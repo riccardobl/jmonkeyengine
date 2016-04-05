@@ -785,7 +785,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         sortingId = -1;
     }
 
-    private void updateShaderMaterialParameters(Renderer renderer, Shader shader, List<MatParamOverride> overrides) {
+    private int updateShaderMaterialParameters(Renderer renderer, Shader shader, List<MatParamOverride> overrides) {
         int unit = 0;
 
         if (overrides != null) {
@@ -830,6 +830,8 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             }
         }
 
+        //TODO HACKY HACK remove this when texture unit is handled by the uniform.
+        return unit;
     }
 
     private void updateRenderState(RenderManager renderManager, Renderer renderer, TechniqueDef techniqueDef) {
@@ -982,13 +984,14 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         renderManager.updateUniformBindings(shader);
         
         // Set material parameters
-        updateShaderMaterialParameters(renderer, shader, geometry.getWorldMatParamOverrides());
+        //TODO RRemove the unit when texture units are handled in the Uniform
+        int unit = updateShaderMaterialParameters(renderer, shader, geometry.getWorldMatParamOverrides());
         
         // Clear any uniforms not changed by material.
         resetUniformsNotSetByCurrent(shader);
         
         // Delegate rendering to the technique
-        technique.render(renderManager, shader, geometry, lights);
+        technique.render(renderManager, shader, geometry, lights, unit);
     }
 
     /**
