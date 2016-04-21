@@ -34,14 +34,14 @@ import com.jme3.scene.plugins.ogre.SceneLoader;
 public class OgrePhysicsBullet implements OgrePhysicsProvider{
 	private static final Logger logger=Logger.getLogger(SceneLoader.class.getName());
 
-	public void apply(Node entityNode, Attributes attribs) {
-		String collisionShapeName=attribs.getValue("collisionPrim");
+	public void apply(final Node entityNode,final Attributes attribs) {
+		final String collisionShapeName=attribs.getValue("collisionPrim");
 		if(collisionShapeName==null) return;
 
-		boolean isGhost=Objects.equals(attribs.getValue("ghost"),"True");
+		final boolean isGhost=Objects.equals(attribs.getValue("ghost"),"True");
 		String physics_type=attribs.getValue("physics_type");if(physics_type==null) physics_type="STATIC";
 		
-		boolean isStatic=physics_type.equals("STATIC");
+		final boolean isStatic=physics_type.equals("STATIC");
 		
 		CollisionShape collisionShape=null;
 		switch(collisionShapeName){
