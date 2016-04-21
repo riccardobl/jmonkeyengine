@@ -48,6 +48,7 @@ import com.jme3.scene.LightNode;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl.ControlDirection;
 import com.jme3.scene.plugins.ogre.matext.OgreMaterialKey;
+import com.jme3.scene.plugins.ogre.physics.OgrePhysics;
 import com.jme3.util.PlaceholderAssets;
 import com.jme3.util.xml.SAXUtil;
 import static com.jme3.util.xml.SAXUtil.*;
@@ -319,6 +320,8 @@ public class SceneLoader extends DefaultHandler implements AssetLoader {
             }
         }
 
+        OgrePhysics.apply(entityNode,attribs);
+        
         node.attachChild(entityNode);
         node = null;
     }
