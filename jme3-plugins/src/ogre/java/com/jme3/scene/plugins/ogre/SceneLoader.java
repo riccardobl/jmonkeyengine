@@ -313,10 +313,11 @@ public class SceneLoader extends DefaultHandler implements AssetLoader {
                 throw ex;
             }
         }
+       
+        node.attachChild(entityNode);
 
         OgrePhysics.apply(entityNode,attribs);
-        
-        node.attachChild(entityNode);
+
         node = null;
     }
     
