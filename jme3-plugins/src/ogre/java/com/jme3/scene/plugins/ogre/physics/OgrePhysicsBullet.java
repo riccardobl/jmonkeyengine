@@ -39,9 +39,13 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 		if(collisionShapeName==null) return;
 
 		final boolean isGhost=Objects.equals(attribs.getValue("ghost"),"True");
-		String physics_type=attribs.getValue("physics_type");if(physics_type==null) physics_type="STATIC";
+		String physics_type=attribs.getValue("physics_type");
+		if(physics_type==null) physics_type="static";
+		else physics_type=physics_type.toLowerCase();
 		
-		final boolean isStatic=physics_type.equals("STATIC");
+		if(physics_type.equals("no_collision"))return;
+		
+		final boolean isStatic=physics_type.equals("static");
 		
 		CollisionShape collisionShape=null;
 		switch(collisionShapeName){
