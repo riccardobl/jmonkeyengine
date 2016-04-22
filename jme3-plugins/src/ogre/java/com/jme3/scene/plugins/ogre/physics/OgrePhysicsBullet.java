@@ -122,9 +122,10 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 		if(isGhost){
 			GhostControl ghost=new GhostControl(collisionShape);
 			entityNode.addControl(ghost);
+//			ghost.setEnabled(false);
 		}else{
 			float mass=isStatic?0:Float.parseFloat(attribs.getValue("mass"));
-			RigidBodyControl rigidbody=new RigidBodyControl(collisionShape,mass);
+			OgreRigidBodyControl rigidbody=new OgreRigidBodyControl(collisionShape,mass);
 			float damping_rot=Float.parseFloat(attribs.getValue("damping_rot"));
 			float damping_trans=Float.parseFloat(attribs.getValue("damping_trans"));
 			Vector3f friction=new Vector3f(Float.parseFloat(attribs.getValue("friction_x")),Float.parseFloat(attribs.getValue("friction_y")),Float.parseFloat(attribs.getValue("friction_z")));
@@ -132,6 +133,8 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 			rigidbody.setAngularDamping(damping_rot);
 			rigidbody.setLinearDamping(damping_trans);
 			entityNode.addControl(rigidbody);
+//			rigidbody.setEnabled(false);
+//			if(isStatic)rigidbody.setKinematic(true);
 		}
 
 	}
