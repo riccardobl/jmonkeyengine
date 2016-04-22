@@ -22,7 +22,6 @@ import com.jme3.bullet.collision.shapes.HullCollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.GhostControl;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
@@ -67,7 +66,7 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 				break;
 
 			case "sphere":
-				Vector3f xtendsphere=OgrePhysics.getBoundingBox(entityNode).getExtent(null);
+				Vector3f xtendsphere=OgrePhysicsHelpers.getBoundingBox(entityNode).getExtent(null);
 				float radius=xtendsphere.x;
 				if(xtendsphere.y>radius) radius=xtendsphere.y;
 				if(xtendsphere.z>radius) radius=xtendsphere.z;
@@ -81,7 +80,7 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 					public void visit(Spatial s) {
 						if(s instanceof Geometry){
 							Geometry g=(Geometry)s;
-							points.addAll(OgrePhysics.getPoints(g.getMesh(),g.getWorldScale()));
+							points.addAll(OgrePhysicsHelpers.getPoints(g.getMesh(),g.getWorldScale()));
 						}
 					}
 				});
@@ -93,24 +92,24 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 				break;
 
 			case "box":
-				BoundingBox bbox=OgrePhysics.getBoundingBox(entityNode);
+				BoundingBox bbox=OgrePhysicsHelpers.getBoundingBox(entityNode);
 				collisionShape=new BoxCollisionShape(bbox.getExtent(null));
 				break;
 
 			case "capsule":
-				BoundingBox cbox=OgrePhysics.getBoundingBox(entityNode);
+				BoundingBox cbox=OgrePhysicsHelpers.getBoundingBox(entityNode);
 				Vector3f xtendcapsule=cbox.getExtent(null);
 				collisionShape=new CapsuleCollisionShape((xtendcapsule.x>xtendcapsule.z?xtendcapsule.x:xtendcapsule.z),xtendcapsule.y);
 				break;
 
 			case "cylinder":
-				BoundingBox cybox=OgrePhysics.getBoundingBox(entityNode);
+				BoundingBox cybox=OgrePhysicsHelpers.getBoundingBox(entityNode);
 				Vector3f xtendcylinder=cybox.getExtent(null);
 				collisionShape=new CylinderCollisionShape(xtendcylinder);
 				break;
 
 			case "cone":
-				BoundingBox cobox=OgrePhysics.getBoundingBox(entityNode);
+				BoundingBox cobox=OgrePhysicsHelpers.getBoundingBox(entityNode);
 				Vector3f xtendcone=cobox.getExtent(null);
 				collisionShape=new ConeCollisionShape((xtendcone.x>xtendcone.z?xtendcone.x:xtendcone.z),xtendcone.y,PhysicsSpace.AXIS_Y);
 				break;
@@ -122,7 +121,6 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 		if(isGhost){
 			GhostControl ghost=new GhostControl(collisionShape);
 			entityNode.addControl(ghost);
-//			ghost.setEnabled(false);
 		}else{
 			float mass=isStatic?0:Float.parseFloat(attribs.getValue("mass"));
 			OgreRigidBodyControl rigidbody=new OgreRigidBodyControl(collisionShape,mass);
@@ -133,8 +131,6 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 			rigidbody.setAngularDamping(damping_rot);
 			rigidbody.setLinearDamping(damping_trans);
 			entityNode.addControl(rigidbody);
-//			rigidbody.setEnabled(false);
-//			if(isStatic)rigidbody.setKinematic(true);
 		}
 
 	}

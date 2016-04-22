@@ -31,7 +31,32 @@
  */
 package com.jme3.scene.plugins.ogre;
 
-import com.jme3.asset.*;
+import static com.jme3.util.xml.SAXUtil.parseBool;
+import static com.jme3.util.xml.SAXUtil.parseColor;
+import static com.jme3.util.xml.SAXUtil.parseFloat;
+import static com.jme3.util.xml.SAXUtil.parseString;
+import static com.jme3.util.xml.SAXUtil.parseVector3;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetLoader;
+import com.jme3.asset.AssetManager;
+import com.jme3.asset.AssetNotFoundException;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.Light;
@@ -44,26 +69,12 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.CameraNode;
-import com.jme3.scene.LightNode;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.CameraControl.ControlDirection;
 import com.jme3.scene.plugins.ogre.matext.OgreMaterialKey;
-import com.jme3.scene.plugins.ogre.physics.OgrePhysics;
+import com.jme3.scene.plugins.ogre.physics.OgrePhysicsProvider;
 import com.jme3.util.PlaceholderAssets;
 import com.jme3.util.xml.SAXUtil;
-import static com.jme3.util.xml.SAXUtil.*;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Stack;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
 
 public class SceneLoader extends DefaultHandler implements AssetLoader {
 
@@ -316,7 +327,11 @@ public class SceneLoader extends DefaultHandler implements AssetLoader {
        
         node.attachChild(entityNode);
 
-        OgrePhysics.apply(entityNode,attribs);
+        if( key instanceof OgreSceneKey){
+        	OgreSceneKey ogresceneKey=(OgreSceneKey)key;
+        	OgrePhysicsProvider pp=ogresceneKey.getPhysicsProvider();
+        	if(pp!=null&&pp.isAvailable()) pp.apply(entityNode,attribs);
+        }
 
         node = null;
     }

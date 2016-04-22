@@ -4,8 +4,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.xml.sax.Attributes;
-
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -16,14 +14,8 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Type;
 
-public class OgrePhysics{
-	public static OgrePhysicsProvider provider=new OgrePhysicsBullet();
+public final class OgrePhysicsHelpers{
 
-	public static void apply(Node node, Attributes attribs) {
-		if(provider.isAvailable()) provider.apply(node,attribs);
-	}
-
-	// Helpers
 	public static BoundingBox getBoundingBox(Node n) {
 		final Collection<VertexBuffer> meshes=new ArrayList<VertexBuffer>();
 		n.depthFirstTraversal(new SceneGraphVisitor(){
