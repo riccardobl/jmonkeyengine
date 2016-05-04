@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import org.xml.sax.Attributes;
 
 import com.jme3.bounding.BoundingBox;
-import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.BoxCollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
@@ -21,6 +20,7 @@ import com.jme3.bullet.collision.shapes.GImpactCollisionShape;
 import com.jme3.bullet.collision.shapes.HullCollisionShape;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
+import com.jme3.bullet.collision.shapes.infos.ChildCollisionShape;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -28,12 +28,13 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.SceneGraphVisitor;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.plugins.ogre.OgreSceneKey;
 import com.jme3.scene.plugins.ogre.SceneLoader;
 
 public class OgrePhysicsBullet implements OgrePhysicsProvider{
 	private static final Logger logger=Logger.getLogger(SceneLoader.class.getName());
 
-	public void apply(final Node entityNode,final Attributes attribs) {
+	public void apply(OgreSceneKey key,final Node entityNode,final Attributes attribs) {
 		final String collisionShapeName=attribs.getValue("collisionPrim");
 		if(collisionShapeName==null) return;
 
@@ -45,10 +46,19 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 		if(physics_type.equals("no_collision"))return;
 		
 		final boolean isStatic=physics_type.equals("static");
-		
+
 		CollisionShape collisionShape=null;
 		switch(collisionShapeName){
 			case "triangle_mesh":
+				Object vhacd_factory=key.getVHACDFactory();
+				if(vhacd_factory!=null&&vhacd_factory instanceof Boolean){
+					if(((boolean)vhacd_factory)==true){
+						vhacd_factory=new com.jme3.bullet.vhacd.VHACDCollisionShapeFactory();
+					}else{
+						vhacd_factory=null;
+					}
+				}
+				final Object vhacd_factoryf=vhacd_factory;
 				final CompoundCollisionShape csh=new CompoundCollisionShape();
 				entityNode.depthFirstTraversal(new SceneGraphVisitor(){
 					@Override
@@ -56,9 +66,23 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 						if(s instanceof Geometry){
 							Geometry g=(Geometry)s;
 							Mesh mesh=g.getMesh();
-							CollisionShape shape=isStatic?new MeshCollisionShape(mesh):new GImpactCollisionShape(mesh);
-							shape.setScale(g.getWorldScale());
-							csh.addChildShape(shape,g.getWorldTranslation().subtract(entityNode.getWorldTranslation()));
+							CollisionShape shape=null;
+							if(isStatic){
+								shape=new MeshCollisionShape(mesh);
+							}else{
+								if(vhacd_factoryf!=null){				
+									com.jme3.bullet.vhacd.VHACDCollisionShapeFactory f=(com.jme3.bullet.vhacd.VHACDCollisionShapeFactory)vhacd_factoryf;
+									CompoundCollisionShape ccs=f.create(entityNode);
+									for(ChildCollisionShape c:ccs.getChildren()){
+										c.shape.setScale(g.getWorldScale());
+										csh.addChildShape(c.shape,g.getWorldTranslation().subtract(entityNode.getWorldTranslation()));
+									}				
+								}else shape=new GImpactCollisionShape(mesh);
+							}
+							if(shape!=null){
+								shape.setScale(g.getWorldScale());
+								csh.addChildShape(shape,g.getWorldTranslation().subtract(entityNode.getWorldTranslation()));
+							}
 						}
 					}
 				});

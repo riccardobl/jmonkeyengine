@@ -7,6 +7,7 @@ import com.jme3.scene.plugins.ogre.physics.OgrePhysicsProvider;
 
 public class OgreSceneKey extends ModelKey {
 	private OgrePhysicsProvider phyProvider;
+	private Object vhacdFactory;
 	public OgreSceneKey(){
 		super();
 	}
@@ -28,6 +29,22 @@ public class OgreSceneKey extends ModelKey {
 		return this;
 	}
 
+	public Object getVHACDFactory(){
+		return vhacdFactory;
+	}
+	
+	public OgreSceneKey useVHACD(Object factory){
+		if(factory ==null){
+			vhacdFactory=null;
+			return this;
+		}
+		try{
+			if(factory instanceof com.jme3.bullet.vhacd.VHACDCollisionShapeFactory||factory instanceof Boolean){
+				vhacdFactory=factory;
+			}
+		}catch(Throwable e){}
+		return this;
+	}
 	
 	public OgreSceneKey usePhysics(OgrePhysicsProvider phyProvider){
 		this.phyProvider= phyProvider;

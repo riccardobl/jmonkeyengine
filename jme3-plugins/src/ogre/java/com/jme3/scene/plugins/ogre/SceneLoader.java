@@ -330,7 +330,7 @@ public class SceneLoader extends DefaultHandler implements AssetLoader {
         if( key instanceof OgreSceneKey){
         	OgreSceneKey ogresceneKey=(OgreSceneKey)key;
         	OgrePhysicsProvider pp=ogresceneKey.getPhysicsProvider();
-        	if(pp!=null) pp.apply(entityNode,attribs);
+        	if(pp!=null) pp.apply(ogresceneKey,entityNode,attribs);
         }
 
         node = null;
