@@ -135,13 +135,4 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 
 	}
 
-	@Override
-	public boolean isAvailable() {
-		try{
-			Class.forName(BulletAppState.class.getName());
-			return true;
-		}catch(ClassNotFoundException e){
-			return false;
-		}
-	}
 }

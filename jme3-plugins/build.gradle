@@ -14,7 +14,7 @@ sourceSets {
 
 dependencies {
     compile project(':jme3-core')
-    compile project(':jme3-bullet')
+    compileOnly project(':jme3-bullet')
     
     testCompile project(':jme3-desktop')
 }

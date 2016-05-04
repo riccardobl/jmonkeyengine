@@ -6,5 +6,5 @@ import com.jme3.scene.Node;
 
 public interface OgrePhysicsProvider{
 	public void apply(Node entityNoze,Attributes attribs);
-	public boolean isAvailable();
+//	public boolean isAvailable();
 }
