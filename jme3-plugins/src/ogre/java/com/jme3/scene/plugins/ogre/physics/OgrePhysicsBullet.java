@@ -123,7 +123,8 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 			case "capsule":
 				BoundingBox cbox=OgrePhysicsHelpers.getBoundingBox(entityNode);
 				Vector3f xtendcapsule=cbox.getExtent(null);
-				collisionShape=new CapsuleCollisionShape((xtendcapsule.x>xtendcapsule.z?xtendcapsule.x:xtendcapsule.z),xtendcapsule.y);
+				float r=(xtendcapsule.x>xtendcapsule.z?xtendcapsule.x:xtendcapsule.z);
+				collisionShape=new CapsuleCollisionShape(r,xtendcapsule.y-r*2f);
 				break;
 
 			case "cylinder":
