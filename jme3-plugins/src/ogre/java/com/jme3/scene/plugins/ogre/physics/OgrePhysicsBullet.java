@@ -22,6 +22,7 @@ import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.collision.shapes.infos.ChildCollisionShape;
 import com.jme3.bullet.control.GhostControl;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
@@ -33,7 +34,13 @@ import com.jme3.scene.plugins.ogre.SceneLoader;
 
 public class OgrePhysicsBullet implements OgrePhysicsProvider{
 	private static final Logger logger=Logger.getLogger(SceneLoader.class.getName());
-
+	private boolean useEnhancedRigidbodies;
+	
+	public OgrePhysicsBullet useEnhancedRigidbodies(boolean v){
+		useEnhancedRigidbodies=v;
+		return this;
+	}
+	
 	public void apply(OgreSceneKey key,final Node entityNode,final Attributes attribs) {
 		final String collisionShapeName=attribs.getValue("collisionPrim");
 		if(collisionShapeName==null) return;
@@ -148,7 +155,7 @@ public class OgrePhysicsBullet implements OgrePhysicsProvider{
 			entityNode.addControl(ghost);
 		}else{
 			float mass=isStatic?0:Float.parseFloat(attribs.getValue("mass"));
-			OgreRigidBodyControl rigidbody=new OgreRigidBodyControl(collisionShape,mass);
+			RigidBodyControl rigidbody=useEnhancedRigidbodies?new OgreRigidBodyControl(collisionShape,mass):new RigidBodyControl(collisionShape,mass);
 			float damping_rot=Float.parseFloat(attribs.getValue("damping_rot"));
 			float damping_trans=Float.parseFloat(attribs.getValue("damping_trans"));
 			Vector3f friction=new Vector3f(Float.parseFloat(attribs.getValue("friction_x")),Float.parseFloat(attribs.getValue("friction_y")),Float.parseFloat(attribs.getValue("friction_z")));
