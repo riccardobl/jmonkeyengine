@@ -20,7 +20,6 @@ repositories {
 dependencies {
     compile project(':jme3-core')
     compileOnly project(':jme3-bullet')
-    compileOnly project(':jme3-bullet')
     compileOnly 'com.github.riccardobl:jme3-bullet-vhacd:0.1.1'    
     testCompile project(':jme3-desktop')
 }
