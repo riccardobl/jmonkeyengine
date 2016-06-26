@@ -175,6 +175,26 @@ public enum Caps {
      */
     GLSL400,
     /**
+     * Supports GLSL 4.1
+     */
+    GLSL410,
+    /**
+     * Supports GLSL 4.2
+     */
+    GLSL420,
+    /**
+     * Supports GLSL 4.3
+     */
+    GLSL430,
+    /**
+     * Supports GLSL 4.4
+     */
+    GLSL440,
+    /**
+     * Supports GLSL 4.5
+     */
+    GLSL450,
+    /**
      * Supports reading from textures inside the vertex shader.
      */
     VertexTextureFetch,

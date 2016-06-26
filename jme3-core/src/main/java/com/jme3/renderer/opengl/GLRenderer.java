@@ -207,6 +207,16 @@ public final class GLRenderer implements Renderer {
                 }
                 // so that future OpenGL revisions wont break jme3
                 // fall through intentional
+            case 450:
+                caps.add(Caps.GLSL450);
+            case 440:
+                caps.add(Caps.GLSL440);
+            case 430:
+                caps.add(Caps.GLSL430);
+            case 420:
+                caps.add(Caps.GLSL420);
+            case 410:
+                caps.add(Caps.GLSL410);
             case 400:
                 caps.add(Caps.GLSL400);
             case 330:
