@@ -129,6 +129,28 @@ public enum Caps {
      */
     OpenGL40,
     /**
+     * Supports OpenGL 4.1
+     */
+    OpenGL41,
+    /**
+     * Supports OpenGL 4.2
+     */
+    OpenGL42,
+    /**
+     * Supports OpenGL 4.3
+     */
+    OpenGL43,
+    /**
+     * Supports OpenGL 4.4
+     */
+    OpenGL44,
+    /**
+     * Supports OpenGL 4.5
+     */
+    OpenGL45, 
+
+    
+    /**
      * Do not use.
      * 
      * @deprecated do not use.

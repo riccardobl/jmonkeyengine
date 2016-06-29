@@ -193,6 +193,21 @@ public final class GLRenderer implements Renderer {
                             caps.add(Caps.OpenGL40);
                             caps.add(Caps.TesselationShader);
                         }
+                        if (oglVer >= 410) {
+                            caps.add(Caps.OpenGL41);
+                        }
+                        if (oglVer >= 420) {
+                            caps.add(Caps.OpenGL42);
+                        }
+                        if (oglVer >= 430) {
+                            caps.add(Caps.OpenGL43);
+                        }
+                        if (oglVer >= 440) {
+                            caps.add(Caps.OpenGL44);
+                        }
+                        if (oglVer >= 450) {
+                            caps.add(Caps.OpenGL45);
+                        }
                     }
                 }
             }
