@@ -188,6 +188,9 @@ public interface GL {
     public static final int GL_VERSION = 0x1F02;
     public static final int GL_VERTEX_SHADER = 0x8B31;
     public static final int GL_ZERO = 0x0;
+	public static final int GL_RGB16F=0x881B;
+	public static final int GL_HALF_FLOAT=0x140B;
+	public static final int GL_RGBA16F=0x881A;
 
         public void resetStats();
         
