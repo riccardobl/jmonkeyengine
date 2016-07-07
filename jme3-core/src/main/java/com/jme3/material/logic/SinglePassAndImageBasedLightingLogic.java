@@ -51,9 +51,7 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
     private static final RenderState ADDITIVE_LIGHT = new RenderState();
 
     private final ColorRGBA ambientLightColor = new ColorRGBA(0, 0, 0, 1);
-    //Env textures units
-    int irrUnit = -1;
-    int pemUnit = -1;
+
 
     static {
         ADDITIVE_LIGHT.setBlendMode(BlendMode.AlphaAdditive);
@@ -117,11 +115,8 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         if(lightProbe != null){
             BoundingSphere s = (BoundingSphere)lightProbe.getBounds();
             lightProbeData.setVector4InArray(lightProbe.getPosition().x, lightProbe.getPosition().y, lightProbe.getPosition().z, 1f/s.getRadius(), 0);
-            //assigning new texture indexes if they have never been assigned.
-            if( irrUnit == -1 ){
-                irrUnit = lastTexUnit++;
-                pemUnit = lastTexUnit++;
-            }
+             int irrUnit = lastTexUnit++;
+             int pemUnit = lastTexUnit++;
             rm.getRenderer().setTexture(irrUnit, lightProbe.getIrradianceMap());
             lightProbeIrrMap.setValue(VarType.Int, irrUnit);
             rm.getRenderer().setTexture(pemUnit, lightProbe.getPrefilteredEnvMap());
