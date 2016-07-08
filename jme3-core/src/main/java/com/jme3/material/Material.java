@@ -35,7 +35,7 @@ import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.CloneableSmartAsset;
 import com.jme3.export.*;
-import com.jme3.light.*;
+import com.jme3.light.LightList;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.material.TechniqueDef.LightMode;
@@ -54,6 +54,8 @@ import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 import com.jme3.texture.image.ColorSpace;
 import com.jme3.util.ListMap;
+import com.jme3.util.SafeArrayList;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -749,8 +751,8 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         sortingId = -1;
     }
 
-    private int applyOverrides(Renderer renderer, Shader shader, List<MatParamOverride> overrides, int unit) {
-        for (MatParamOverride override : overrides) {
+    private int applyOverrides(Renderer renderer, Shader shader, SafeArrayList<MatParamOverride> overrides, int unit) {
+        for (MatParamOverride override : overrides.getArray()) {
             VarType type = override.getVarType();
 
             MatParam paramDef = def.getMaterialParam(override.getName());
@@ -777,7 +779,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     }
 
     private int updateShaderMaterialParameters(Renderer renderer, Shader shader,
-            List<MatParamOverride> worldOverrides, List<MatParamOverride> forcedOverrides) {
+                 SafeArrayList<MatParamOverride> worldOverrides, SafeArrayList<MatParamOverride> forcedOverrides) {
 
         int unit = 0;
         if (worldOverrides != null) {
@@ -947,7 +949,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         updateRenderState(renderManager, renderer, techniqueDef);
 
         // Get world overrides
-        List<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
+        SafeArrayList<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
 
         // Select shader to use
         Shader shader = technique.makeCurrent(renderManager, overrides, renderManager.getForcedMatParams(), lights, rendererCaps);
@@ -996,8 +998,8 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     @Override
     public String toString() {
         return "Material[name=" + name + 
-                ", def=" + def.getName() + 
-                ", tech=" + technique.getDef().getName() + 
+                ", def=" + (def != null ? def.getName() : null) + 
+                ", tech=" + (technique != null && technique.getDef() != null ? technique.getDef().getName() : null) + 
                 "]";
     }
 
