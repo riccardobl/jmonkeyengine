@@ -88,7 +88,8 @@ public class GLSLLoader implements AssetLoader {
                 sb.append("// -- begin import ").append(nodeName).append(" --\n");
             }
             while ((ln = bufReader.readLine()) != null) {
-                if (ln.trim().startsWith("#import ")) {
+            	String tl=ln.trim();
+                if (tl.startsWith("#import ")||tl.startsWith("#include ")) {
                     ln = ln.trim().substring(8).trim();
                     if (ln.startsWith("\"") && ln.endsWith("\"") && ln.length() > 3) {
                         // import user code
