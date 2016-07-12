@@ -179,7 +179,7 @@ public class GLSLLoader implements AssetLoader {
         // to retrieve the fragment shader, use the content manager
         this.assetManager = info.getManager();
         Reader reader = new InputStreamReader(info.openStream());
-        if (info.getKey().getExtension().equals("glsllib")) {
+        if (info.getKey() instanceof ShaderDependencyKey) {
             // NOTE: Loopback, GLSLLIB is loaded by this loader
             // and needs data as InputStream
             return reader;
