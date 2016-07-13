@@ -79,6 +79,18 @@ public abstract class PhysicsJoint implements Savable {
     public long getObjectId() {
         return objectId;
     }
+    
+    public void setBreakingImpulseThreshold(float tr){
+    	setBreakingImpulseThreshold(objectId,tr);
+    }
+    
+    private native float setBreakingImpulseThreshold(long objectId,float tr);
+    
+    public float getBreakingImpulseThreshold(){
+    	return getBreakingImpulseThreshold(objectId);
+    }
+    private native float getBreakingImpulseThreshold(long objectId);
+
 
     /**
      * @return the collisionBetweenLinkedBodys
@@ -126,6 +138,7 @@ public abstract class PhysicsJoint implements Savable {
         capsule.write(nodeB, "nodeB", null);
         capsule.write(pivotA, "pivotA", null);
         capsule.write(pivotB, "pivotB", null);
+        capsule.write(getBreakingImpulseThreshold(),"breakingThreshold",-1f);
     }
 
     public void read(JmeImporter im) throws IOException {
@@ -134,6 +147,8 @@ public abstract class PhysicsJoint implements Savable {
         this.nodeB = (PhysicsRigidBody) capsule.readSavable("nodeB", new PhysicsRigidBody());
         this.pivotA = (Vector3f) capsule.readSavable("pivotA", new Vector3f());
         this.pivotB = (Vector3f) capsule.readSavable("pivotB", new Vector3f());
+        float breakingThreshold=capsule.readFloat("breakingThreshold",-1);
+        if(breakingThreshold>=0)setBreakingImpulseThreshold(breakingThreshold);
     }
 
     @Override

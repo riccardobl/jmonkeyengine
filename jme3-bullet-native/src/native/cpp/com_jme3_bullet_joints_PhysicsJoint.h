@@ -23,6 +23,15 @@ JNIEXPORT jfloat JNICALL Java_com_jme3_bullet_joints_PhysicsJoint_getAppliedImpu
 JNIEXPORT void JNICALL Java_com_jme3_bullet_joints_PhysicsJoint_finalizeNative
   (JNIEnv *, jobject, jlong);
 
+
+
+    JNIEXPORT void JNICALL Java_com_jme3_bullet_joints_PhysicsJoint_setBreakingImpulseThreshold
+    (JNIEnv * env, jobject object, jlong jointId,jfloat threshold);
+
+    JNIEXPORT jfloat JNICALL Java_com_jme3_bullet_joints_PhysicsJoint_getBreakingImpulseThreshold
+    (JNIEnv * env, jobject object, jlong jointId);
+
+
 #ifdef __cplusplus
 }
 #endif
