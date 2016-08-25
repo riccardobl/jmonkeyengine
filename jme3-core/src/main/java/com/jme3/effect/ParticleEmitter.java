@@ -888,7 +888,7 @@ public class ParticleEmitter extends Geometry {
         this.particleInfluencer.setVelocityVariation(variation);
     }
 
-    private Particle emitParticle(Vector3f min, Vector3f max) {
+    protected Particle emitParticle(Vector3f min, Vector3f max) {
         int idx = lastUsed + 1;
         if (idx >= particles.length) {
             return null;
