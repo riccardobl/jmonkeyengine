@@ -352,6 +352,15 @@ public final class ColorRGBA implements Savable, Cloneable, java.io.Serializable
         this.a *= scalar;
         return this;
     }
+    
+    public ColorRGBA multLocal(ColorRGBA c) {
+        this.r *= c.r;
+        this.g *= c.g;
+        this.b *= c.b;
+        this.a *= c.a;
+        return this;
+    }
+
 
     /**
      * Adds each r,g,b,a of this <code>ColorRGBA</code> by the corresponding 
