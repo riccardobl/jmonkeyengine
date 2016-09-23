@@ -42,6 +42,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * GLSL File parser that supports #import pre-processor statement
@@ -79,17 +81,18 @@ public class GLSLLoader implements AssetLoader {
     private ShaderDependencyNode loadNode(Reader reader, String nodeName) {
         ShaderDependencyNode node = new ShaderDependencyNode(nodeName);
 
+        boolean isMainNode=nodeName.equals("[main]");
+
         StringBuilder sb = new StringBuilder();
         BufferedReader bufReader = null;
         try {
             bufReader = new BufferedReader(reader);
             String ln;
-            if (!nodeName.equals("[main]")) {
-                sb.append("// -- begin import ").append(nodeName).append(" --\n");
-            }
+            if (!isMainNode) sb.append("// -- begin import ").append(nodeName).append(" --\n");
+            
             while ((ln = bufReader.readLine()) != null) {
             	String tl=ln.trim();
-                if (tl.startsWith("#import ")||tl.startsWith("#include ")) {
+            	if (tl.startsWith("#import ")||tl.startsWith("#include ")) {
                     ln = ln.trim().substring(8).trim();
                     if (ln.startsWith("\"") && ln.endsWith("\"") && ln.length() > 3) {
                         // import user code
@@ -113,9 +116,7 @@ public class GLSLLoader implements AssetLoader {
                     sb.append(ln).append('\n');
                 }
             }
-            if (!nodeName.equals("[main]")) {
-                sb.append("// -- end import ").append(nodeName).append(" --\n");
-            }
+            if (!isMainNode) sb.append("// -- end import ").append(nodeName).append(" --\n");
         } catch (IOException ex) {
             if (bufReader != null) {
                 try {
@@ -125,7 +126,6 @@ public class GLSLLoader implements AssetLoader {
             }
             throw new AssetLoadException("Failed to load shader node: " + nodeName, ex);
         }
-
         node.setSource(sb.toString());
         dependCache.put(nodeName, node);
         return node;
@@ -175,6 +175,19 @@ public class GLSLLoader implements AssetLoader {
         }
     }
 
+    // Some drivers want the extensions to be before the code.
+    private String fixExtensions(String src){
+    	StringBuilder extensions = new StringBuilder();
+    	StringBuilder code = new StringBuilder();
+    	StringTokenizer st = new StringTokenizer(src,"\n");
+    	while(st.hasMoreTokens()){
+    		String line = st.nextToken();
+    		if(line.trim().startsWith("#extension ")) extensions.append(line).append("\n");
+    		else code.append(line).append("\n");
+       	}   
+    	return extensions.toString()+code.toString();
+    }
+    
     public Object load(AssetInfo info) throws IOException {
         // The input stream provided is for the vertex shader, 
         // to retrieve the fragment shader, use the content manager
@@ -185,8 +198,10 @@ public class GLSLLoader implements AssetLoader {
             // and needs data as InputStream
             return reader;
         } else {
+        	
             ShaderDependencyNode rootNode = loadNode(reader, "[main]");
             String code = resolveDependencies(rootNode, new HashSet<ShaderDependencyNode>());
+            code= fixExtensions(code);
             dependCache.clear();
             return code;
         }
