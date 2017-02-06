@@ -133,8 +133,13 @@ public class NativeObjectManager {
                 // Unregister it from cleanup list.
                 NativeObjectRef ref2 = refMap.remove(obj.getUniqueId());
                 if (ref2 == null) {
-                    throw new IllegalArgumentException("This NativeObject is not " + 
-                                                       "registered in this NativeObjectManager");
+                    try{
+                        new IllegalArgumentException("This NativeObject ("+obj+")is not " + 
+                                                       "registered in this NativeObjectManager").printStackTrace();
+                    }catch(Exception e){
+                         new IllegalArgumentException("This NativeObject is not " + 
+                                                       "registered in this NativeObjectManager").printStackTrace();
+                    }
                 }
 
                 assert ref == null || ref == ref2;
