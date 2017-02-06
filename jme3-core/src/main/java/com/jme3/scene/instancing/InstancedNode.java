@@ -49,6 +49,7 @@ import com.jme3.util.clone.JmeCloneable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import com.jme3.renderer.Camera;
 
 public class InstancedNode extends GeometryGroupNode {
 
@@ -163,7 +164,7 @@ public class InstancedNode extends GeometryGroupNode {
         }
 
         public void render(RenderManager rm, ViewPort vp) {
-            node.renderFromControl();
+            node.renderFromControl(vp.getCamera());
         }
 
         public void write(JmeExporter ex) throws IOException {
@@ -195,9 +196,9 @@ public class InstancedNode extends GeometryGroupNode {
         addControl(control);
     }
 
-    private void renderFromControl() {
+    private void renderFromControl(Camera cam) {
         for (InstancedGeometry ig : instancesMap.values()) {
-            ig.updateInstances();
+            ig.updateInstances(cam);
         }
     }
 

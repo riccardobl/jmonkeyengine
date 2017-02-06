@@ -31,6 +31,8 @@
  */
 package com.jme3.scene.instancing;
 
+import com.jme3.renderer.Camera.FrustumIntersect;
+import com.jme3.renderer.Camera;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
@@ -210,7 +212,7 @@ public class InstancedGeometry extends Geometry {
     }
 
     public int getActualNumInstances() {
-        return firstUnusedIndex;
+        return firstUnusedIndex-culledInstances;
     }
 
     private void swap(int idx1, int idx2) {
@@ -247,7 +249,20 @@ public class InstancedGeometry extends Geometry {
         }
     }
 
-    public void updateInstances() {
+    protected boolean checkInstanceCulling(Camera cam,Geometry g){
+        CullHint cm = g.getCullHint();
+        if (cm == Spatial.CullHint.Always) return false;
+        else if (cm == Spatial.CullHint.Never) return true;       
+        FrustumIntersect frustrumIntersects = (parent != null ? g.getParent().getLastFrustumIntersection(): Camera.FrustumIntersect.Intersects);
+        if (frustrumIntersects == Camera.FrustumIntersect.Intersects) {
+            if (g.getQueueBucket() == com.jme3.renderer.queue.RenderQueue.Bucket.Gui)  return cam.containsGui(g.getWorldBound());
+            else  frustrumIntersects = cam.contains(g.getWorldBound());            
+        }
+        return frustrumIntersects != Camera.FrustumIntersect.Outside;    
+    }
+    protected int culledInstances=0;
+    public void updateInstances(Camera cam) {
+        culledInstances=0;
         FloatBuffer fb = (FloatBuffer) transformInstanceData.getData();
         fb.limit(fb.capacity());
         fb.position(0);
@@ -269,16 +284,19 @@ public class InstancedGeometry extends Geometry {
                     swap(i, firstUnusedIndex - 1);
 
                     while (geometries[firstUnusedIndex -1] == null) {
-                        firstUnusedIndex--;
+                        firstUnusedIndex--;                     
                     }
                 }
 
-                Matrix4f worldMatrix = geom.getWorldMatrix();
-                updateInstance(worldMatrix, temp, 0, vars.tempMat3, vars.quat1);
-                fb.put(temp);
+                if(checkInstanceCulling(cam,geom)){
+                    Matrix4f worldMatrix = geom.getWorldMatrix();
+                    updateInstance(worldMatrix, temp, 0, vars.tempMat3, vars.quat1);
+                    fb.put(temp);
+                }else culledInstances++;                
             }
         }
         vars.release();
+        fb.position(fb.position()+culledInstances*INSTANCE_SIZE);
 
         fb.flip();
 
