@@ -218,6 +218,7 @@ public class InstancedNode extends GeometryGroupNode {
             ig.setMesh(lookUp.mesh);
             ig.setUserData(UserData.JME_PHYSICSIGNORE, true);
             ig.setCullHint(CullHint.Never);
+            ig.setQueueBucket(geom.getQueueBucket());
             instancesMap.put(lookUp.clone(), ig);
             attachChild(ig);
         }
