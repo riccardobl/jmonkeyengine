@@ -186,6 +186,12 @@ public class Image extends NativeObject implements Savable /*, Cloneable*/ {
          */
         DXT5(8,false,true, false),
         
+    
+        RGTC2(8,false,true, false),
+        SIGNED_RGTC2(8,false,true, false),
+        RGTC1(4,false,true, false),
+        SIGNED_RGTC1(4,false,true, false),
+
         /**
          * Luminance-Alpha Texture Compression. 
          * 
