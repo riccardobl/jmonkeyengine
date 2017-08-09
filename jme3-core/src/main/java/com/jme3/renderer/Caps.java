@@ -243,7 +243,12 @@ public enum Caps {
      * Supports floating point & half textures (Format.RGB16F)
      */
     FloatTexture,
-
+    
+    /**
+     * Supports integer textures
+     */
+    IntegerTexture,
+    
     /**
      * Supports floating point FBO color buffers (Format.RGB16F)
      */
@@ -523,6 +528,18 @@ public enum Caps {
                         if (!caps.contains(Caps.GLSL150)) return false;
                     case 330:
                         if (!caps.contains(Caps.GLSL330)) return false;
+                    case 400:
+                        if (!caps.contains(Caps.GLSL400)) return false;
+                    case 410:
+                        if (!caps.contains(Caps.GLSL410)) return false;
+                    case 420:
+                        if (!caps.contains(Caps.GLSL420)) return false;
+                    case 430:
+                        if (!caps.contains(Caps.GLSL430)) return false;
+                    case 440:
+                        if (!caps.contains(Caps.GLSL440)) return false;
+                    case 450:
+                        if (!caps.contains(Caps.GLSL450)) return false;
                     default:
                         return false;
                 }

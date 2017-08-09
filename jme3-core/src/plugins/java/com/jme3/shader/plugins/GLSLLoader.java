@@ -84,6 +84,7 @@ public class GLSLLoader implements AssetLoader {
         boolean isMainNode=nodeName.equals("[main]");
 
         StringBuilder sb = new StringBuilder();
+        StringBuilder sbExt = new StringBuilder();
         BufferedReader bufReader = null;
         try {
             bufReader = new BufferedReader(reader);
@@ -112,6 +113,8 @@ public class GLSLLoader implements AssetLoader {
 
                         node.addDependency(sb.length(), dependNode);
                     }
+                } else if (ln.trim().startsWith("#extension ")) {
+                    sbExt.append(ln).append('\n');
                 } else {
                     sb.append(ln).append('\n');
                 }
@@ -127,6 +130,7 @@ public class GLSLLoader implements AssetLoader {
             throw new AssetLoadException("Failed to load shader node: " + nodeName, ex);
         }
         node.setSource(sb.toString());
+        node.setExtensions(sbExt.toString());
         dependCache.put(nodeName, node);
         return node;
     }
@@ -151,20 +155,24 @@ public class GLSLLoader implements AssetLoader {
         
         throw new IOException("Circular dependency.");
     }
-    
-    private String resolveDependencies(ShaderDependencyNode node, Set<ShaderDependencyNode> alreadyInjectedSet) {
+
+    private String resolveDependencies(ShaderDependencyNode node, Set<ShaderDependencyNode> alreadyInjectedSet, StringBuilder extensions) {
         if (alreadyInjectedSet.contains(node)) {
             return "// " + node.getName() + " was already injected at the top.\n";
         } else {
             alreadyInjectedSet.add(node);
+        }
+        if (!node.getExtensions().isEmpty()) {
+            extensions.append(node.getExtensions());
         }
         if (node.getDependencies().isEmpty()) {
             return node.getSource();
         } else {
             StringBuilder sb = new StringBuilder(node.getSource());
             List<String> resolvedShaderNodes = new ArrayList<String>();
+
             for (ShaderDependencyNode dependencyNode : node.getDependencies()) {
-                resolvedShaderNodes.add( resolveDependencies(dependencyNode, alreadyInjectedSet) );
+                resolvedShaderNodes.add(resolveDependencies(dependencyNode, alreadyInjectedSet, extensions));
             }
             List<Integer> injectIndices = node.getDependencyInjectIndices();
             for (int i = resolvedShaderNodes.size() - 1; i >= 0; i--) {
@@ -175,18 +183,18 @@ public class GLSLLoader implements AssetLoader {
         }
     }
 
-    // Some drivers want the extensions to be before the code.
-    private String fixExtensions(String src){
-    	StringBuilder extensions = new StringBuilder();
-    	StringBuilder code = new StringBuilder();
-    	StringTokenizer st = new StringTokenizer(src,"\n");
-    	while(st.hasMoreTokens()){
-    		String line = st.nextToken();
-    		if(line.trim().startsWith("#extension ")) extensions.append(line).append("\n");
-    		else code.append(line).append("\n");
-       	}   
-    	return extensions.toString()+code.toString();
-    }
+    // // Some drivers want the extensions to be before the code.
+    // private String fixExtensions(String src){
+    // 	StringBuilder extensions = new StringBuilder();
+    // 	StringBuilder code = new StringBuilder();
+    // 	StringTokenizer st = new StringTokenizer(src,"\n");
+    // 	while(st.hasMoreTokens()){
+    // 		String line = st.nextToken();
+    // 		if(line.trim().startsWith("#extension ")) extensions.append(line).append("\n");
+    // 		else code.append(line).append("\n");
+    //    	}   
+    // 	return extensions.toString()+code.toString();
+    // }
     
     public Object load(AssetInfo info) throws IOException {
         // The input stream provided is for the vertex shader, 
@@ -200,10 +208,11 @@ public class GLSLLoader implements AssetLoader {
         } else {
         	
             ShaderDependencyNode rootNode = loadNode(reader, "[main]");
-            String code = resolveDependencies(rootNode, new HashSet<ShaderDependencyNode>());
-            code= fixExtensions(code);
+            StringBuilder extensions = new StringBuilder();
+            String code = resolveDependencies(rootNode, new HashSet<ShaderDependencyNode>(), extensions);
+            extensions.append(code);
             dependCache.clear();
-            return code;
+            return extensions.toString();
         }
     }
 }

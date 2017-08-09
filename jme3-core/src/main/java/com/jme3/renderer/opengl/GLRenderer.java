@@ -32,6 +32,7 @@
 package com.jme3.renderer.opengl;
 
 import com.jme3.material.RenderState;
+import com.jme3.material.RenderState.BlendFunc;
 import com.jme3.material.RenderState.StencilOperation;
 import com.jme3.material.RenderState.TestFunction;
 import com.jme3.math.*;
@@ -179,38 +180,38 @@ public final class GLRenderer implements Renderer {
             caps.add(Caps.OpenGL20);
             if (oglVer >= 210) {
                 caps.add(Caps.OpenGL21);
-                if (oglVer >= 300) {
-                    caps.add(Caps.OpenGL30);
-                    if (oglVer >= 310) {
-                        caps.add(Caps.OpenGL31);
-                        if (oglVer >= 320) {
-                            caps.add(Caps.OpenGL32);
-                        }
-                        if (oglVer >= 330) {
-                            caps.add(Caps.OpenGL33);
-                            caps.add(Caps.GeometryShader);
-                        }
-                        if (oglVer >= 400) {
-                            caps.add(Caps.OpenGL40);
-                            caps.add(Caps.TesselationShader);
-                        }
-                        if (oglVer >= 410) {
-                            caps.add(Caps.OpenGL41);
-                        }
-                        if (oglVer >= 420) {
-                            caps.add(Caps.OpenGL42);
-                        }
-                        if (oglVer >= 430) {
-                            caps.add(Caps.OpenGL43);
-                        }
-                        if (oglVer >= 440) {
-                            caps.add(Caps.OpenGL44);
-                        }
-                        if (oglVer >= 450) {
-                            caps.add(Caps.OpenGL45);
-                        }
-                    }
-                }
+            }
+            if (oglVer >= 300) {
+                caps.add(Caps.OpenGL30);
+            }
+            if (oglVer >= 310) {
+                caps.add(Caps.OpenGL31);
+            }
+            if (oglVer >= 320) {
+                caps.add(Caps.OpenGL32);
+            }
+            if (oglVer >= 330) {
+                caps.add(Caps.OpenGL33);
+                caps.add(Caps.GeometryShader);
+            }
+            if (oglVer >= 400) {
+                caps.add(Caps.OpenGL40);
+                caps.add(Caps.TesselationShader);
+            }
+            if (oglVer >= 410) {
+                caps.add(Caps.OpenGL41);
+            }
+            if (oglVer >= 420) {
+                caps.add(Caps.OpenGL42);
+            }
+            if (oglVer >= 430) {
+                caps.add(Caps.OpenGL43);
+            }
+            if (oglVer >= 440) {
+                caps.add(Caps.OpenGL44);
+            }
+            if (oglVer >= 450) {
+                caps.add(Caps.OpenGL45);
             }
         }
 
@@ -323,6 +324,10 @@ public final class GLRenderer implements Renderer {
         if (hasFloatTexture) {
             caps.add(Caps.FloatTexture);
         }
+        
+        // integer texture format extensions
+        if(hasExtension("GL_EXT_texture_integer") || caps.contains(Caps.OpenGL30))
+            caps.add(Caps.IntegerTexture);
 
         if (hasExtension("GL_OES_depth_texture") || gl2 != null) {
             caps.add(Caps.DepthTexture);
@@ -773,6 +778,13 @@ public final class GLRenderer implements Renderer {
                     case Exclusion:
                         gl.glBlendFunc(GL.GL_ONE_MINUS_DST_COLOR, GL.GL_ONE_MINUS_SRC_COLOR);
                         break;
+                    case Custom:
+                        gl.glBlendFuncSeparate(
+                            convertBlendFunc(state.getCustomSfactorRGB()),
+                            convertBlendFunc(state.getCustomDfactorRGB()),
+                            convertBlendFunc(state.getCustomSfactorAlpha()),
+                            convertBlendFunc(state.getCustomDfactorAlpha()));
+                        break;
                     default:
                         throw new UnsupportedOperationException("Unrecognized blend mode: "
                                 + state.getBlendMode());
@@ -873,6 +885,35 @@ public final class GLRenderer implements Renderer {
             default:
                 throw new UnsupportedOperationException("Unrecognized alpha blend operation: " + blendEquationAlpha);
         }
+    }
+    
+    private int convertBlendFunc(BlendFunc blendFunc) {
+        switch (blendFunc) {
+            case Zero:
+                return GL.GL_ZERO;
+            case One:
+                return GL.GL_ONE;
+            case Src_Color:
+                return GL.GL_SRC_COLOR;
+            case One_Minus_Src_Color:
+                return GL.GL_ONE_MINUS_SRC_COLOR;
+            case Dst_Color:
+                return GL.GL_DST_COLOR;
+            case One_Minus_Dst_Color:
+                return GL.GL_ONE_MINUS_DST_COLOR;
+            case Src_Alpha:
+                return GL.GL_SRC_ALPHA;
+            case One_Minus_Src_Alpha:
+                return GL.GL_ONE_MINUS_SRC_ALPHA;
+            case Dst_Alpha:
+                return GL.GL_DST_ALPHA;
+            case One_Minus_Dst_Alpha:
+                return GL.GL_ONE_MINUS_DST_ALPHA;
+            case Src_Alpha_Saturate:        
+                return GL.GL_SRC_ALPHA_SATURATE;
+            default:
+                throw new UnsupportedOperationException("Unrecognized blend function operation: " + blendFunc);
+         }
     }
 
     private int convertStencilOperation(StencilOperation stencilOp) {
@@ -2834,5 +2875,32 @@ public final class GLRenderer implements Renderer {
         if (caps.contains(Caps.Srgb)) {
             linearizeSrgbImages = linearize;
         }
+    }
+
+    @Override
+    public int[] generateProfilingTasks(int numTasks) {
+        IntBuffer ids = BufferUtils.createIntBuffer(numTasks);
+        gl.glGenQueries(numTasks, ids);
+        return BufferUtils.getIntArray(ids);
+    }
+
+    @Override
+    public void startProfiling(int taskId) {
+        gl.glBeginQuery(GL.GL_TIME_ELAPSED, taskId);
+    }
+
+    @Override
+    public void stopProfiling() {
+        gl.glEndQuery(GL.GL_TIME_ELAPSED);
+    }
+
+    @Override
+    public long getProfilingTime(int taskId) {
+        return gl.glGetQueryObjectui64(taskId, GL.GL_QUERY_RESULT);
+    }
+
+    @Override
+    public boolean isTaskResultAvailable(int taskId) {
+        return gl.glGetQueryObjectiv(taskId, GL.GL_QUERY_RESULT_AVAILABLE) == 1;
     }
 }
