@@ -82,18 +82,25 @@ model {
             } else{
                 cppCompiler.args '-I', "$javaHome/include"
             }
+            
+            cppCompiler.args "-O2"
+            cppCompiler.args "-DBT_NO_PROFILE=1"
+            cppCompiler.args "-fmessage-length=0"
+            cppCompiler.args "-fpermissive"
+            cppCompiler.args "-fno-strict-aliasing"
+            cppCompiler.args "-fPIC"
+            cppCompiler.args "-Wall"
+            cppCompiler.args "-fno-rtti"
 
             if (os == "osx") {
                 cppCompiler.args '-I', "$javaHome/include/darwin"
-                cppCompiler.args "-Ofast"
-                cppCompiler.args "-U_FORTIFY_SOURCE"
+                cppCompiler.args "-mmacosx-version-min=10.5"
+                cppCompiler.args "-DFIXED_POINT"            
             } else if (os == "linux") {
                 cppCompiler.args "-fvisibility=hidden"
                 cppCompiler.args '-I', "$javaHome/include/linux"
-                cppCompiler.args "-fPIC"
-                cppCompiler.args "-Ofast"
-                cppCompiler.args "-U_FORTIFY_SOURCE"
-                cppCompiler.args "-fpermissive"
+                cppCompiler.args "-mfpmath=sse"
+                cppCompiler.args "-msse"
                 linker.args "-fvisibility=hidden"
             } else if (os == "windows") {
                 if (toolChain in Gcc) {
@@ -102,10 +109,9 @@ model {
                     } else {
                         cppCompiler.args '-I', "$javaHome/include/win32"
                     }
-                    cppCompiler.args "-fpermissive"
+                    cppCompiler.args "-mfpmath=sse"
+                    cppCompiler.args "-msse"
                     cppCompiler.args "-static"
-                    cppCompiler.args "-Ofast"
-                    cppCompiler.args "-U_FORTIFY_SOURCE"
                     linker.args "-static"
                     linker.args "-Wl,--exclude-all-symbols"
                 }
