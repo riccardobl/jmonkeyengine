@@ -12,7 +12,7 @@ matrix:
     jdk: oraclejdk8
     env: UPLOAD=true UPLOAD_NATIVE=true
   - os: linux
-    jdk: openjdk7
+    jdk: oraclejdk7
   - os: osx
     env: UPLOAD_NATIVE=true
 
