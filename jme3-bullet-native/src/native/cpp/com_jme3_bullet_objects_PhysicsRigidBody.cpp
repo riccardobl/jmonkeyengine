@@ -90,8 +90,11 @@ extern "C" {
             return;
         }
         //        if (body->isStaticOrKinematicObject() || !body->isInWorld())
-        ((jmeMotionState*) body->getMotionState())->setKinematicLocation(env, value);
-        body->setCenterOfMassTransform(((jmeMotionState*) body->getMotionState())->worldTransform);
+        if(body->isKinematicObject()) ((jmeMotionState*) body->getMotionState())->setKinematicLocation(env, value);
+        else {
+            ((jmeMotionState*)body->getMotionState())->setKinematicLocation(env, value);
+            body->setCenterOfMassTransform(((jmeMotionState*) body->getMotionState())->worldTransform);
+        }
         //        else{
         //            btMatrix3x3* mtx = &btMatrix3x3();
         //            btTransform* trans = &btTransform(*mtx);
@@ -115,8 +118,11 @@ extern "C" {
             return;
         }
         //        if (body->isStaticOrKinematicObject() || !body->isInWorld())
-        ((jmeMotionState*) body->getMotionState())->setKinematicRotation(env, value);
-        body->setCenterOfMassTransform(((jmeMotionState*) body->getMotionState())->worldTransform);
+        if(body->isKinematicObject())  ((jmeMotionState*) body->getMotionState())->setKinematicRotation(env, value);
+        else{        
+            ((jmeMotionState*) body->getMotionState())->setKinematicRotation(env, value);
+            body->setCenterOfMassTransform(((jmeMotionState*) body->getMotionState())->worldTransform);
+        }
         //        else{
         //            btMatrix3x3* mtx = &btMatrix3x3();
         //            btTransform* trans = &btTransform(*mtx);
@@ -140,8 +146,11 @@ extern "C" {
             return;
         }
         //        if (body->isStaticOrKinematicObject() || !body->isInWorld())
-        ((jmeMotionState*) body->getMotionState())->setKinematicRotationQuat(env, value);
-        body->setCenterOfMassTransform(((jmeMotionState*) body->getMotionState())->worldTransform);
+        if(body->isKinematicObject())   ((jmeMotionState*) body->getMotionState())->setKinematicRotationQuat(env, value);
+        else{
+            ((jmeMotionState*) body->getMotionState())->setKinematicRotationQuat(env, value);
+            body->setCenterOfMassTransform(((jmeMotionState*) body->getMotionState())->worldTransform);
+        }
         //        else{
         //            btMatrix3x3* mtx = &btMatrix3x3();
         //            btTransform* trans = &btTransform(*mtx);
