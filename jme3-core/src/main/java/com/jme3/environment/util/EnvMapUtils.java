@@ -433,7 +433,7 @@ public class EnvMapUtils {
 
     public static float getRoughnessFromMip(int miplevel, int miptot) {
         float mipScale = 1.0f;
-        float mipOffset = -0.3f;
+        float mipOffset = -0.5f;
 
         return pow(2, (miplevel - (miptot - 1) + mipOffset) / mipScale);
     }
@@ -608,7 +608,7 @@ public class EnvMapUtils {
         }
 
         for (int i = 0; i < 6; i++) {
-            ByteBuffer buf = BufferUtils.createByteBuffer(targetMapSize * targetMapSize * irrCubeMap.getImage().getFormat().getBitsPerPixel()/8);
+            ByteBuffer buf = BufferUtils.createByteBuffer(targetMapSize * targetMapSize * store.getImage().getFormat().getBitsPerPixel()/8);
             irrCubeMap.getImage().setData(i, buf);
         }
 

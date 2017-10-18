@@ -16,7 +16,7 @@ import java.lang.annotation.RetentionPolicy;
  * Such a field can be declared as:
  *
  * <pre><code>
- *   private @Nullable @Dependent(result=NonNull.class, when=ThreadSafe.class)
+ *   private  @Dependent(result=NonNull.class, when=ThreadSafe.class)
  *     Lock lock;
  * </code></pre>
  */
