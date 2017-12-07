@@ -140,7 +140,7 @@ JNIEXPORT void JNICALL Java_com_jme3_bullet_objects_PhysicsCharacter_setJumpSpee
 /*
  * Class:     com_jme3_bullet_objects_PhysicsCharacter
  * Method:    setGravity
- * Signature:  (JLcom/jme3/math/Vector3f;)V
+ * Signature: (JLcom/jme3/math/Vector3f;)V
  */
 JNIEXPORT void JNICALL Java_com_jme3_bullet_objects_PhysicsCharacter_setGravity
   (JNIEnv *, jobject, jlong, jobject);
@@ -232,24 +232,6 @@ JNIEXPORT void JNICALL Java_com_jme3_bullet_objects_PhysicsCharacter_setMaxSlope
  */
 JNIEXPORT jfloat JNICALL Java_com_jme3_bullet_objects_PhysicsCharacter_getMaxSlope
   (JNIEnv *, jobject, jlong);
-
-
-/*
-  * Class:     com_jme3_bullet_objects_PhysicsCharacter
-  * Method:    setMaxPenetrationDepth
-  * Signature: (JF)V
-  */
-  JNIEXPORT void JNICALL Java_com_jme3_bullet_objects_PhysicsCharacter_setMaxPenetrationDepth
-    (JNIEnv *, jobject , jlong , jfloat );
-
-
-/*
-  * Class:     com_jme3_bullet_objects_PhysicsCharacter
-  * Method:    getMaxPenetrationDepth
-  * Signature: (J)F
-  */
-JNIEXPORT jfloat JNICALL Java_com_jme3_bullet_objects_PhysicsCharacter_getMaxPenetrationDepth
-    (JNIEnv *, jobject , jlong );
 
 /*
  * Class:     com_jme3_bullet_objects_PhysicsCharacter

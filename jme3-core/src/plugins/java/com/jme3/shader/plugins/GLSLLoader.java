@@ -36,8 +36,6 @@ import com.jme3.asset.cache.AssetCache;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * GLSL File parser that supports #import pre-processor statement
@@ -74,19 +72,20 @@ public class GLSLLoader implements AssetLoader {
      */
     private ShaderDependencyNode loadNode(Reader reader, String nodeName) {
 
-        boolean isMainNode=nodeName.equals("[main]");
-
+        ShaderDependencyNode node = new ShaderDependencyNode(nodeName);
         StringBuilder sb = new StringBuilder();
         StringBuilder sbExt = new StringBuilder();
 
         try (final BufferedReader bufferedReader = new BufferedReader(reader)) {
 
             String ln;
-            if (!isMainNode) sb.append("// -- begin import ").append(nodeName).append(" --\n");
-            
-            while ((ln = bufReader.readLine()) != null) {
-            	String tl=ln.trim();
-            	if (tl.startsWith("#import ")||tl.startsWith("#include ")) {
+
+            if (!nodeName.equals("[main]")) {
+                sb.append("// -- begin import ").append(nodeName).append(" --\n");
+            }
+
+            while ((ln = bufferedReader.readLine()) != null) {
+                if (ln.trim().startsWith("#import ")) {
                     ln = ln.trim().substring(8).trim();
                     if (ln.startsWith("\"") && ln.endsWith("\"") && ln.length() > 3) {
                         // import user code
@@ -112,16 +111,13 @@ public class GLSLLoader implements AssetLoader {
                     sb.append(ln).append('\n');
                 }
             }
-            if (!isMainNode) sb.append("// -- end import ").append(nodeName).append(" --\n");
-        } catch (IOException ex) {
-            if (bufReader != null) {
-                try {
-                    bufReader.close();
-                } catch (IOException ex1) {
-                }
+            if (!nodeName.equals("[main]")) {
+                sb.append("// -- end import ").append(nodeName).append(" --\n");
             }
+        } catch (final IOException ex) {
             throw new AssetLoadException("Failed to load shader node: " + nodeName, ex);
         }
+
         node.setSource(sb.toString());
         node.setExtensions(sbExt.toString());
         dependCache.put(nodeName, node);
@@ -185,30 +181,21 @@ public class GLSLLoader implements AssetLoader {
         }
     }
 
-    // // Some drivers want the extensions to be before the code.
-    // private String fixExtensions(String src){
-    // 	StringBuilder extensions = new StringBuilder();
-    // 	StringBuilder code = new StringBuilder();
-    // 	StringTokenizer st = new StringTokenizer(src,"\n");
-    // 	while(st.hasMoreTokens()){
-    // 		String line = st.nextToken();
-    // 		if(line.trim().startsWith("#extension ")) extensions.append(line).append("\n");
-    // 		else code.append(line).append("\n");
-    //    	}   
-    // 	return extensions.toString()+code.toString();
-    // }
-    
+    @Override
     public Object load(AssetInfo info) throws IOException {
         // The input stream provided is for the vertex shader,
         // to retrieve the fragment shader, use the content manager
         this.assetManager = info.getManager();
         Reader reader = new InputStreamReader(info.openStream());
-        if (info.getKey() instanceof ShaderDependencyKey) {
+        boolean injectDependencies = true;
+        if (info.getKey() instanceof ShaderAssetKey) {
+            injectDependencies = ((ShaderAssetKey) info.getKey()).isInjectDependencies();
+        }
+        if (info.getKey().getExtension().equals("glsllib")) {
             // NOTE: Loopback, GLSLLIB is loaded by this loader
             // and needs data as InputStream
             return reader;
         } else {
-        	
             ShaderDependencyNode rootNode = loadNode(reader, "[main]");
             StringBuilder extensions = new StringBuilder();
             if (injectDependencies) {
