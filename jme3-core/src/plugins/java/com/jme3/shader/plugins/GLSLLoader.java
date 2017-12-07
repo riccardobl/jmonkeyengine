@@ -31,16 +31,10 @@
  */
 package com.jme3.shader.plugins;
 
-import com.jme3.asset.AssetInfo;
-import com.jme3.asset.AssetKey;
-import com.jme3.asset.AssetLoadException;
-import com.jme3.asset.AssetLoader;
-import com.jme3.asset.AssetManager;
+import com.jme3.asset.*;
 import com.jme3.asset.cache.AssetCache;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +45,7 @@ import java.util.regex.Pattern;
 public class GLSLLoader implements AssetLoader {
 
     private AssetManager assetManager;
-    private Map<String, ShaderDependencyNode> dependCache = new HashMap<String, ShaderDependencyNode>();
+    private Map<String, ShaderDependencyNode> dependCache = new HashMap<>();
 
     /**
      * Used to load {@link ShaderDependencyNode}s.
@@ -72,22 +66,21 @@ public class GLSLLoader implements AssetLoader {
 
     /**
      * Creates a {@link ShaderDependencyNode} from a stream representing shader code.
-     * 
-     * @param in The input stream containing shader code
-     * @param nodeName
-     * @return
-     * @throws IOException 
+     *
+     * @param reader   the reader with shader code
+     * @param nodeName the node name.
+     * @return the shader dependency node
+     * @throws AssetLoadException if we failed to load the shader code.
      */
     private ShaderDependencyNode loadNode(Reader reader, String nodeName) {
-        ShaderDependencyNode node = new ShaderDependencyNode(nodeName);
 
         boolean isMainNode=nodeName.equals("[main]");
 
         StringBuilder sb = new StringBuilder();
         StringBuilder sbExt = new StringBuilder();
-        BufferedReader bufReader = null;
-        try {
-            bufReader = new BufferedReader(reader);
+
+        try (final BufferedReader bufferedReader = new BufferedReader(reader)) {
+
             String ln;
             if (!isMainNode) sb.append("// -- begin import ").append(nodeName).append(" --\n");
             
@@ -137,11 +130,11 @@ public class GLSLLoader implements AssetLoader {
 
     private ShaderDependencyNode nextIndependentNode() throws IOException {
         Collection<ShaderDependencyNode> allNodes = dependCache.values();
-        
-        if (allNodes == null || allNodes.isEmpty()) {
+
+        if (allNodes.isEmpty()) {
             return null;
         }
-        
+
         for (ShaderDependencyNode node : allNodes) {
             if (node.getDependOnMe().isEmpty()) {
                 return node;
@@ -152,11 +145,11 @@ public class GLSLLoader implements AssetLoader {
         for (ShaderDependencyNode node : allNodes){
             System.out.println(node.getName());
         }
-        
+
         throw new IOException("Circular dependency.");
     }
 
-    private String resolveDependencies(ShaderDependencyNode node, Set<ShaderDependencyNode> alreadyInjectedSet, StringBuilder extensions) {
+    private String resolveDependencies(ShaderDependencyNode node, Set<ShaderDependencyNode> alreadyInjectedSet, StringBuilder extensions, boolean injectDependencies) {
         if (alreadyInjectedSet.contains(node)) {
             return "// " + node.getName() + " was already injected at the top.\n";
         } else {
@@ -168,18 +161,27 @@ public class GLSLLoader implements AssetLoader {
         if (node.getDependencies().isEmpty()) {
             return node.getSource();
         } else {
-            StringBuilder sb = new StringBuilder(node.getSource());
-            List<String> resolvedShaderNodes = new ArrayList<String>();
+            if (injectDependencies) {
+                StringBuilder sb = new StringBuilder(node.getSource());
+                List<String> resolvedShaderNodes = new ArrayList<>();
 
-            for (ShaderDependencyNode dependencyNode : node.getDependencies()) {
-                resolvedShaderNodes.add(resolveDependencies(dependencyNode, alreadyInjectedSet, extensions));
+                for (ShaderDependencyNode dependencyNode : node.getDependencies()) {
+                    resolvedShaderNodes.add(resolveDependencies(dependencyNode, alreadyInjectedSet, extensions, injectDependencies));
+                }
+
+                List<Integer> injectIndices = node.getDependencyInjectIndices();
+                for (int i = resolvedShaderNodes.size() - 1; i >= 0; i--) {
+                    // Must insert them backwards ..
+                    sb.insert(injectIndices.get(i), resolvedShaderNodes.get(i));
+                }
+                return sb.toString();
+            } else {
+                for (ShaderDependencyNode dependencyNode : node.getDependencies()) {
+                    resolveDependencies(dependencyNode, alreadyInjectedSet, extensions, injectDependencies);
+                }
+                return null;
             }
-            List<Integer> injectIndices = node.getDependencyInjectIndices();
-            for (int i = resolvedShaderNodes.size() - 1; i >= 0; i--) {
-                // Must insert them backwards ..
-                sb.insert(injectIndices.get(i), resolvedShaderNodes.get(i));
-            }
-            return sb.toString();
+
         }
     }
 
@@ -197,7 +199,7 @@ public class GLSLLoader implements AssetLoader {
     // }
     
     public Object load(AssetInfo info) throws IOException {
-        // The input stream provided is for the vertex shader, 
+        // The input stream provided is for the vertex shader,
         // to retrieve the fragment shader, use the content manager
         this.assetManager = info.getManager();
         Reader reader = new InputStreamReader(info.openStream());
@@ -209,10 +211,25 @@ public class GLSLLoader implements AssetLoader {
         	
             ShaderDependencyNode rootNode = loadNode(reader, "[main]");
             StringBuilder extensions = new StringBuilder();
-            String code = resolveDependencies(rootNode, new HashSet<ShaderDependencyNode>(), extensions);
-            extensions.append(code);
-            dependCache.clear();
-            return extensions.toString();
+            if (injectDependencies) {
+                String code = resolveDependencies(rootNode, new HashSet<ShaderDependencyNode>(), extensions, injectDependencies);
+                extensions.append(code);
+                dependCache.clear();
+                return extensions.toString();
+            } else {
+                Map<String, String> files = new LinkedHashMap<>();
+                HashSet<ShaderDependencyNode> dependencies = new HashSet<>();
+                String code = resolveDependencies(rootNode, dependencies, extensions, injectDependencies);
+                extensions.append(code);
+                files.put("[main]", extensions.toString());
+
+                for (ShaderDependencyNode dependency : dependencies) {
+                    files.put(dependency.getName(), dependency.getSource());
+                }
+
+                dependCache.clear();
+                return files;
+            }
         }
     }
 }
