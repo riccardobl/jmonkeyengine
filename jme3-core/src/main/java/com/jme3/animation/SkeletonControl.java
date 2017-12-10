@@ -32,7 +32,8 @@
 package com.jme3.animation;
 
 import com.jme3.export.*;
-import com.jme3.material.MatParamOverride;
+import com.jme3.material.MatParam;
+import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix4f;
 import com.jme3.renderer.RenderManager;
@@ -42,7 +43,6 @@ import com.jme3.scene.*;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
-import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.shader.VarType;
 import com.jme3.util.*;
 import com.jme3.util.clone.Cloner;
@@ -51,6 +51,8 @@ import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -105,11 +107,13 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
      * Bone offset matrices, recreated each frame
      */
     private transient Matrix4f[] offsetMatrices;
+    /**
+     * Material references used for hardware skinning
+     */
+    private Set<Material> materials = new HashSet<Material>();
 
-    
-    private MatParamOverride numberOfBonesParam;
-    private MatParamOverride boneMatricesParam;
-    
+    //temp reader
+    private BufferUtils.ByteShortIntBufferReader indexReader = new BufferUtils.ByteShortIntBufferReader();
     /**
      * Serialization only. Do not use.
      */
@@ -117,13 +121,11 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
     }
 
     private void switchToHardware() {
-        numberOfBonesParam.setEnabled(true);
-        boneMatricesParam.setEnabled(true);
-        
         // Next full 10 bones (e.g. 30 on 24 bones)
         int numBones = ((skeleton.getBoneCount() / 10) + 1) * 10;
-        numberOfBonesParam.setValue(numBones);
-        
+        for (Material m : materials) {
+            m.setInt("NumberOfBones", numBones);
+        }
         for (Geometry geometry : targets) {
             Mesh mesh = geometry.getMesh();
             if (mesh != null && mesh.isAnimated()) {
@@ -133,9 +135,11 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
     }
 
     private void switchToSoftware() {
-        numberOfBonesParam.setEnabled(false);
-        boneMatricesParam.setEnabled(false);
-        
+        for (Material m : materials) {
+            if (m.getParam("NumberOfBones") != null) {
+                m.clearParam("NumberOfBones");
+            }
+        }
         for (Geometry geometry : targets) {
             Mesh mesh = geometry.getMesh();
             if (mesh != null && mesh.isAnimated()) {
@@ -145,6 +149,19 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
     }
 
     private boolean testHardwareSupported(RenderManager rm) {
+        for (Material m : materials) {
+            // Some of the animated mesh(es) do not support hardware skinning,
+            // so it is not supported by the model.
+            if (m.getMaterialDef().getMaterialParam("NumberOfBones") == null) {
+                Logger.getLogger(SkeletonControl.class.getName()).log(Level.WARNING, 
+                        "Not using hardware skinning for {0}, " + 
+                        "because material {1} doesn''t support it.", 
+                        new Object[]{spatial, m.getMaterialDef().getName()});
+                
+                return false;
+            }
+        }
+
         switchToHardware();
         
         try {
@@ -161,7 +178,6 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
      * supported by GPU, it shall be enabled, if its not preferred, or not
      * supported by GPU, then it shall be disabled.
      * 
-     * @param preferred
      * @see #isHardwareSkinningUsed() 
      */
     public void setHardwareSkinningPreferred(boolean preferred) {
@@ -196,8 +212,6 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
             throw new IllegalArgumentException("skeleton cannot be null");
         }
         this.skeleton = skeleton;
-        this.numberOfBonesParam = new MatParamOverride(VarType.Int, "NumberOfBones", null);
-        this.boneMatricesParam = new MatParamOverride(VarType.Matrix4Array, "BoneMatrices", null);
     }
 
     /**
@@ -208,8 +222,8 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
         Mesh mesh = geometry.getMesh();
         if (mesh != null && mesh.isAnimated()) {
             targets.add(geometry);
+            materials.add(geometry.getMaterial());
         }
-        
     }
 
     private void findTargets(Node node) {
@@ -224,21 +238,8 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
 
     @Override
     public void setSpatial(Spatial spatial) {
-        Spatial oldSpatial = this.spatial;
         super.setSpatial(spatial);
         updateTargetsAndMaterials(spatial);
-        
-        if (oldSpatial != null) {
-            oldSpatial.removeMatParamOverride(numberOfBonesParam);
-            oldSpatial.removeMatParamOverride(boneMatricesParam);
-        }
-        
-        if (spatial != null) {
-            spatial.removeMatParamOverride(numberOfBonesParam);
-            spatial.removeMatParamOverride(boneMatricesParam);
-            spatial.addMatParamOverride(numberOfBonesParam);
-            spatial.addMatParamOverride(boneMatricesParam);
-        }
     }
 
     private void controlRenderSoftware() {
@@ -257,8 +258,27 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
     
     private void controlRenderHardware() {
         offsetMatrices = skeleton.computeSkinningMatrices();
-        boneMatricesParam.setValue(offsetMatrices);
+        for (Material m : materials) {
+            MatParam currentParam = m.getParam("BoneMatrices");
+
+            if (currentParam != null) {
+                if (currentParam.getValue() != offsetMatrices) {
+                    // Check to see if other SkeletonControl
+                    // is operating on this material, in that case, user
+                    // is sharing materials between models which is NOT allowed
+                    // when hardware skinning used.
+                    
+                    Logger.getLogger(SkeletonControl.class.getName()).log(Level.SEVERE,
+                            "Material instances cannot be shared when hardware skinning is used. " +
+                            "Ensure all models use unique material instances."
+                    );
+                }
+            }
+            
+            m.setParam("BoneMatrices", VarType.Matrix4Array, offsetMatrices);
+        }
     }
+
     
     @Override
     protected void controlRender(RenderManager rm, ViewPort vp) {
@@ -276,7 +296,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
                 if (hwSkinningSupported) {
                     hwSkinningEnabled = true;
                     
-                    Logger.getLogger(SkeletonControl.class.getName()).log(Level.INFO, "Hardware skinning engaged for {0}", spatial);
+                    Logger.getLogger(SkeletonControl.class.getName()).log(Level.INFO, "Hardware skinning engaged for " + spatial);
                 } else {
                     switchToSoftware();
                 }
@@ -400,8 +420,28 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
         // were shared then this will share them.
         this.targets = cloner.clone(targets);
         
-        this.numberOfBonesParam = cloner.clone(numberOfBonesParam);
-        this.boneMatricesParam = cloner.clone(boneMatricesParam);
+        // Not automatic set cloning yet
+        Set<Material> newMaterials = new HashSet<Material>();
+        for( Material m : this.materials ) {
+            Material mClone = cloner.clone(m);
+            newMaterials.add(mClone);
+            if( mClone != m ) {
+                // Material was really cloned so clear the bone matrices in case
+                // this is hardware skinned.  This allows a local version to be
+                // used and will be reset on the material.  Really this just avoids
+                // the 'safety' check in controlRenderHardware().  Right now material
+                // doesn't clone itself with the cloner (and doesn't clone its parameters)
+                // else this would be unnecessary.
+                MatParam boneMatrices = mClone.getParam("BoneMatrices");
+                
+                // ...because for some strange reason you can't clear a non-existant 
+                // parameter.
+                if( boneMatrices != null ) {                    
+                    mClone.clearParam("BoneMatrices");
+                }
+            }
+        }
+        this.materials = newMaterials;
     }
          
     /**
@@ -507,9 +547,10 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
         fnb.rewind();
 
         // get boneIndexes and weights for mesh
-        IndexBuffer ib = IndexBuffer.wrapIndexBuffer(mesh.getBuffer(Type.BoneIndex).getData());
+        indexReader.setBuffer(mesh.getBuffer(Type.BoneIndex).getData());
         FloatBuffer wb = (FloatBuffer) mesh.getBuffer(Type.BoneWeight).getData();
 
+        indexReader.rewind();
         wb.rewind();
 
         float[] weights = wb.array();
@@ -550,7 +591,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
 
                 for (int w = maxWeightsPerVert - 1; w >= 0; w--) {
                     float weight = weights[idxWeights];
-                    Matrix4f mat = offsetMatrices[ib.get(idxWeights++)];
+                    Matrix4f mat = offsetMatrices[indexReader.getUnsigned(idxWeights++)];
 
                     rx += (mat.m00 * vtx + mat.m01 * vty + mat.m02 * vtz + mat.m03) * weight;
                     ry += (mat.m10 * vtx + mat.m11 * vty + mat.m12 * vtz + mat.m13) * weight;
@@ -623,9 +664,10 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
 
 
         // get boneIndexes and weights for mesh
-        IndexBuffer ib = IndexBuffer.wrapIndexBuffer(mesh.getBuffer(Type.BoneIndex).getData());
+        indexReader.setBuffer(mesh.getBuffer(Type.BoneIndex).getData());
         FloatBuffer wb = (FloatBuffer) mesh.getBuffer(Type.BoneWeight).getData();
 
+        indexReader.rewind();
         wb.rewind();
 
         float[] weights = wb.array();
@@ -681,7 +723,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
 
                 for (int w = maxWeightsPerVert - 1; w >= 0; w--) {
                     float weight = weights[idxWeights];
-                    Matrix4f mat = offsetMatrices[ib.get(idxWeights++)];
+                    Matrix4f mat = offsetMatrices[indexReader.getUnsigned(idxWeights++)];
 
                     rx += (mat.m00 * vtx + mat.m01 * vty + mat.m02 * vtz + mat.m03) * weight;
                     ry += (mat.m10 * vtx + mat.m11 * vty + mat.m12 * vtz + mat.m13) * weight;
@@ -739,9 +781,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
         super.write(ex);
         OutputCapsule oc = ex.getCapsule(this);
         oc.write(skeleton, "skeleton", null);
-        
-        oc.write(numberOfBonesParam, "numberOfBonesParam", null);
-        oc.write(boneMatricesParam, "boneMatricesParam", null);
+        //Targets and materials don't need to be saved, they'll be gathered on each frame
     }
 
     @Override
@@ -749,16 +789,6 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
         super.read(im);
         InputCapsule in = im.getCapsule(this);
         skeleton = (Skeleton) in.readSavable("skeleton", null);
-        
-        numberOfBonesParam = (MatParamOverride) in.readSavable("numberOfBonesParam", null);
-        boneMatricesParam = (MatParamOverride) in.readSavable("boneMatricesParam", null);
-        
-        if (numberOfBonesParam == null) {
-            numberOfBonesParam = new MatParamOverride(VarType.Int, "NumberOfBones", null);
-            boneMatricesParam = new MatParamOverride(VarType.Matrix4Array, "BoneMatrices", null);
-            getSpatial().addMatParamOverride(numberOfBonesParam);
-            getSpatial().addMatParamOverride(boneMatricesParam);
-        }
     }
 
     /**
@@ -768,6 +798,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
      */
     private void updateTargetsAndMaterials(Spatial spatial) {
         targets.clear();
+        materials.clear();
 
         if (spatial instanceof Node) {
             findTargets((Node) spatial);
