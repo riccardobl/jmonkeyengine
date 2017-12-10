@@ -47,12 +47,7 @@ public class IndexByteBuffer extends IndexBuffer {
         buf = buffer;
         buf.rewind();
     }
-
-    @Override
-    public int get() {
-        return buf.get() & 0x000000FF;
-    }
-
+    
     @Override
     public int get(int i) {
         return buf.get(i) & 0x000000FF;
