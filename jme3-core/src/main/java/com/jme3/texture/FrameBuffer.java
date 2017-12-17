@@ -493,6 +493,21 @@ public class FrameBuffer extends NativeObject {
         depthBuf.format = img.getFormat();
         depthBuf.layer = layer;
     }
+
+    public void setDepthTexture(TextureCubeMap tex, TextureCubeMap.Face face) {
+        if (id != -1)
+            throw new UnsupportedOperationException("FrameBuffer already initialized.");
+
+        Image img = tex.getImage();
+        checkSetTexture(tex, true);
+
+        depthBuf = new RenderBuffer();
+        depthBuf.slot =  img.getFormat().isDepthStencilFormat() ?  SLOT_DEPTH_STENCIL : SLOT_DEPTH;
+        depthBuf.tex = tex;
+        depthBuf.format = img.getFormat();
+        depthBuf.face = face.ordinal();
+    }
+
     
     /**
      * @return The number of color buffers attached to this texture. 
