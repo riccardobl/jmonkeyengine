@@ -66,7 +66,7 @@ import java.util.List;
 public class ViewPort {
 
     protected final String name;
-    protected final Camera cam;
+    protected Camera cam;
     protected final RenderQueue queue = new RenderQueue();
     protected final SafeArrayList<Spatial> sceneList = new SafeArrayList<Spatial>(Spatial.class);
     protected final SafeArrayList<SceneProcessor> processors = new SafeArrayList<SceneProcessor>(SceneProcessor.class);
@@ -91,6 +91,11 @@ public class ViewPort {
     public ViewPort(String name, Camera cam) {
         this.name = name;
         this.cam = cam;
+    }
+
+
+    public void setCamera(Camera cam){
+        this.cam=cam;
     }
 
     /**
