@@ -36,20 +36,19 @@ import com.jme3.material.MatParam;
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
 import com.jme3.math.Matrix4f;
-import com.jme3.renderer.RenderManager;
-import com.jme3.renderer.RendererException;
-import com.jme3.renderer.ViewPort;
+import com.jme3.renderer.*;
 import com.jme3.scene.*;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 import com.jme3.shader.VarType;
-import com.jme3.util.*;
+import com.jme3.util.SafeArrayList;
+import com.jme3.util.TempVars;
 import com.jme3.util.clone.Cloner;
 import com.jme3.util.clone.JmeCloneable;
+
 import java.io.IOException;
 import java.nio.Buffer;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.HashSet;
 import java.util.Set;
@@ -149,6 +148,9 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
     }
 
     private boolean testHardwareSupported(RenderManager rm) {
+        if (skeleton.getBoneCount() > 255) {
+            return false;
+        }
         for (Material m : materials) {
             // Some of the animated mesh(es) do not support hardware skinning,
             // so it is not supported by the model.
