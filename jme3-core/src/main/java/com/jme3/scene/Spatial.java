@@ -1467,7 +1467,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         clone.setTransformRefresh();
         clone.setLightListRefresh();
         clone.setMatParamOverrideRefresh();
-
+        
         return clone;
     }
 
@@ -1501,7 +1501,12 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         this.worldOverrides = cloner.clone(worldOverrides);
         this.localOverrides = cloner.clone(localOverrides);
         this.controls = cloner.clone(controls);
-
+        
+        // HOTFIX #797
+        for(Control c: this.controls  ){
+            c.setSpatial(null);
+            c.setSpatial(this);
+        }
         // Cloner doesn't handle maps on its own just yet.
         // Note: this is more advanced cloning than the old clone() method
         // did because it just shallow cloned the map.  In this case, we want

@@ -131,31 +131,37 @@ task configureVersionInfo {
             }
         }
 
-        def releaseInfo = getReleaseInfo(jmeGitTag)
-        if (releaseInfo != null) {
-            jmeFullVersion = "${releaseInfo.baseVersion}${releaseInfo.releaseSuffix}"
-            jmePomVersion = "${releaseInfo.mainVersion}${releaseInfo.releaseSuffix}"
-        } else {
-            // SNAPSHOT
-            jmeFullVersion = jmeMainVersion
-            jmePomVersion  = jmeVersion
-            if (System.env.TRAVIS_BRANCH != null) {
-                jmeBranchName = System.env.TRAVIS_BRANCH
-            } else if (System.env.APPVEYOR_REPO_BRANCH != null) {
-                jmeBranchName = System.env.APPVEYOR_REPO_BRANCH
+        if( project.hasProperty('in_version') ){
+            jmeFullVersion=project.getProperty('in_version')
+            jmePomVersion=project.getProperty('in_version')
+        }else{
+
+            def releaseInfo = getReleaseInfo(jmeGitTag)
+            if (releaseInfo != null) {
+                jmeFullVersion = "${releaseInfo.baseVersion}${releaseInfo.releaseSuffix}"
+                jmePomVersion = "${releaseInfo.mainVersion}${releaseInfo.releaseSuffix}"
+            } else {
+                // SNAPSHOT
+                jmeFullVersion = jmeMainVersion
+                jmePomVersion  = jmeVersion
+                if (System.env.TRAVIS_BRANCH != null) {
+                    jmeBranchName = System.env.TRAVIS_BRANCH
+                } else if (System.env.APPVEYOR_REPO_BRANCH != null) {
+                    jmeBranchName = System.env.APPVEYOR_REPO_BRANCH
+                }
+                if (System.env.TRAVIS_PULL_REQUEST != null &&
+                    System.env.TRAVIS_PULL_REQUEST != "false") {
+                    jmeBranchName += "-pr-" + System.env.TRAVIS_PULL_REQUEST
+                } else if (System.env.APPVEYOR_PULL_REQUEST_NUMBER != null) {
+                    jmeBranchName += "-pr-" + System.env.APPVEYOR_PULL_REQUEST_NUMBER
+                }
+                if (jmeBranchName != "master") {
+                    jmeFullVersion += "-${jmeBranchName}"
+                    jmePomVersion  += "-${jmeBranchName}"
+                }
+                jmeFullVersion += "-${jmeRevision}"
+                jmePomVersion  += "-SNAPSHOT"
             }
-            if (System.env.TRAVIS_PULL_REQUEST != null &&
-                System.env.TRAVIS_PULL_REQUEST != "false") {
-                jmeBranchName += "-pr-" + System.env.TRAVIS_PULL_REQUEST
-            } else if (System.env.APPVEYOR_PULL_REQUEST_NUMBER != null) {
-                jmeBranchName += "-pr-" + System.env.APPVEYOR_PULL_REQUEST_NUMBER
-            }
-            if (jmeBranchName != "master") {
-                jmeFullVersion += "-${jmeBranchName}"
-                jmePomVersion  += "-${jmeBranchName}"
-            }
-            jmeFullVersion += "-${jmeRevision}"
-            jmePomVersion  += "-SNAPSHOT"
         }
 
         logger.warn("Full Version: ${jmeFullVersion}")
