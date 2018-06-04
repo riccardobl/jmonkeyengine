@@ -411,7 +411,8 @@ public class BIHTree implements CollisionData {
         try {
             CollisionResults boundResults = vars.collisionResults;
             boundResults.clear();
-            if(worldBound==null)return 0;
+            if (worldBound == null)
+                return 0;
             worldBound.collideWith(r, boundResults);
             if (boundResults.size() > 0) {
                 float tMin = boundResults.getClosestCollision().getDistance();

@@ -297,13 +297,13 @@ public class InstancedGeometry extends Geometry {
             }
         }
         vars.release();
-        fb.position(fb.position()+culledInstances*INSTANCE_SIZE);
-
+        // fb.position(fb.position()+culledInstances*INSTANCE_SIZE);
+        // fb.limit(fb.position());
         fb.flip();
 
-        if (fb.limit() / INSTANCE_SIZE != firstUnusedIndex) {
-            throw new AssertionError();
-        }
+        // if (fb.limit() / INSTANCE_SIZE != firstUnusedIndex) {
+        //     throw new AssertionError();
+        // }
 
         transformInstanceData.updateData(fb);
     }

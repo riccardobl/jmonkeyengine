@@ -48,6 +48,7 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.*;
+import com.jme3.scene.instancing.InstancedGeometry;
 import com.jme3.shader.Shader;
 import com.jme3.shader.UniformBinding;
 import com.jme3.shader.UniformBindingManager;
@@ -715,6 +716,10 @@ public class RenderManager {
 
         // check culling first.
         if (!scene.checkCulling(vp.getCamera())) {
+            return;
+        }
+
+        if (scene instanceof InstancedGeometry && ((InstancedGeometry) scene).getActualNumInstances() == 0) {
             return;
         }
 
