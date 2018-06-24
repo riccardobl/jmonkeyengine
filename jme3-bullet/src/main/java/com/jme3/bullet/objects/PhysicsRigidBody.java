@@ -31,6 +31,7 @@
  */
 package com.jme3.bullet.objects;
 
+import com.jme3.bullet.JNICache;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionObject;
 import com.jme3.bullet.collision.shapes.CollisionShape;
@@ -46,6 +47,8 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,7 +62,12 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
     protected RigidBodyMotionState motionState = new RigidBodyMotionState();
     protected float mass = 1.0f;
     protected boolean kinematic = false;
-    protected ArrayList<PhysicsJoint> joints = new ArrayList<PhysicsJoint>();
+    protected ArrayList<PhysicsJoint> joints=new ArrayList<PhysicsJoint>();
+    LinkedList<JNICache.Entry> cachegrounp=new LinkedList<JNICache.Entry>();
+    JNICache.Entry<Vector3f> getLinearVelocity_cache;
+    JNICache.Entry<Vector3f> getAngularVelocity_cache;
+    JNICache.Entry<Boolean> isActive_cache;
+    JNICache.Entry<Vector3f>  getGravity_cache;
 
     public PhysicsRigidBody() {
     }
@@ -349,10 +357,36 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
     }
 
     public Vector3f getGravity(Vector3f gravity) {
+        if(!JNICache.enabled){
+            if (gravity == null) {
+                gravity = new Vector3f();
+            }
+            getGravity(objectId, gravity);
+            return gravity;
+        }
+        if(getGravity_cache==null){
+            JNICache cache=PhysicsSpace.getPhysicsSpace().getCache();
+            getGravity_cache=cache.cacheFor(this);
+            cachegrounp.add(getGravity_cache);
+        }
+
+
         if (gravity == null) {
             gravity = new Vector3f();
         }
-        getGravity(objectId, gravity);
+
+        Vector3f tmpg;
+
+        if((tmpg=getGravity_cache.get())==null){
+            // vec=new Vector3f();
+            getGravity(objectId, gravity);
+            getGravity_cache.set(gravity);
+        }else{
+            gravity.set(tmpg);
+        }
+
+
+      
         return gravity;
     }
 
@@ -437,13 +471,15 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
 
     private native void setRestitution(long objectId, float factor);
 
+
+
     /**
      * Get the current angular velocity of this PhysicsRigidBody
      * @return the current linear velocity
      */
     public Vector3f getAngularVelocity() {
         Vector3f vec = new Vector3f();
-        getAngularVelocity(objectId, vec);
+        getAngularVelocity( vec);
         return vec;
     }
 
@@ -454,8 +490,24 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
      * @param vec the vector to store the velocity in
      */
     public void getAngularVelocity(Vector3f vec) {
-        getAngularVelocity(objectId, vec);
-    }
+        if(!JNICache.enabled){
+            getAngularVelocity(objectId, vec);
+            return;
+        }
+        if(getAngularVelocity_cache==null){
+            JNICache cache=PhysicsSpace.getPhysicsSpace().getCache();
+            getAngularVelocity_cache=cache.cacheFor(this);
+            cachegrounp.add(getAngularVelocity_cache);
+        }
+
+        Vector3f tmpvec;
+        if((tmpvec=getAngularVelocity_cache.get())==null){
+            getAngularVelocity(objectId, vec);
+            getAngularVelocity_cache.set(vec);
+        }else{
+            vec.set(tmpvec);
+        }
+   }
 
     /**
      * Sets the angular velocity of this PhysicsRigidBody
@@ -468,13 +520,17 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
 
     private native void setAngularVelocity(long objectId, Vector3f vec);
 
+
+
+
     /**
      * Get the current linear velocity of this PhysicsRigidBody
      * @return the current linear velocity
      */
+
     public Vector3f getLinearVelocity() {
-        Vector3f vec = new Vector3f();
-        getLinearVelocity(objectId, vec);
+        Vector3f vec=new Vector3f();
+         getLinearVelocity(vec);
         return vec;
     }
 
@@ -485,7 +541,26 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
      * @param vec the vector to store the velocity in
      */
     public void getLinearVelocity(Vector3f vec) {
-        getLinearVelocity(objectId, vec);
+        if(!JNICache.enabled){
+            getLinearVelocity(objectId, vec);
+            return;
+        }
+        if(getLinearVelocity_cache==null){
+            JNICache cache=PhysicsSpace.getPhysicsSpace().getCache();
+            getLinearVelocity_cache=cache.cacheFor(this);
+            cachegrounp.add(getLinearVelocity_cache);
+        }
+        Vector3f tmpvec;
+
+        if((tmpvec=getLinearVelocity_cache.get())==null){
+            // vec=new Vector3f();
+            getLinearVelocity(objectId, vec);
+            getLinearVelocity_cache.set(vec);
+        }else{
+            vec.set(tmpvec);
+        }
+
+        // getLinearVelocity(objectId, vec);
     }
 
     /**
@@ -593,13 +668,32 @@ public class PhysicsRigidBody extends PhysicsCollisionObject {
      * reactivates this PhysicsRigidBody when it has been deactivated because it was not moving
      */
     public void activate() {
+        if(JNICache.enabled){
+            for(JNICache.Entry e:cachegrounp)
+                e.invalidate();
+        }
         activate(objectId);
     }
 
     private native void activate(long objectId);
 
+
     public boolean isActive() {
-        return isActive(objectId);
+        if(!JNICache.enabled){
+            return isActive(objectId);
+        }
+        if(isActive_cache==null){
+            JNICache cache=PhysicsSpace.getPhysicsSpace().getCache();
+            isActive_cache=cache.cacheFor(this);
+            cachegrounp.add(isActive_cache);
+        }
+        Boolean v;
+        if((v=isActive_cache.get())==null){
+             v=isActive(objectId);
+            isActive_cache.set( v);
+            // return v;
+        }
+        return v;
     }
 
     private native boolean isActive(long objectId);

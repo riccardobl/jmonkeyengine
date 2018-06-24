@@ -107,11 +107,23 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         if (executor != null) {
             executor.shutdown();
         }
-        executor = new ScheduledThreadPoolExecutor(1);
+        executor=new ScheduledThreadPoolExecutor(1);
+        executor.setThreadFactory( new ThreadFactory() {
+            int n=1;
+            public Thread newThread(Runnable r) {
+                Thread t=new Thread(r);
+                t.setName("Bullet Simulation "+(n++));
+                // if (t.isDaemon())
+                    t.setDaemon(false);
+                // if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+                return t;
+            }
+        });
         final BulletAppState app = this;
         Callable<Boolean> call = new Callable<Boolean>() {
             public Boolean call() throws Exception {
-                detachedPhysicsLastUpdate = System.currentTimeMillis();
+                // detachedPhysicsLastUpdate = System.currentTimeMillis();
                 pSpace = new PhysicsSpace(worldMin, worldMax, broadphaseType);
                 pSpace.addTickListener(app);
                 return true;
@@ -122,26 +134,37 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         } catch (InterruptedException ex) {
             Logger.getLogger(BulletAppState.class.getName()).log(Level.SEVERE, null, ex);
             return false;
-        } catch (ExecutionException ex) {
-            Logger.getLogger(BulletAppState.class.getName()).log(Level.SEVERE, null, ex);
+        }catch(ExecutionException ex){
+            Logger.getLogger(BulletAppState.class.getName()).log(Level.SEVERE,null,ex);
             return false;
         }
+        
+    
     }
-    private Callable<Boolean> parallelPhysicsUpdate = new Callable<Boolean>() {
+
+    private Callable<Boolean> parallelPhysicsUpdate=new Callable<Boolean>(){
         public Boolean call() throws Exception {
-            pSpace.update(tpf * getSpeed());
+            pSpace.update(tpf*getSpeed());
             return true;
         }
     };
-    long detachedPhysicsLastUpdate = 0;
-    private Callable<Boolean> detachedPhysicsUpdate = new Callable<Boolean>() {
-        public Boolean call() throws Exception {
-            pSpace.update(getPhysicsSpace().getAccuracy() * getSpeed());
+
+    long detachedPhysicsLastUpdate = -1;
+    private  Runnable  detachedPhysicsUpdate = new  Runnable() {
+        public void run()  {
+            // if(detachedPhysicsLastUpdate==-1)return ;
+            long ct=System.currentTimeMillis();
+            // if(detachedPhysicsLastUpdate==0) detachedPhysicsLastUpdate=ct;
+            float tpf=(float)(ct-detachedPhysicsLastUpdate)/1000f;
+            // pSpace.distributeEvents();
+            // pSpace.update(tpf);
+            pSpace.update(tpf*getSpeed());
             pSpace.distributeEvents();
-            long update = System.currentTimeMillis() - detachedPhysicsLastUpdate;
-            detachedPhysicsLastUpdate = System.currentTimeMillis();
-            executor.schedule(detachedPhysicsUpdate, Math.round(getPhysicsSpace().getAccuracy() * 1000000.0f) - (update * 1000), TimeUnit.MICROSECONDS);
-            return true;
+            // long update = System.currentTimeMillis() - detachedPhysicsLastUpdate;
+            detachedPhysicsLastUpdate=ct;
+            // executor.schedule(detachedPhysicsUpdate,
+            //  Math.round(getPhysicsSpace().getAccuracy() * 1000000.0f) - (update * 1000), TimeUnit.MICROSECONDS);
+            // return true ;
         }
     };
 
@@ -158,9 +181,11 @@ public class BulletAppState implements AppState, PhysicsTickListener {
             return;
         }
         //start physics thread(pool)
-        if (threadingType == ThreadingType.PARALLEL) {
+        if(threadingType==ThreadingType.PARALLEL){
             startPhysicsOnExecutor();
-        } else {
+        }else if(threadingType==ThreadingType.DETACHED){
+            startPhysicsOnExecutor();
+        }else {
             pSpace = new PhysicsSpace(worldMin, worldMax, broadphaseType);
         }
         pSpace.addTickListener(this);
@@ -210,9 +235,9 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         if (!initialized) {
             startPhysics();
         }
-        if (threadingType == ThreadingType.PARALLEL) {
+        if (threadingType == ThreadingType.PARALLEL||threadingType==ThreadingType.DETACHED) {
             PhysicsSpace.setLocalThreadPhysicsSpace(pSpace);
-        }
+        } 
         if (debugEnabled) {
             debugAppState = new BulletDebugAppState(pSpace);
             stateManager.attach(debugAppState);
@@ -233,7 +258,9 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         if (!active) {
             return;
         }
-        pSpace.distributeEvents();
+        if(threadingType==ThreadingType.SEQUENTIAL||threadingType==ThreadingType.PARALLEL){
+            pSpace.distributeEvents();
+        } 
         this.tpf = tpf;
     }
 
@@ -241,12 +268,21 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         if (!active) {
             return;
         }
-        if (threadingType == ThreadingType.PARALLEL) {
-            physicsFuture = executor.submit(parallelPhysicsUpdate);
+        if(threadingType==ThreadingType.PARALLEL){
+        physicsFuture = executor.submit(parallelPhysicsUpdate);
         } else if (threadingType == ThreadingType.SEQUENTIAL) {
             pSpace.update(active ? tpf * speed : 0);
-        } else {
+        }else if(threadingType == ThreadingType.DETACHED&&detachedPhysicsLastUpdate==-1){
+            // long delay=(long)(1000l*getPhysicsSpace().getAccuracy());
+            detachedPhysicsLastUpdate=System.currentTimeMillis();
+            // executor.submit(detachedPhysicsUpdate);
+            executor.scheduleAtFixedRate(detachedPhysicsUpdate,0l,
+            (long)(1000l*(double)(getPhysicsSpace().getAccuracy() )/getSpeed()),TimeUnit.MILLISECONDS);
+   // executor.schedule(detachedPhysicsUpdate,
+            //  Math.round(getPhysicsSpace().getAccuracy() * 1000000.0f) - (update * 1000), TimeUnit.MICROSECONDS);
+
         }
+        
     }
 
     public void postRender() {
@@ -334,5 +370,6 @@ public class BulletAppState implements AppState, PhysicsTickListener {
          * execute in parallel in this mode.
          */
         PARALLEL,
+        DETACHED
     }
 }

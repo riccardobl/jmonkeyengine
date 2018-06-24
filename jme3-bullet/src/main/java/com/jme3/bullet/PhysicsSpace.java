@@ -58,9 +58,12 @@ import java.util.Comparator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.security.auth.callback.Callback;
 
 /**
  * <p>PhysicsSpace - The central jbullet-jme physics space</p>
@@ -105,7 +108,8 @@ public class PhysicsSpace {
     private float accuracy = 1f / 60f;
     private int maxSubSteps = 4, rayTestFlags = 1 << 2;
     private int solverNumIterations = 10;
-
+    private JNICache cache=new JNICache();
+    
     static {
 //        System.loadLibrary("bulletjme");
 //        initNativePhysics();
@@ -148,6 +152,10 @@ public class PhysicsSpace {
         this.worldMax.set(worldMax);
         this.broadphaseType = broadphaseType;
         create();
+    }
+
+        public JNICache getCache() {
+        return cache;
     }
 
     /**
@@ -193,19 +201,26 @@ public class PhysicsSpace {
     private native long createPhysicsSpace(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int broadphaseType, boolean threading);
 
     private void preTick_native(float f) {
-        AppTask task = pQueue.poll();
-        task = pQueue.poll();
-        while (task != null) {
-            while (task.isCancelled()) {
-                task = pQueue.poll();
-            }
-            try {
+
+        // try{
+        // System.out.println("Execute queue from thread "+Thread.currentThread());
+        // task = pQueue.poll();
+
+        AppTask task;
+        while((task=pQueue.poll())!=null){
+            if(task.isCancelled())continue;
+            try{
                 task.invoke();
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
-            task = pQueue.poll();
         }
+        // }catch(Throwable /t){
+        //     t.printStackTrace();
+        //     System.exit(1);
+        // }
+        
+        
         for (Iterator<PhysicsTickListener> it = tickListeners.iterator(); it.hasNext();) {
             PhysicsTickListener physicsTickCallback = it.next();
             physicsTickCallback.prePhysicsTick(this, f);
@@ -335,7 +350,9 @@ public class PhysicsSpace {
 //    }
     private void addCollisionEvent_native(PhysicsCollisionObject node, PhysicsCollisionObject node1, long manifoldPointObjectId) {
 //        System.out.println("addCollisionEvent:"+node.getObjectId()+" "+ node1.getObjectId());
-        collisionEvents.add(eventFactory.getEvent(PhysicsCollisionEvent.TYPE_PROCESSED, node, node1, manifoldPointObjectId));
+        collisionEvents.add(
+                eventFactory.getEvent(PhysicsCollisionEvent.TYPE_PROCESSED,
+            node, node1, manifoldPointObjectId));
     }
     
     private boolean notifyCollisionGroupListeners_native(PhysicsCollisionObject node, PhysicsCollisionObject node1){
@@ -349,16 +366,18 @@ public class PhysicsSpace {
         if(listener1 != null && node.getCollisionGroup() != node1.getCollisionGroup()){
             result = listener1.collide(node, node1) && result;
         }
-        
+        // distributeEvents();
         return result;
     }
 
+    Thread updateThread=null;
     /**
      * updates the physics space
      *
      * @param time the current time value
      */
     public void update(float time) {
+        if(updateThread==null) updateThread=Thread.currentThread();
         update(time, maxSubSteps);
     }
 
@@ -373,12 +392,14 @@ public class PhysicsSpace {
 //            return;
 //        }
         //step simulation
+        if(JNICache.enabled) cache.update();
         stepSimulation(physicsSpaceId, time, maxSteps, accuracy);
     }
 
     private native void stepSimulation(long space, float time, int maxSteps, float accuracy);
 
     public void distributeEvents() {
+        // if(collisionEvents==null) return;
         //add collision callbacks
         int clistsize = collisionListeners.size();
         while( collisionEvents.isEmpty() == false ) {
@@ -393,7 +414,6 @@ public class PhysicsSpace {
 
     public static <V> Future<V> enqueueOnThisThread(Callable<V> callable) {
         AppTask<V> task = new AppTask<V>(callable);
-        System.out.println("created apptask");
         pQueueTL.get().add(task);
         return task;
     }
@@ -407,24 +427,125 @@ public class PhysicsSpace {
      * @return Future object
      */
     public <V> Future<V> enqueue(Callable<V> callable) {
-        AppTask<V> task = new AppTask<V>(callable);
+        AppTask<V> task=new AppTask<V>(callable);
         pQueue.add(task);
         return task;
     }
 
+
+
+    public  <V> Future<V> safeRun(final Callable<V> callable) {
+        // final Object monitor=Thread.currentThread();
+
+        AppTask task;
+        // if(updateThread==null||){
+        //     System.err.println("Not running");
+        //     System.exit(1);
+        // }
+        if(updateThread==null||Thread.currentThread()!=updateThread){
+            task=(AppTask)enqueue(new Callable<V>(){
+                @Override
+                public V call() throws Exception {
+                    // System.exit(1);
+                    // System.out.println("Call");
+
+                    V r=callable.call();
+                    // callable.notifyAll();
+
+                    // synchronized(this){
+                    //     System.out.println("WakeyWakey ");
+
+                    //     notifyAll();
+                    // }
+                    return r;
+                }
+            });
+            // // try{
+            //     do{
+            //         synchronized(callable){
+            //             try{
+			// 				callable.wait(200);
+			// 			}catch(InterruptedException e){
+			// 				// TODO Auto-generated catch block
+			// 				e.printStackTrace();
+			// 			}
+            //         }
+            //     }while(!task.isDone());
+                // do{
+            //     synchronized(task.getCallable()){
+            //         try{
+            //             System.out.println("Wait for callable");
+            //             task.getCallable().wait(200);
+            //             // task.getCallable().wait();
+            //             System.out.println("WakeyWaket ");
+            //         }catch(InterruptedException e){
+            //             e.printStackTrace();
+            //         }
+            //     }
+            // } while(task.isDone());
+            // }catch(InterruptedException e){
+            //     // TODO Auto-generated catch block
+            //     e.printStackTrace();
+            // }catch(ExecutionException e){
+            //     // TODO Auto-generated catch block
+            //     e.printStackTrace();
+            // }
+            // task=(AppTask)enqueue(callable);
+   
+        }else{
+            task=new AppTask<V>(callable);
+            try{
+                // callable.call();
+                task.invoke();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+     
+        // while(!(task.isDone()||task.isCancelled())){
+        //     try{
+        //         synchronized(){
+        //             task.wait();
+        //         }
+        //     }catch(Exception e){
+        //         e.printStackTrace();
+        //     }
+        // }
+        return task;
+    }
     /**
      * adds an object to the physics space
      *
      * @param obj the PhysicsControl or Spatial with PhysicsControl to add
      */
-    public void add(Object obj) {
+    public void add(final Object obj) {
+        // if(Thread.currentThread()!=updateThread){
+        //     new Exception().printStackTrace();
+        // }
+        // if(updateThread==null){
+            safeRun(new Callable<Boolean>(){
+                    public Boolean call(){
+                        _add(obj);
+                        return true;
+                    }
+                });
+        // }else      _add(obj);
+        // safeRun/(new Callable<Boolean>(){
+        //     public Boolean call(){
+          
+        //         return true;
+        //     }
+        // });
+    }
+
+    public void _add(Object obj) {
         if (obj instanceof PhysicsControl) {
             ((PhysicsControl) obj).setPhysicsSpace(this);
         } else if (obj instanceof Spatial) {
             Spatial node = (Spatial) obj;
             for (int i = 0; i < node.getNumControls(); i++) {
                 if (node.getControl(i) instanceof PhysicsControl) {
-                    add(((PhysicsControl) node.getControl(i)));
+                    _add(((PhysicsControl) node.getControl(i)));
                 }
             }
         } else if (obj instanceof PhysicsCollisionObject) {
@@ -453,7 +574,23 @@ public class PhysicsSpace {
      *
      * @param obj the PhysicsControl or Spatial with PhysicsControl to remove
      */
-    public void remove(Object obj) {
+    public void remove(final Object obj) {
+        // if(updateThread==null){
+            safeRun(new Callable<Boolean>(){
+                   public Boolean call(){
+                    _remove(obj);
+                       return true;
+                   }
+               });
+    //    }else  _remove(obj);
+        // safeRun(new Callable<Boolean>(){
+        //     public Boolean call(){
+                
+        //         return true;
+        //     }
+        // });
+    }
+    public void _remove(Object obj) {
         if (obj == null) return;
         if (obj instanceof PhysicsControl) {
             ((PhysicsControl) obj).setPhysicsSpace(null);
@@ -461,7 +598,7 @@ public class PhysicsSpace {
             Spatial node = (Spatial) obj;
             for (int i = 0; i < node.getNumControls(); i++) {
                 if (node.getControl(i) instanceof PhysicsControl) {
-                    remove(((PhysicsControl) node.getControl(i)));
+                   _remove(((PhysicsControl) node.getControl(i)));
                 }
             }
         } else if (obj instanceof PhysicsCollisionObject) {
