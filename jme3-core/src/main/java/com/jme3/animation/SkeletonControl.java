@@ -63,7 +63,8 @@ import com.jme3.util.BufferUtils;
  * @author Rémy Bouquet Based on AnimControl by Kirill Vainer
  */
 public class SkeletonControl extends AbstractControl implements Cloneable, JmeCloneable {
-
+    public static boolean NEVER_SWSK=false;
+    public static boolean KILL_IF_HWSK_NOT_AVAILABLE=false;
     /**
      * The skeleton of the model.
      */
@@ -159,7 +160,9 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
                         "Not using hardware skinning for {0}, " + 
                         "because material {1} doesn''t support it.", 
                         new Object[]{spatial, m.getMaterialDef().getName()});
-                
+                if(KILL_IF_HWSK_NOT_AVAILABLE){
+                    System.exit(1);
+                }
                 return false;
             }
         }
@@ -245,6 +248,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
     }
 
     private void controlRenderSoftware() {
+        if(NEVER_SWSK) return;
         resetToBind(); // reset morph meshes to bind pose
 
         offsetMatrices = skeleton.computeSkinningMatrices();
