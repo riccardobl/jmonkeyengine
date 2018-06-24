@@ -719,11 +719,11 @@ public class RenderManager {
             return;
         }
 
+        scene.runControlRender(this,vp);
+
         if (scene instanceof InstancedGeometry && ((InstancedGeometry) scene).getActualNumInstances() == 0) {
             return;
         }
-
-        scene.runControlRender(this, vp);
         if (scene instanceof Node) {
             // Recurse for all children
             Node n = (Node) scene;

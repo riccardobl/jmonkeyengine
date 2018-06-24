@@ -254,15 +254,22 @@ public class InstancedGeometry extends Geometry {
         CullHint cm = g.getCullHint();
         if (cm == Spatial.CullHint.Always) return false;
         else if (cm == Spatial.CullHint.Never) return true;       
-        FrustumIntersect frustrumIntersects = (parent != null ? g.getParent().getLastFrustumIntersection(): Camera.FrustumIntersect.Intersects);
+        // FrustumIntersect frustrumIntersects=(parent!=null?g.getParent().getLastFrustumIntersection():Camera.FrustumIntersect.Intersects);
+        FrustumIntersect frustrumIntersects=Camera.FrustumIntersect.Intersects;
         if (frustrumIntersects == Camera.FrustumIntersect.Intersects) {
             if (g.getQueueBucket() == com.jme3.renderer.queue.RenderQueue.Bucket.Gui)  return cam.containsGui(g.getWorldBound());
             else  frustrumIntersects = cam.contains(g.getWorldBound());            
         }
         return frustrumIntersects != Camera.FrustumIntersect.Outside;    
     }
+
+    boolean updateNeeded=true;
     protected int culledInstances=0;
+    boolean isStatic=true;
     public void updateInstances(Camera cam) {
+        if(!this.updateNeeded&&isStatic) return;
+        updateNeeded=false;
+        
         culledInstances=0;
         FloatBuffer fb = (FloatBuffer) transformInstanceData.getData();
         fb.limit(fb.capacity());
@@ -289,7 +296,7 @@ public class InstancedGeometry extends Geometry {
                     }
                 }
 
-                if(checkInstanceCulling(cam,geom)){
+                if(isStatic||checkInstanceCulling(cam,geom)){
                     Matrix4f worldMatrix = geom.getWorldMatrix();
                     updateInstance(worldMatrix, temp, 0, vars.tempMat3, vars.quat1);
                     fb.put(temp);
