@@ -40,19 +40,24 @@ import com.jme3.math.*;
 import com.jme3.renderer.*;
 import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
+
 import com.jme3.util.TempVars;
 
+import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
 public final class SinglePassAndImageBasedLightingLogic extends DefaultTechniqueDefLogic {
 
     private static final String DEFINE_SINGLE_PASS_LIGHTING = "SINGLE_PASS_LIGHTING";
     private static final String DEFINE_NB_LIGHTS = "NB_LIGHTS";
+
     private static final String DEFINE_INDIRECT_LIGHTING = "INDIRECT_LIGHTING";
     private static final RenderState ADDITIVE_LIGHT = new RenderState();
 
     private final ColorRGBA ambientLightColor = new ColorRGBA(0, 0, 0, 1);
     private LightProbe lightProbe = null;
+
+    public static boolean FIXED = true;
 
     static {
         ADDITIVE_LIGHT.setBlendMode(BlendMode.AlphaAdditive);
@@ -68,6 +73,7 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         singlePassLightingDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_SINGLE_PASS_LIGHTING, VarType.Boolean);
         nbLightsDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_NB_LIGHTS, VarType.Int);
         indirectLightingDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_INDIRECT_LIGHTING, VarType.Boolean);
+
     }
 
     @Override
@@ -75,7 +81,6 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
             EnumSet<Caps> rendererCaps, LightList lights, DefineList defines) {
         defines.set(nbLightsDefineId, renderManager.getSinglePassLightBatchSize() * 3);
         defines.set(singlePassLightingDefineId, true);
-
 
         //TODO here we have a problem, this is called once before render, so the define will be set for all passes (in case we have more than NB_LIGHTS lights)
         //Though the second pass should not render IBL as it is taken care of on first pass like ambient light in phong lighting.
@@ -91,6 +96,7 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
 
         return super.makeCurrent(assetManager, renderManager, rendererCaps, lights, defines);
     }
+
 
     /**
      * Uploads the lights in the light list as two uniform arrays.<br/><br/> *
@@ -151,12 +157,16 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         int endIndex = numLights + startIndex;
         for (curIndex = startIndex; curIndex < endIndex && curIndex < lightList.size(); curIndex++) {
 
-
             Light l = lightList.get(curIndex);
-            if(l.getType() == Light.Type.Ambient){
+            if (l.getType() == Light.Type.Ambient) {
                 endIndex++;
                 continue;
             }
+
+
+
+            
+
             ColorRGBA color = l.getColor();
             //Color
 
@@ -226,7 +236,8 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
     public void render(RenderManager renderManager, Shader shader, Geometry geometry, LightList lights, int lastTexUnit) {
         int nbRenderedLights = 0;
         Renderer renderer = renderManager.getRenderer();
-        int batchSize = renderManager.getSinglePassLightBatchSize();
+        int batchSize=renderManager.getSinglePassLightBatchSize();
+        
         if (lights.size() == 0) {
             updateLightListUniforms(shader, geometry, lights,batchSize, renderManager, 0, lastTexUnit);
             renderer.setShader(shader);
@@ -236,6 +247,8 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
                 nbRenderedLights = updateLightListUniforms(shader, geometry, lights, batchSize, renderManager, nbRenderedLights, lastTexUnit);
                 renderer.setShader(shader);
                 renderMeshFromGeometry(renderer, geometry);
+                if (FIXED)
+                    break;
             }
         }
         return;
