@@ -38,9 +38,9 @@ import java.nio.ShortBuffer;
 
 /**
  * Baseline GL methods that must be available on all platforms.
- * 
+ * <p>
  * This is the subset of vanilla desktop OpenGL 2 and OpenGL ES 2.
- * 
+ *
  * @author Kirill Vainer
  */
 public interface GL {

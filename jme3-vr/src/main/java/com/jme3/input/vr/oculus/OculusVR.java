@@ -237,7 +237,7 @@ public class OculusVR implements VRAPI {
             hmdRelativeEyePositions[eye] = new Vector3f();
 
             // Find the eye render information - we use this in the
-            // view manager for giving LibOVR it's timewarp information.
+            // view manager for giving LibOVR its timewarp information.
             eyeRenderDesc[eye] = OVREyeRenderDesc.malloc();
             ovr_GetRenderDesc(session, eye, fovPorts[eye], eyeRenderDesc[eye]);
 
@@ -610,7 +610,7 @@ public class OculusVR implements VRAPI {
      * @return The {@code to} argument.
      */
     public static Vector3f vecO2J(OVRVector3f from, Vector3f to) {
-        // jME and LibOVR disagree on which way X and Z is, too.
+        // jME and LibOVR disagree on which way X and Z are, too.
         to.set(
                 -from.x(),
                 from.y(),

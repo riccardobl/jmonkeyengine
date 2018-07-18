@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2017 jMonkeyEngine
+ * Copyright (c) 2009-2018 jMonkeyEngine
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
  */
 package com.jme3.animation;
 
+import com.jme3.anim.SkinningControl;
 import com.jme3.export.*;
 import com.jme3.material.MatParam;
 import com.jme3.material.Material;
@@ -41,12 +42,13 @@ import com.jme3.scene.*;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
+
+import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.shader.VarType;
 import com.jme3.util.SafeArrayList;
 import com.jme3.util.TempVars;
 import com.jme3.util.clone.Cloner;
 import com.jme3.util.clone.JmeCloneable;
-
 import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
@@ -61,7 +63,9 @@ import com.jme3.util.BufferUtils;
  * the mesh
  *
  * @author Rémy Bouquet Based on AnimControl by Kirill Vainer
+ * @deprecated use {@link SkinningControl}
  */
+@Deprecated
 public class SkeletonControl extends AbstractControl implements Cloneable, JmeCloneable {
     public static boolean NEVER_SWSK=false;
     public static boolean KILL_IF_HWSK_NOT_AVAILABLE=false;
@@ -180,7 +184,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
 
     /**
      * Specifies if hardware skinning is preferred. If it is preferred and
-     * supported by GPU, it shall be enabled, if its not preferred, or not
+     * supported by GPU, it shall be enabled, if it's not preferred, or not
      * supported by GPU, then it shall be disabled.
      * 
      * @see #isHardwareSkinningUsed() 
@@ -352,7 +356,7 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
                 bpb.clear();
                 bnb.clear();
 
-                //reseting bind tangents if there is a bind tangent buffer
+                //reset bind tangents if there is a bind tangent buffer
                 VertexBuffer bindTangents = mesh.getBuffer(Type.BindPoseTangent);
                 if (bindTangents != null) {
                     VertexBuffer tangents = mesh.getBuffer(Type.Tangent);
@@ -368,47 +372,6 @@ public class SkeletonControl extends AbstractControl implements Cloneable, JmeCl
                 nb.put(bnb).clear();
             }
         }
-    }
-
-    @Override
-    public Control cloneForSpatial(Spatial spatial) {
-        Node clonedNode = (Node) spatial;
-        SkeletonControl clone = new SkeletonControl();
-
-        AnimControl ctrl = spatial.getControl(AnimControl.class);
-        if (ctrl != null) {
-            // AnimControl is responsible for cloning the skeleton, not
-            // SkeletonControl.
-            clone.skeleton = ctrl.getSkeleton();
-        } else {
-            // If there's no AnimControl, create the clone ourselves.
-            clone.skeleton = new Skeleton(skeleton);
-        }
-        clone.hwSkinningDesired = this.hwSkinningDesired;
-        clone.hwSkinningEnabled = this.hwSkinningEnabled;
-        clone.hwSkinningSupported = this.hwSkinningSupported;
-        clone.hwSkinningTested = this.hwSkinningTested;
-        
-        clone.setSpatial(clonedNode);
-
-        // Fix attachments for the cloned node
-        for (int i = 0; i < clonedNode.getQuantity(); i++) {
-            // go through attachment nodes, apply them to correct bone
-            Spatial child = clonedNode.getChild(i);
-            if (child instanceof Node) {
-                Node clonedAttachNode = (Node) child;
-                Bone originalBone = (Bone) clonedAttachNode.getUserData("AttachedBone");
-
-                if (originalBone != null) {
-                    Bone clonedBone = clone.skeleton.getBone(originalBone.getName());
-
-                    clonedAttachNode.setUserData("AttachedBone", clonedBone);
-                    clonedBone.setAttachmentsNode(clonedAttachNode);
-                }
-            }
-        }
-
-        return clone;
     }
 
     @Override   

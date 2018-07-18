@@ -45,11 +45,7 @@ public class OpenCLObjectManager {
     private static final Logger LOG = Logger.getLogger(OpenCLObjectManager.class.getName());
     private static final Level LOG_LEVEL1 = Level.FINEST;
     private static final Level LOG_LEVEL2 = Level.FINER;
-    /**
-     * Call Runtime.getRuntime().gc() every these frames
-     */
-    private static final int GC_FREQUENCY = 10;
-    
+
     private static final OpenCLObjectManager INSTANCE = new OpenCLObjectManager();
     private OpenCLObjectManager() {}
     

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2017 jMonkeyEngine
+ * Copyright (c) 2009-2018 jMonkeyEngine
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,9 @@ import java.util.ArrayList;
  *
  * @author Kirill Vainer
  * @author Rémy Bouquet
+ * @deprecated use {@link com.jme3.anim.Joint}
  */
+@Deprecated
 public final class Bone implements Savable, JmeCloneable {
 
     // Version #2: Changed naming of transforms as they were misleading
@@ -533,11 +535,21 @@ public final class Bone implements Savable, JmeCloneable {
             attachNode.setLocalRotation(modelRot);
             attachNode.setLocalScale(modelScale);
 
+        } else if (targetGeometry.isIgnoreTransform()) {
+            /*
+             * The animated meshes ignore transforms: match the world transform
+             * of the attachments node to the bone's transform.
+             */
+            attachNode.setLocalTranslation(modelPos);
+            attachNode.setLocalRotation(modelRot);
+            attachNode.setLocalScale(modelScale);
+            attachNode.getLocalTransform().combineWithParent(attachNode.getParent().getWorldTransform().invert());
+
         } else {
             Spatial loopSpatial = targetGeometry;
             Transform combined = new Transform(modelPos, modelRot, modelScale);
             /*
-             * Climb the scene graph applying local transforms until the 
+             * Climb the scene graph applying local transforms until the
              * attachments node's parent is reached.
              */
             while (loopSpatial != attachParent && loopSpatial != null) {
@@ -550,7 +562,7 @@ public final class Bone implements Savable, JmeCloneable {
     }
 
     /**
-     * Updates world transforms for this bone and it's children.
+     * Updates world transforms for this bone and its children.
      */
     public final void update() {
         this.updateModelTransforms();
@@ -590,7 +602,7 @@ public final class Bone implements Savable, JmeCloneable {
     }
 
     /**
-     * Reset the bone and it's children to bind pose.
+     * Reset the bone and its children to bind pose.
      */
     final void reset() {
         if (!userControl) {
@@ -677,7 +689,7 @@ public final class Bone implements Savable, JmeCloneable {
         modelPos.set(translation);
         modelRot.set(rotation);
         
-        //if there is an attached Node we need to set it's local transforms too.
+        //if there is an attached Node we need to set its local transforms too.
         if(attachNode != null){
             attachNode.setLocalTranslation(translation);
             attachNode.setLocalRotation(rotation);
