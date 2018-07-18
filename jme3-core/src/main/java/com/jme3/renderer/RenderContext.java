@@ -195,7 +195,7 @@ public class RenderContext {
      * 
      * @see Renderer#setTexture(int, com.jme3.texture.Texture) 
      */
-    public Image[] boundTextures = new Image[16];
+    public Image[] boundTextures = new Image[32];
 
     /**
      * IDList for texture units
