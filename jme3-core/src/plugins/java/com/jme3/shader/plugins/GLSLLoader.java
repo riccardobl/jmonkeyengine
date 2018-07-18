@@ -145,7 +145,8 @@ public class GLSLLoader implements AssetLoader {
         throw new IOException("Circular dependency.");
     }
 
-    private String resolveDependencies(ShaderDependencyNode node, Set<ShaderDependencyNode> alreadyInjectedSet, StringBuilder extensions, boolean injectDependencies) {
+    private String resolveDependencies(ShaderDependencyNode node, Set<ShaderDependencyNode> alreadyInjectedSet,
+            StringBuilder extensions, boolean injectDependencies) {
         if (alreadyInjectedSet.contains(node)) {
             return "// " + node.getName() + " was already injected at the top.\n";
         } else {
@@ -162,7 +163,8 @@ public class GLSLLoader implements AssetLoader {
                 List<String> resolvedShaderNodes = new ArrayList<>();
 
                 for (ShaderDependencyNode dependencyNode : node.getDependencies()) {
-                    resolvedShaderNodes.add(resolveDependencies(dependencyNode, alreadyInjectedSet, extensions, injectDependencies));
+                    resolvedShaderNodes.add(
+                            resolveDependencies(dependencyNode, alreadyInjectedSet, extensions, injectDependencies));
                 }
 
                 List<Integer> injectIndices = node.getDependencyInjectIndices();
@@ -180,7 +182,65 @@ public class GLSLLoader implements AssetLoader {
 
         }
     }
+    
+    public static int findEndFor(int i, String lines[]) {
+        int nskip = 0;
+        for (int j = i + 1; j < lines.length; j++) {
+            if (lines[j].trim().startsWith("#for")) {
+                nskip++;
+            } else if (lines[j].trim().startsWith("#endfor")) {
+                if (nskip == 0) {
+                    return j;
+                } else
+                    nskip--;
+            }
+        }
+        return -1;
+    }
 
+    public static String processFor(String s) {
+        boolean noreplace = true;
+        StringBuilder processed = new StringBuilder();
+        String lines[] = s.split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            String statement =lines[i].trim();
+            if (statement.startsWith("#for")) {
+                noreplace = false;
+                int end = findEndFor(i, lines);
+                if (end == -1)
+                    System.err.println("Can't fnd #endfor");
+                else {
+                    String forparts[] = statement.split(" : ");
+                    String countv = forparts[0].trim().split(" ")[1].trim();
+                    String range[] = forparts[1].trim().split(",");
+
+                    int range_start = Integer.parseInt(range[0]);
+                    int range_end = Integer.parseInt(range[1]);
+                    for (int k = range_start; k <= range_end; k++) {
+                        for (int j = i + 1; j < end ; j++) {
+                            processed.append("\n");
+                            processed.append(lines[j].replace(countv, "" + k));
+                        }
+                    }
+                    i = end ;
+                }
+            } else {
+                if (i != 0)
+                    processed.append("\n");
+                processed.append(lines[i]);
+            }
+        }
+        if (noreplace)
+            return processed.toString();
+        else
+            return processFor(processed.toString());
+    }
+
+
+    public String prePreProcessor(String s) {
+        return processFor(s);
+    }
+    
     @Override
     public Object load(AssetInfo info) throws IOException {
         // The input stream provided is for the vertex shader,
@@ -200,14 +260,14 @@ public class GLSLLoader implements AssetLoader {
             StringBuilder extensions = new StringBuilder();
             if (injectDependencies) {
                 String code = resolveDependencies(rootNode, new HashSet<ShaderDependencyNode>(), extensions, injectDependencies);
-                extensions.append(code);
+                extensions.append(prePreProcessor(code));
                 dependCache.clear();
                 return extensions.toString();
             } else {
                 Map<String, String> files = new LinkedHashMap<>();
                 HashSet<ShaderDependencyNode> dependencies = new HashSet<>();
                 String code = resolveDependencies(rootNode, dependencies, extensions, injectDependencies);
-                extensions.append(code);
+                extensions.append(prePreProcessor(code));
                 files.put("[main]", extensions.toString());
 
                 for (ShaderDependencyNode dependency : dependencies) {
