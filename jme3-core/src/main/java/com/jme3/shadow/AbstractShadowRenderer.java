@@ -124,7 +124,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, Savable,
     /**
      * true to skip the post pass when there are no shadow casters
      */
-    protected boolean skipPostPass;
+    public boolean skipPostPass;
     
     /**
      * used for serialization
@@ -203,7 +203,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, Savable,
      *
      * @param postShadowMat
      */
-    protected final void setPostShadowMaterial(Material postShadowMat) {
+    public final void setPostShadowMaterial(Material postShadowMat) {
         this.postshadowMat = postShadowMat;
         postshadowMat.setFloat("ShadowMapSize", shadowMapSize);
         for (int i = 0; i < nbShadowMaps; i++) {
@@ -599,7 +599,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, Savable,
     /**
      * for internal use only
      */
-    protected void setPostShadowParams() {
+    public void setPostShadowParams() {
         setMaterialParameters(postshadowMat);
         for (int j = 0; j < nbShadowMaps; j++) {
             postshadowMat.setMatrix4(lightViewStringCache[j], lightViewProjectionsMatrices[j]);
