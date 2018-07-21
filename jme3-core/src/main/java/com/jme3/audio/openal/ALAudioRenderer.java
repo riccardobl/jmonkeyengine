@@ -518,6 +518,9 @@ public class ALAudioRenderer implements AudioRenderer, Runnable {
                 case Volume:
                     al.alSourcef(id, AL_GAIN, src.getVolume());
                     break;
+                case Attenuation:
+                    al.alSourcef(id, AL_ROLLOFF_FACTOR, src.getAttenuation());
+                    break;
                 case Pitch:
                     al.alSourcef(id, AL_PITCH, src.getPitch());
                     break;

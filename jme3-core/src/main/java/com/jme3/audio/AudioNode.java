@@ -70,7 +70,7 @@ public class AudioNode extends Node implements AudioSource {
     //Version #1 : AudioKey is now stored into "audio_key" instead of "key"
     public static final int SAVABLE_VERSION = 1;
     protected boolean loop = false;
-    protected float volume = 1;
+    protected float volume = 1,attenuation=1.0f;
     protected float pitch = 1;
     protected float timeOffset = 0;
     protected Filter dryFilter;
@@ -399,6 +399,10 @@ public class AudioNode extends Node implements AudioSource {
         return volume;
     }
 
+    public float getAttenuation() {
+        return this.attenuation;
+    }
+
     /**
      * Set the volume of this audio node.
      *
@@ -416,7 +420,15 @@ public class AudioNode extends Node implements AudioSource {
         if (channel >= 0)
             getRenderer().updateSourceParam(this, AudioParam.Volume);
     }
+    
 
+    
+    public void setAttenuation(float attenuation) {
+        if(attenuation<0f){ throw new IllegalArgumentException("Volume cannot be negative"); }
+        this.attenuation=attenuation;
+        if (channel >= 0)
+        getRenderer().updateSourceParam(this, AudioParam.Attenuation);
+    }
     /**
      * @return the time offset in the sound sample when to start playing.
      */

@@ -91,6 +91,8 @@ public interface AudioSource {
      */
     public float getVolume();
 
+    public float getAttenuation();
+
     /**
      * @return the time offset in the sound sample when to start playing.
      */

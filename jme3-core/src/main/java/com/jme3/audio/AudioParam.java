@@ -46,5 +46,6 @@ public enum AudioParam {
     MaxDistance,
     DryFilter,
     ReverbFilter,
-    ReverbEnabled;
+    ReverbEnabled,
+    Attenuation,;
 }
