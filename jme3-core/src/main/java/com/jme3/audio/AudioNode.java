@@ -814,7 +814,8 @@ public class AudioNode extends Node implements AudioSource {
         oc.write(outerAngle, "outer_angle", 360);
 
         oc.write(positional, "positional", false);
-        oc.write(velocityFromTranslation, "velocity_from_translation", false);
+        oc.write(velocityFromTranslation,"velocity_from_translation",false);
+        oc.write(attenuation,"attenuation",1.0f);
     }
 
     @Override
@@ -849,7 +850,8 @@ public class AudioNode extends Node implements AudioSource {
         outerAngle = ic.readFloat("outer_angle", 360);
 
         positional = ic.readBoolean("positional", false);
-        velocityFromTranslation = ic.readBoolean("velocity_from_translation", false);
+        velocityFromTranslation=ic.readBoolean("velocity_from_translation",false);
+        attenuation=ic.readFloat("attenuation",1.0f);
 
         if (audioKey != null) {
             try {
@@ -865,12 +867,22 @@ public class AudioNode extends Node implements AudioSource {
     public String toString() {
         String ret = getClass().getSimpleName()
                 + "[status=" + status;
-        if (volume != 1f) {
-            ret += ", vol=" + volume;
-        }
-        if (pitch != 1f) {
-            ret += ", pitch=" + pitch;
-        }
+        ret+=", vol="+volume;
+        ret += ", attenuation=" + attenuation;
+        ret+=", pitch="+pitch;        
+        ret += ", velocity=" + velocity;
+        ret += ", reverbEnabled=" + reverbEnabled;
+        ret += ", maxDistance=" + maxDistance;
+        ret += ", refDistance=" + refDistance;
+        ret += ", directional=" + directional;
+        ret+=", direction="+direction;
+        ret += ", innerAngle=" + innerAngle;
+        ret += ", outerAngle=" + outerAngle;
+        ret += ", positional=" + positional;
+        ret += ", velocityFromTranslation=" + velocityFromTranslation;
+
+
+
         return ret + "]";
     }
 }
