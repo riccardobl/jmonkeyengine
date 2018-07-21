@@ -138,8 +138,9 @@ public class InstancedGeometry extends Geometry {
         return transformInstanceData;
     }
 
-    private void updateInstance(Matrix4f worldMatrix, float[] store,
-                                int offset, Matrix3f tempMat3,
+
+   
+    private void updateInstance(Matrix4f worldMatrix, float[] store, int offset, Matrix3f tempMat3,
                                 Quaternion tempQuat) {
         worldMatrix.toRotationMatrix(tempMat3);
         tempMat3.invertLocal();
@@ -212,9 +213,6 @@ public class InstancedGeometry extends Geometry {
         return geometries.length;
     }
 
-    public int getActualNumInstances() {
-        return firstUnusedIndex-culledInstances;
-    }
 
     private void swap(int idx1, int idx2) {
         Geometry g = geometries[idx1];
@@ -248,6 +246,10 @@ public class InstancedGeometry extends Geometry {
                 }
             }
         }
+    }   
+    
+    public int getActualNumInstances() {
+        return firstUnusedIndex;
     }
 
     protected boolean checkInstanceCulling(Camera cam,Geometry g){
@@ -256,37 +258,58 @@ public class InstancedGeometry extends Geometry {
         else if (cm == Spatial.CullHint.Never) return true;       
         // FrustumIntersect frustrumIntersects=(parent!=null?g.getParent().getLastFrustumIntersection():Camera.FrustumIntersect.Intersects);
         FrustumIntersect frustrumIntersects=Camera.FrustumIntersect.Intersects;
-        if (frustrumIntersects == Camera.FrustumIntersect.Intersects) {
-            if (g.getQueueBucket() == com.jme3.renderer.queue.RenderQueue.Bucket.Gui)  return cam.containsGui(g.getWorldBound());
-            else  frustrumIntersects = cam.contains(g.getWorldBound());            
+        if(frustrumIntersects==Camera.FrustumIntersect.Intersects){
+            if(g.getQueueBucket()==com.jme3.renderer.queue.RenderQueue.Bucket.Gui) return cam.containsGui(g.getWorldBound());
+            else frustrumIntersects=cam.contains(g.getWorldBound());
         }
-        return frustrumIntersects != Camera.FrustumIntersect.Outside;    
+        return frustrumIntersects!=Camera.FrustumIntersect.Outside;
     }
 
-    boolean updateNeeded=true;
-    protected int culledInstances=0;
-    boolean isStatic=true;
+    boolean needUpdate=true;
+
+    public void checkUpdateNeeded() {
+        if(USE_EXPERIMENTAL_OPTIMIZATIONS){
+            needUpdate=false;
+
+        if((refreshFlags&RF_BOUND)!=0||(refreshFlags&RF_TRANSFORM)!=0){
+            needUpdate=true;
+            return;
+        }
+        for(int i=0;i<firstUnusedIndex;i++){
+            Geometry geom=geometries[i];
+            if((geom.refreshFlags&RF_TRANSFORM)!=0){
+                needUpdate=true;
+                break;
+            }
+        }
+    }
+}
+
+  
+
+    public static boolean USE_EXPERIMENTAL_OPTIMIZATIONS=false;
+
     public void updateInstances(Camera cam) {
-        if(!this.updateNeeded&&isStatic) return;
-        updateNeeded=false;
-        
-        culledInstances=0;
-        FloatBuffer fb = (FloatBuffer) transformInstanceData.getData();
+ 
+        if(USE_EXPERIMENTAL_OPTIMIZATIONS){
+            if(!needUpdate) return;
+            needUpdate=false;
+        }
+        FloatBuffer fb=(FloatBuffer)transformInstanceData.getData();
         fb.limit(fb.capacity());
         fb.position(0);
 
-        TempVars vars = TempVars.get();
-        {
-            float[] temp = vars.matrixWrite;
+        TempVars vars=TempVars.get();
+        
+            float[] temp=vars.matrixWrite;
 
-            for (int i = 0; i < firstUnusedIndex; i++) {
-                Geometry geom = geometries[i];
+            for(int i=0;i<firstUnusedIndex;i++){
+                Geometry geom=geometries[i];
 
-                if (geom == null) {
-                    geom = geometries[firstUnusedIndex - 1];
+                if(geom==null){
+                    geom=geometries[firstUnusedIndex-1];
 
-                    if (geom == null) {
-                        throw new AssertionError();
+                    if(geom==null){ throw new AssertionError();
                     }
 
                     swap(i, firstUnusedIndex - 1);
@@ -296,13 +319,11 @@ public class InstancedGeometry extends Geometry {
                     }
                 }
 
-                if(isStatic||checkInstanceCulling(cam,geom)){
                     Matrix4f worldMatrix = geom.getWorldMatrix();
                     updateInstance(worldMatrix, temp, 0, vars.tempMat3, vars.quat1);
                     fb.put(temp);
-                }else culledInstances++;                
             }
-        }
+        
         vars.release();
         // fb.position(fb.position()+culledInstances*INSTANCE_SIZE);
         // fb.limit(fb.position());
@@ -312,10 +333,12 @@ public class InstancedGeometry extends Geometry {
         //     throw new AssertionError();
         // }
 
-        transformInstanceData.updateData(fb);
+        transformInstanceData.updateData(fb);        
     }
 
     public void deleteInstance(Geometry geom) {
+        needUpdate=true;
+
         int idx = InstancedNode.getGeometryStartIndex2(geom);
         InstancedNode.setGeometryStartIndex2(geom, -1);
 
@@ -342,6 +365,7 @@ public class InstancedGeometry extends Geometry {
         if (geometry == null) {
             throw new IllegalArgumentException("geometry cannot be null");
         }
+        needUpdate=true;
 
         // Take an index from the end.
         if (firstUnusedIndex + 1 >= geometries.length) {

@@ -288,19 +288,30 @@ public class InstancedNode extends GeometryGroupNode {
         return s;
     }
 
+    @Override
+    public void updateGeometricState(){
+            for(InstancedGeometry gs:instancesMap.values()){
+                gs.checkUpdateNeeded();
+            }
+            super.updateGeometricState();
+    }
+
     private void instance(Spatial n) {
         if (n instanceof Geometry) {
             Geometry g = (Geometry) n;
             if (!g.isGrouped() && g.getBatchHint() != BatchHint.Never) {
                 addToInstancedGeometry(g);
             }
-        } else if (n instanceof Node) {
-            for (Spatial child : ((Node) n).getChildren()) {
-                if (child instanceof GeometryGroupNode) {
+        }else if(n instanceof Node){
+            for(Spatial child:((Node)n).getChildren()){
+                if(child instanceof GeometryGroupNode){
                     continue;
                 }
                 instance(child);
             }
+        }
+        for(InstancedGeometry gs:instancesMap.values()){
+            gs.needUpdate=true;
         }
     }
 

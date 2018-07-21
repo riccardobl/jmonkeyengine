@@ -169,7 +169,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
      * Refresh flags. Indicate what data of the spatial need to be
      * updated to reflect the correct state.
      */
-    protected transient int refreshFlags = 0;
+    public transient int refreshFlags = 0;
 
     /**
      * Set to true if a subclass requires updateLogicalState() even
