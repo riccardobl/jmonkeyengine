@@ -38,7 +38,6 @@ public class SphereProbeArea implements ProbeArea {
         return radius;
     }
 
-    @Override
     public void setRadius(float radius) {
         this.radius = radius;
         updateMatrix();

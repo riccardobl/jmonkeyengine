@@ -14,8 +14,6 @@ public interface ProbeArea extends Savable, Cloneable{
 
     public float getRadius();
 
-    public void setRadius(float radius);
-
     public Matrix4f getUniformMatrix();
 
     /**

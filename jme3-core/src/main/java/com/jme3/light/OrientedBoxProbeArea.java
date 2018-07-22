@@ -73,11 +73,6 @@ public class OrientedBoxProbeArea implements ProbeArea {
     }
 
     @Override
-    public void setRadius(float radius) {
-        transform.setScale(radius, radius, radius);
-    }
-
-    @Override
     public boolean intersectsSphere(BoundingSphere sphere, TempVars vars) {
 
         Vector3f closestPoint = getClosestPoint(vars, sphere.getCenter());
