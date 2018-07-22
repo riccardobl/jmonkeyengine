@@ -196,7 +196,6 @@ public final class GLImageFormats {
                 format(formatToGL, Format.Luminance32F,         GLExt.GL_LUMINANCE32F_ARB,       GL.GL_LUMINANCE,       GL.GL_FLOAT);
                 format(formatToGL, Format.Luminance16FAlpha16F, GLExt.GL_LUMINANCE_ALPHA16F_ARB, GL.GL_LUMINANCE_ALPHA, halfFloatFormat);
             }
-<<<<<<< HEAD
             if(caps.contains(Caps.OpenGL30)){
 	            format(formatToGL, Format.RGB16F,               GL.GL_RGB16F,             GL.GL_RGB,             GL.GL_HALF_FLOAT);
 	            format(formatToGL, Format.RGBA16F,               GL.GL_RGBA16F,             GL.GL_RGBA,             GL.GL_HALF_FLOAT);
@@ -206,9 +205,7 @@ public final class GLImageFormats {
 	            format(formatToGL, Format.RGBA16F,              GLExt.GL_RGBA16F_ARB,            GL.GL_RGBA,            halfFloatFormat);
 
             }
-=======
-            format(formatToGL, Format.RGB16F,               GLExt.GL_RGB16F_ARB,             GL.GL_RGB,             halfFloatFormat);
->>>>>>> parent of c72b73e... Added Texture Formats R16F, R32F, RG16F, RG32F. (#839)
+
             format(formatToGL, Format.RGB32F,               GLExt.GL_RGB32F_ARB,             GL.GL_RGB,             GL.GL_FLOAT);
             format(formatToGL, Format.RGBA32F,              GLExt.GL_RGBA32F_ARB,            GL.GL_RGBA,            GL.GL_FLOAT);
         }
