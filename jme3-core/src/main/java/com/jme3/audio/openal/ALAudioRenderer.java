@@ -890,7 +890,7 @@ public class ALAudioRenderer implements AudioRenderer, Runnable {
             
             // Check if we need to sync JME status with OAL status.
             if (oalStatus != jmeStatus) {
-                if (oalStatus == Status.Stopped && jmeStatus == Status.Playing) {
+                if (oalStatus == Status.Stopped && jmeStatus != Status.Stopped) {
                     // Maybe we need to reclaim the channel.
                     if (src.getAudioData() instanceof AudioStream) {
                         AudioStream stream = (AudioStream) src.getAudioData();
