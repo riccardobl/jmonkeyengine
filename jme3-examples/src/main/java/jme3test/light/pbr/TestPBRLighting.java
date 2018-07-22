@@ -42,7 +42,8 @@ import com.jme3.input.ChaseCamera;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.light.*;
+import com.jme3.light.DirectionalLight;
+import com.jme3.light.LightProbe;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
@@ -204,7 +205,7 @@ public class TestPBRLighting extends SimpleApplication {
                     tex = EnvMapUtils.getCubeMapCrossDebugViewWithMipMaps(result.getPrefilteredEnvMap(), assetManager);
                 }
             });
-            ((SphereProbeArea) probe.getArea()).setRadius(100);
+            ((BoundingSphere) probe.getBounds()).setRadius(100);
             rootNode.addLight(probe);
             //getStateManager().getState(EnvironmentManager.class).addEnvProbe(probe);
 

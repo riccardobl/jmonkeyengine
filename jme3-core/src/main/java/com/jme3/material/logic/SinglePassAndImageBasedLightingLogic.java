@@ -47,16 +47,18 @@ import java.nio.ByteBuffer;
 import java.util.EnumSet;
 import java.util.*;
 
+import java.util.EnumSet;
+
 public final class SinglePassAndImageBasedLightingLogic extends DefaultTechniqueDefLogic {
 
     private static final String DEFINE_SINGLE_PASS_LIGHTING = "SINGLE_PASS_LIGHTING";
     private static final String DEFINE_NB_LIGHTS = "NB_LIGHTS";
 
-    private static final String DEFINE_NB_PROBES = "NB_PROBES";
+    private static final String DEFINE_INDIRECT_LIGHTING = "INDIRECT_LIGHTING";
     private static final RenderState ADDITIVE_LIGHT = new RenderState();
 
     private final ColorRGBA ambientLightColor = new ColorRGBA(0, 0, 0, 1);
-    private List<LightProbe> lightProbes = new ArrayList<>(3);
+    private LightProbe lightProbe = null;
 
     public static boolean FIXED = true;
 
@@ -67,14 +69,14 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
 
     private final int singlePassLightingDefineId;
     private final int nbLightsDefineId;
-    private final int nbProbesDefineId;
+    private final int indirectLightingDefineId;
 
     public SinglePassAndImageBasedLightingLogic(TechniqueDef techniqueDef) {
         super(techniqueDef);
         singlePassLightingDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_SINGLE_PASS_LIGHTING, VarType.Boolean);
         nbLightsDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_NB_LIGHTS, VarType.Int);
 
-        nbProbesDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_NB_PROBES, VarType.Int);
+        indirectLightingDefineId = techniqueDef.addShaderUnmappedDefine(DEFINE_INDIRECT_LIGHTING, VarType.Boolean);
     }
 
     @Override
@@ -87,9 +89,12 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         //Though the second pass should not render IBL as it is taken care of on first pass like ambient light in phong lighting.
         //We cannot change the define between passes and the old technique, and for some reason the code fails on mac (renders nothing).
         if(lights != null) {
-            lightProbes.clear();
-            extractIndirectLights(lights, false);
-            defines.set(nbProbesDefineId, lightProbes.size());
+            lightProbe = extractIndirectLights(lights, false);
+            if (lightProbe == null) {
+                defines.set(indirectLightingDefineId, false);
+            } else {
+                defines.set(indirectLightingDefineId, true);
+            }
         }
 
         return super.makeCurrent(assetManager, renderManager, rendererCaps, lights, defines);
@@ -117,44 +122,35 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         Uniform lightData = shader.getUniform("g_LightData");
         lightData.setVector4Length(numLights * 3);//8 lights * max 3
         Uniform ambientColor = shader.getUniform("g_AmbientLightColor");
-
-        // Matrix4f
         Uniform lightProbeData = shader.getUniform("g_LightProbeData");
-        Uniform lightProbeData2 = shader.getUniform("g_LightProbeData2");
-        Uniform lightProbeData3 = shader.getUniform("g_LightProbeData3");
+        lightProbeData.setVector4Length(1);
 
+        //TODO These 2 uniforms should be packed in an array, to be able to have several probes and blend between them.
         Uniform shCoeffs = shader.getUniform("g_ShCoeffs");
         Uniform lightProbePemMap = shader.getUniform("g_PrefEnvMap");
-        Uniform shCoeffs2 = shader.getUniform("g_ShCoeffs2");
-        Uniform lightProbePemMap2 = shader.getUniform("g_PrefEnvMap2");
-        Uniform shCoeffs3 = shader.getUniform("g_ShCoeffs3");
-        Uniform lightProbePemMap3 = shader.getUniform("g_PrefEnvMap3");
 
-        lightProbes.clear();
+        lightProbe = null;
         if (startIndex != 0) {
             // apply additive blending for 2nd and future passes
             rm.getRenderer().applyRenderState(ADDITIVE_LIGHT);
             ambientColor.setValue(VarType.Vector4, ColorRGBA.Black);
         }else{
-            extractIndirectLights(lightList,true);
+            lightProbe = extractIndirectLights(lightList,true);
             ambientColor.setValue(VarType.Vector4, ambientLightColor);
         }
 
         //If there is a lightProbe in the list we force its render on the first pass
-        if (!lightProbes.isEmpty()) {
-            LightProbe lightProbe = lightProbes.get(0);
-            lastTexUnit = setProbeData(rm, lastTexUnit, lightProbeData, shCoeffs, lightProbePemMap, lightProbe);
-            if (lightProbes.size() > 1) {
-                lightProbe = lightProbes.get(1);
-                lastTexUnit = setProbeData(rm, lastTexUnit, lightProbeData2, shCoeffs2, lightProbePemMap2, lightProbe);
-            }
-            if (lightProbes.size() > 2) {
-                lightProbe = lightProbes.get(2);
-                setProbeData(rm, lastTexUnit, lightProbeData3, shCoeffs3, lightProbePemMap3, lightProbe);
-            }
+        if(lightProbe != null){
+            BoundingSphere s = (BoundingSphere)lightProbe.getBounds();
+            lightProbeData.setVector4InArray(lightProbe.getPosition().x, lightProbe.getPosition().y, lightProbe.getPosition().z, 1f / s.getRadius() + lightProbe.getNbMipMaps(), 0);
+            shCoeffs.setValue(VarType.Vector3Array, lightProbe.getShCoeffs());
+            //assigning new texture indexes
+            int pemUnit = lastTexUnit++;
+            rm.getRenderer().setTexture(pemUnit, lightProbe.getPrefilteredEnvMap());
+            lightProbePemMap.setValue(VarType.Int, pemUnit);
         } else {
             //Disable IBL for this pass
-            lightProbeData.setValue(VarType.Matrix4, LightProbe.FALLBACK_MATRIX);
+            lightProbeData.setVector4InArray(0,0,0,-1, 0);
         }
 
         int lightDataIndex = 0;
@@ -239,18 +235,6 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         return curIndex;
     }
 
-    private int setProbeData(RenderManager rm, int lastTexUnit, Uniform lightProbeData, Uniform shCoeffs, Uniform lightProbePemMap, LightProbe lightProbe) {
-
-        lightProbeData.setValue(VarType.Matrix4, lightProbe.getUniformMatrix());
-                //setVector4InArray(lightProbe.getPosition().x, lightProbe.getPosition().y, lightProbe.getPosition().z, 1f / area.getRadius() + lightProbe.getNbMipMaps(), 0);
-        shCoeffs.setValue(VarType.Vector3Array, lightProbe.getShCoeffs());
-        //assigning new texture indexes
-        int pemUnit = lastTexUnit++;
-        rm.getRenderer().setTexture(pemUnit, lightProbe.getPrefilteredEnvMap());
-        lightProbePemMap.setValue(VarType.Int, pemUnit);
-        return lastTexUnit;
-    }
-
     @Override
     public void render(RenderManager renderManager, Shader shader, Geometry geometry, LightList lights, int lastTexUnit) {
         int nbRenderedLights = 0;
@@ -273,8 +257,9 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
         return;
     }
 
-    protected void extractIndirectLights(LightList lightList, boolean removeLights) {
+    protected LightProbe extractIndirectLights(LightList lightList, boolean removeLights) {
         ambientLightColor.set(0, 0, 0, 1);
+        LightProbe probe = null;
         for (int j = 0; j < lightList.size(); j++) {
             Light l = lightList.get(j);
             if (l instanceof AmbientLight) {
@@ -285,7 +270,7 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
                 }
             }
             if (l instanceof LightProbe) {
-                lightProbes.add((LightProbe) l);
+                probe = (LightProbe)l;
                 if(removeLights){
                     lightList.remove(l);
                     j--;
@@ -293,5 +278,6 @@ public final class SinglePassAndImageBasedLightingLogic extends DefaultTechnique
             }
         }
         ambientLightColor.a = 1.0f;
+        return probe;
     }
 }

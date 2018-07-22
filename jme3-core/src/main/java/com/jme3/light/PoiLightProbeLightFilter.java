@@ -39,20 +39,16 @@ import com.jme3.scene.Geometry;
 import com.jme3.util.TempVars;
 import java.util.HashSet;
 
-public final class DefaultLightFilter implements LightFilter {
+public final class PoiLightProbeLightFilter implements LightFilter {
 
     private Camera camera;
     private final HashSet<Light> processedLights = new HashSet<Light>();
-    private final LightProbeBlendingStrategy probeBlendStrat;
+    private final LightProbeBlendingProcessor processor;
 
-    public DefaultLightFilter() {
-        probeBlendStrat = new BasicProbeBlendingStrategy();
+    public PoiLightProbeLightFilter(LightProbeBlendingProcessor processor) {
+        this.processor = processor;
     }
 
-    public DefaultLightFilter(LightProbeBlendingStrategy probeBlendStrat) {
-        this.probeBlendStrat = probeBlendStrat;
-    }
-    
     @Override
     public void setCamera(Camera camera) {
         this.camera = camera;
@@ -66,12 +62,11 @@ public final class DefaultLightFilter implements LightFilter {
         TempVars vars = TempVars.get();
         try {
             LightList worldLights = geometry.getWorldLightList();
-           
+
             for (int i = 0; i < worldLights.size(); i++) {
                 Light light = worldLights.get(i);
 
-                // If this light is not enabled it will be ignored.
-                if (!light.isEnabled()) {
+                if (light.getType() == Light.Type.Probe) {
                     continue;
                 }
 
@@ -86,32 +81,27 @@ public final class DefaultLightFilter implements LightFilter {
                 }
 
                 BoundingVolume bv = geometry.getWorldBound();
-                
+
                 if (bv instanceof BoundingBox) {
-                    if (!light.intersectsBox((BoundingBox)bv, vars)) {
+                    if (!light.intersectsBox((BoundingBox) bv, vars)) {
                         continue;
                     }
                 } else if (bv instanceof BoundingSphere) {
-                    if (!Float.isInfinite( ((BoundingSphere)bv).getRadius() )) {
-                        if (!light.intersectsSphere((BoundingSphere)bv, vars)) {
+                    if (!Float.isInfinite(((BoundingSphere) bv).getRadius())) {
+                        if (!light.intersectsSphere((BoundingSphere) bv, vars)) {
                             continue;
                         }
                     }
                 }
                 
-                if (light.getType() == Light.Type.Probe) {
-                    probeBlendStrat.registerProbe((LightProbe) light);
-                } else {
-                    filteredLightList.add(light);
-                }
-                
+                filteredLightList.add(light);
             }
-            
-            probeBlendStrat.populateProbes(geometry, filteredLightList);
+
+            processor.populateProbe(filteredLightList);           
 
         } finally {
             vars.release();
         }
     }
-    
+
 }

@@ -42,39 +42,29 @@ import java.nio.FloatBuffer;
 public class WireFrustum extends Mesh {
 
     public WireFrustum(Vector3f[] points){
-        initGeom(this, points);
-    }
-
-    public static Mesh makeFrustum(Vector3f[] points){
-        Mesh m = new Mesh();
-        initGeom(m, points);
-        return m;
-    }
-
-    private static void initGeom(Mesh m, Vector3f[] points) {
         if (points != null)
-            m.setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(points));
+            setBuffer(Type.Position, 3, BufferUtils.createFloatBuffer(points));
 
-        m.setBuffer(Type.Index, 2,
+        setBuffer(Type.Index, 2,
                 new short[]{
-                        0, 1,
-                        1, 2,
-                        2, 3,
-                        3, 0,
+                     0, 1,
+                     1, 2,
+                     2, 3,
+                     3, 0,
 
-                        4, 5,
-                        5, 6,
-                        6, 7,
-                        7, 4,
+                     4, 5,
+                     5, 6,
+                     6, 7,
+                     7, 4,
 
-                        0, 4,
-                        1, 5,
-                        2, 6,
-                        3, 7,
+                     0, 4,
+                     1, 5,
+                     2, 6,
+                     3, 7,
                 }
         );
-        m.getBuffer(Type.Index).setUsage(Usage.Static);
-        m.setMode(Mode.Lines);
+        getBuffer(Type.Index).setUsage(Usage.Static);
+        setMode(Mode.Lines);
     }
 
     public void update(Vector3f[] points){
