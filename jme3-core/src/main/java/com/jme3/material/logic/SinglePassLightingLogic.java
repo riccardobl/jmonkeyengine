@@ -106,6 +106,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
         lightData.setVector4Length(numLights * 3);//8 lights * max 3
         Uniform ambientColor = shader.getUniform("g_AmbientLightColor");
 
+
         if (startIndex != 0) {
             // apply additive blending for 2nd and future passes
             rm.getRenderer().applyRenderState(ADDITIVE_LIGHT);
@@ -122,7 +123,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
         for (curIndex = startIndex; curIndex < endIndex && curIndex < lightList.size(); curIndex++) {
 
             Light l = lightList.get(curIndex);
-            if (l.getType() == Light.Type.Ambient || l.getType() == Light.Type.Probe) {
+            if (l.getType() == Light.Type.Ambient) {
                 endIndex++;
                 continue;
             }
@@ -183,6 +184,8 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
                     tmpVec.normalizeLocal();
                     lightData.setVector4InArray(tmpVec.getX(), tmpVec.getY(), tmpVec.getZ(), spotAngleCos, lightDataIndex);
                     lightDataIndex++;
+                    break;
+                case Probe:
                     break;
                 default:
                     throw new UnsupportedOperationException("Unknown type of light: " + l.getType());
