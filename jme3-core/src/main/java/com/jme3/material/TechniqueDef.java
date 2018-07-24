@@ -487,13 +487,16 @@ public class TechniqueDef implements Savable, Cloneable {
     }
     
     private Shader loadShader(AssetManager assetManager, EnumSet<Caps> rendererCaps, DefineList defines) {
+
         StringBuilder sb = new StringBuilder();
         sb.append(shaderPrologue);
         defines.generateSource(sb, defineNames, defineTypes);
         String definesSourceCode = sb.toString();
 
         Shader shader;
-        if (isUsingShaderNodes()) {
+        if(isUsingShaderNodes()){
+            System.out.println("Warning: Compiling shader node ");
+
             ShaderGenerator shaderGenerator = assetManager.getShaderGenerator(rendererCaps);
             if (shaderGenerator == null) {
                 throw new UnsupportedOperationException("ShaderGenerator was not initialized, "
@@ -501,14 +504,17 @@ public class TechniqueDef implements Savable, Cloneable {
             }
             shaderGenerator.initialize(this);
             shader = shaderGenerator.generateShader(definesSourceCode);
-        } else {
+        }else{
             shader = new Shader();
             for (ShaderType type : ShaderType.values()) {
                 String language = shaderLanguages.get(type);
-                String shaderSourceAssetName = shaderNames.get(type);
-                if (language == null || shaderSourceAssetName == null) {
+                String shaderSourceAssetName=shaderNames.get(type);
+
+                if(language==null||shaderSourceAssetName==null){
                     continue;
                 }
+                System.out.println("Warning: Compiling shader: "+shaderSourceAssetName);
+
                 String shaderSourceCode = (String) assetManager.loadAsset(shaderSourceAssetName);
                 shader.addSource(type, shaderSourceAssetName, shaderSourceCode, definesSourceCode, language);
             }

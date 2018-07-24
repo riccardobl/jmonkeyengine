@@ -40,7 +40,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
-import com.jme3.scene.instancing.InstancedGeometry;
+import com.jme3.scene.instancing.InstanceableGeometry;
 import com.jme3.shader.DefineList;
 import com.jme3.shader.Shader;
 import java.util.EnumSet;
@@ -62,8 +62,8 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     public static void renderMeshFromGeometry(Renderer renderer, Geometry geom) {
         Mesh mesh = geom.getMesh();
         int lodLevel = geom.getLodLevel();
-        if (geom instanceof InstancedGeometry) {
-            InstancedGeometry instGeom = (InstancedGeometry) geom;
+        if (geom instanceof InstanceableGeometry) {
+            InstanceableGeometry instGeom = (InstanceableGeometry) geom;
             if(instGeom.getActualNumInstances()>0){
                 renderer.renderMesh(mesh, lodLevel, instGeom.getActualNumInstances(),
                         instGeom.getAllInstanceData());

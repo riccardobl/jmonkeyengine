@@ -247,7 +247,7 @@ public class LightProbe extends Light implements Savable {
 
     @Override
     public boolean intersectsFrustum(Camera camera, TempVars vars) {
-        return camera.contains(bounds) != Camera.FrustumIntersect.Outside;
+        return true;//camera.contains(bounds) != Camera.FrustumIntersect.Outside;
     }
 
     @Override

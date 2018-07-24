@@ -56,7 +56,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class InstancedGeometry extends Geometry {
+public class InstancedGeometry extends InstanceableGeometry{
 
     private static final int INSTANCE_SIZE = 16;
 
@@ -248,6 +248,7 @@ public class InstancedGeometry extends Geometry {
         }
     }   
     
+    @Override
     public int getActualNumInstances() {
         return firstUnusedIndex;
     }
@@ -409,6 +410,7 @@ public class InstancedGeometry extends Geometry {
         return geometries;
     }
 
+    @Override
     public VertexBuffer[] getAllInstanceData() {
         ArrayList<VertexBuffer> allData = new ArrayList();
         if (transformInstanceData != null) {
