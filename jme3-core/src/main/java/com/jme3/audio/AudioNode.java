@@ -734,16 +734,14 @@ public class AudioNode extends Node implements AudioSource {
     @Override
     public void updateGeometricState() {
         super.updateGeometricState();
-        if(channel<0||this.getParent()==null||!velocityFromTranslation) return;
-        Vector3f currentWorldTranslation=worldTransform.getTranslation();
-        if(Float.isNaN(previousWorldTranslation.x)){
-            previousWorldTranslation.set(currentWorldTranslation);
-            return;
-        }
-        if(!previousWorldTranslation.equals(currentWorldTranslation)){
-            getRenderer().updateSourceParam(this,AudioParam.Position);
-            velocity.set(currentWorldTranslation).subtractLocal(previousWorldTranslation).multLocal(1f/lastTpf);
-            getRenderer().updateSourceParam(this,AudioParam.Velocity);
+        if (channel < 0 || this.getParent() == null) return;
+        Vector3f currentWorldTranslation = worldTransform.getTranslation();
+        if (!previousWorldTranslation.equals(currentWorldTranslation)) {
+            getRenderer().updateSourceParam(this, AudioParam.Position);
+            if (velocityFromTranslation && !Float.isNaN(previousWorldTranslation.x)) {
+                velocity.set(currentWorldTranslation).subtractLocal(previousWorldTranslation).multLocal(1f / lastTpf);
+                getRenderer().updateSourceParam(this, AudioParam.Velocity);
+            }
             previousWorldTranslation.set(currentWorldTranslation);
         }
     }
