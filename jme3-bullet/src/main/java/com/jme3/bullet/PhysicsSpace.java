@@ -202,35 +202,41 @@ public class PhysicsSpace {
 
     private void preTick_native(float f) {
 
-        // try{
-        // System.out.println("Execute queue from thread "+Thread.currentThread());
-        // task = pQueue.poll();
-
+     
         AppTask task;
         while((task=pQueue.poll())!=null){
             if(task.isCancelled())continue;
             try{
                 task.invoke();
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
+            } catch (Throwable ex) {
+                logger.log(Level.SEVERE,null,ex);
+                ex.printStackTrace();
             }
         }
-        // }catch(Throwable /t){
-        //     t.printStackTrace();
-        //     System.exit(1);
-        // }
-        
+    
         
         for (Iterator<PhysicsTickListener> it = tickListeners.iterator(); it.hasNext();) {
+            try{
+
             PhysicsTickListener physicsTickCallback = it.next();
-            physicsTickCallback.prePhysicsTick(this, f);
+            physicsTickCallback.prePhysicsTick(this,f);
+        } catch (Throwable ex) {
+                logger.log(Level.SEVERE,null,ex);
+                ex.printStackTrace();
+
+        }
         }
     }
 
     private void postTick_native(float f) {
-        for (Iterator<PhysicsTickListener> it = tickListeners.iterator(); it.hasNext();) {
+        for(Iterator<PhysicsTickListener> it=tickListeners.iterator();it.hasNext();){
+            try{
             PhysicsTickListener physicsTickCallback = it.next();
             physicsTickCallback.physicsTick(this, f);
+        } catch (Throwable ex) {
+                logger.log(Level.SEVERE,null,ex);
+                ex.printStackTrace();
+        }
         }
     }
 
@@ -433,84 +439,36 @@ public class PhysicsSpace {
     }
 
 
-
-    public  <V> Future<V> safeRun(final Callable<V> callable) {
-        // final Object monitor=Thread.currentThread();
-
+    public <V> Future<V> safeRun(final Callable<V> callable, final boolean wait) {
         AppTask task;
-        // if(updateThread==null||){
-        //     System.err.println("Not running");
-        //     System.exit(1);
-        // }
-        if(updateThread==null||Thread.currentThread()!=updateThread){
+            if(updateThread==null||Thread.currentThread()!=updateThread){
+            final Thread thread=Thread.currentThread();
             task=(AppTask)enqueue(new Callable<V>(){
                 @Override
                 public V call() throws Exception {
-                    // System.exit(1);
-                    // System.out.println("Call");
-
                     V r=callable.call();
-                    // callable.notifyAll();
-
-                    // synchronized(this){
-                    //     System.out.println("WakeyWakey ");
-
-                    //     notifyAll();
-                    // }
-                    return r;
+                      return r;
                 }
-            });
-            // // try{
-            //     do{
-            //         synchronized(callable){
-            //             try{
-			// 				callable.wait(200);
-			// 			}catch(InterruptedException e){
-			// 				// TODO Auto-generated catch block
-			// 				e.printStackTrace();
-			// 			}
-            //         }
-            //     }while(!task.isDone());
-                // do{
-            //     synchronized(task.getCallable()){
-            //         try{
-            //             System.out.println("Wait for callable");
-            //             task.getCallable().wait(200);
-            //             // task.getCallable().wait();
-            //             System.out.println("WakeyWaket ");
-            //         }catch(InterruptedException e){
-            //             e.printStackTrace();
-            //         }
-            //     }
-            // } while(task.isDone());
-            // }catch(InterruptedException e){
-            //     // TODO Auto-generated catch block
-            //     e.printStackTrace();
-            // }catch(ExecutionException e){
-            //     // TODO Auto-generated catch block
-            //     e.printStackTrace();
-            // }
-            // task=(AppTask)enqueue(callable);
-   
+            });         
+
         }else{
             task=new AppTask<V>(callable);
             try{
-                // callable.call();
                 task.invoke();
             }catch(Exception e){
                 e.printStackTrace();
             }
         }
-     
-        // while(!(task.isDone()||task.isCancelled())){
-        //     try{
-        //         synchronized(){
-        //             task.wait();
-        //         }
-        //     }catch(Exception e){
-        //         e.printStackTrace();
-        //     }
-        // }
+
+        if(wait) try{
+			task.get();
+		}catch(InterruptedException e){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch(ExecutionException e){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return task;
     }
     /**
@@ -523,50 +481,63 @@ public class PhysicsSpace {
         //     new Exception().printStackTrace();
         // }
         // if(updateThread==null){
-            safeRun(new Callable<Boolean>(){
-                    public Boolean call(){
-                        _add(obj);
-                        return true;
+        final PhysicsSpace ps=this;
+        safeRun(new Callable<Void>(){
+
+			@Override
+            public Void call() throws Exception {
+                if(obj instanceof Spatial){
+                    Spatial node=(Spatial)obj;
+                    for(int i=0;i<node.getNumControls();i++){
+                        if(node.getControl(i) instanceof PhysicsControl){
+                            // _add(((PhysicsControl)node.getControl(i)));
+                            add(((PhysicsControl)node.getControl(i)));
+        
+                        }
                     }
-                });
-        // }else      _add(obj);
-        // safeRun/(new Callable<Boolean>(){
-        //     public Boolean call(){
-          
-        //         return true;
-        //     }
-        // });
-    }
-
-    public void _add(Object obj) {
-        if (obj instanceof PhysicsControl) {
-            ((PhysicsControl) obj).setPhysicsSpace(this);
-        } else if (obj instanceof Spatial) {
-            Spatial node = (Spatial) obj;
-            for (int i = 0; i < node.getNumControls(); i++) {
-                if (node.getControl(i) instanceof PhysicsControl) {
-                    _add(((PhysicsControl) node.getControl(i)));
+                }else{
+                    if (obj instanceof PhysicsControl) {
+                        ((PhysicsControl) obj).setPhysicsSpace(ps);
+                    }  else if (obj instanceof PhysicsCollisionObject) {
+                        addCollisionObject((PhysicsCollisionObject) obj);
+                    } else if (obj instanceof PhysicsJoint) {
+                        addJoint((PhysicsJoint) obj);
+                    }else{
+                        throw (new UnsupportedOperationException("Cannot add this kind of object to the physics space."));
+                    }
+                    // _add(obj);
                 }
-            }
-        } else if (obj instanceof PhysicsCollisionObject) {
-            addCollisionObject((PhysicsCollisionObject) obj);
-        } else if (obj instanceof PhysicsJoint) {
-            addJoint((PhysicsJoint) obj);
-        } else {
-            throw (new UnsupportedOperationException("Cannot add this kind of object to the physics space."));
-        }
-    }
+        
+				return null;
+			}
 
-    public void addCollisionObject(PhysicsCollisionObject obj) {
-        if (obj instanceof PhysicsGhostObject) {
-            addGhostObject((PhysicsGhostObject) obj);
-        } else if (obj instanceof PhysicsRigidBody) {
-            addRigidBody((PhysicsRigidBody) obj);
-        } else if (obj instanceof PhysicsVehicle) {
-            addRigidBody((PhysicsVehicle) obj);
-        } else if (obj instanceof PhysicsCharacter) {
-            addCharacter((PhysicsCharacter) obj);
-        }
+        },true);
+        
+        
+    }
+    
+   
+    public void addCollisionObject(final PhysicsCollisionObject obj) {
+        final PhysicsSpace ps=this;
+        safeRun(new Callable<Void>(){
+
+			@Override
+            public Void call() throws Exception {
+                if (obj instanceof PhysicsGhostObject) {
+                    addGhostObject((PhysicsGhostObject) obj);
+                } else if (obj instanceof PhysicsRigidBody) {
+                    addRigidBody((PhysicsRigidBody) obj);
+                } else if (obj instanceof PhysicsVehicle) {
+                    addRigidBody((PhysicsVehicle) obj);
+                } else if (obj instanceof PhysicsCharacter) {
+                    addCharacter((PhysicsCharacter) obj);
+                }
+        
+				return null;
+			}
+
+        },true);
+
     }
 
     /**
@@ -575,49 +546,51 @@ public class PhysicsSpace {
      * @param obj the PhysicsControl or Spatial with PhysicsControl to remove
      */
     public void remove(final Object obj) {
-        // if(updateThread==null){
-            safeRun(new Callable<Boolean>(){
-                   public Boolean call(){
-                    _remove(obj);
-                       return true;
-                   }
-               });
-    //    }else  _remove(obj);
-        // safeRun(new Callable<Boolean>(){
-        //     public Boolean call(){
-                
-        //         return true;
-        //     }
-        // });
-    }
-    public void _remove(Object obj) {
-        if (obj == null) return;
-        if (obj instanceof PhysicsControl) {
-            ((PhysicsControl) obj).setPhysicsSpace(null);
-        } else if (obj instanceof Spatial) {
-            Spatial node = (Spatial) obj;
-            for (int i = 0; i < node.getNumControls(); i++) {
-                if (node.getControl(i) instanceof PhysicsControl) {
-                   _remove(((PhysicsControl) node.getControl(i)));
-                }
-            }
-        } else if (obj instanceof PhysicsCollisionObject) {
-            removeCollisionObject((PhysicsCollisionObject) obj);
-        } else if (obj instanceof PhysicsJoint) {
-            removeJoint((PhysicsJoint) obj);
-        } else {
-            throw (new UnsupportedOperationException("Cannot remove this kind of object from the physics space."));
-        }
-    }
+        safeRun(new Callable<Void>(){
 
-    public void removeCollisionObject(PhysicsCollisionObject obj) {
-        if (obj instanceof PhysicsGhostObject) {
-            removeGhostObject((PhysicsGhostObject) obj);
-        } else if (obj instanceof PhysicsRigidBody) {
-            removeRigidBody((PhysicsRigidBody) obj);
-        } else if (obj instanceof PhysicsCharacter) {
-            removeCharacter((PhysicsCharacter) obj);
-        }
+			@Override
+            public Void call() throws Exception {
+                if (obj == null) return null;
+                if (obj instanceof PhysicsControl) {
+                    ((PhysicsControl) obj).setPhysicsSpace(null);
+                } else if (obj instanceof Spatial) {
+                    Spatial node = (Spatial) obj;
+                    for (int i = 0; i < node.getNumControls(); i++) {
+                        if (node.getControl(i) instanceof PhysicsControl) {
+                           remove(((PhysicsControl) node.getControl(i)));
+                        }
+                    }
+                } else if (obj instanceof PhysicsCollisionObject) {
+                    removeCollisionObject((PhysicsCollisionObject) obj);
+                } else if (obj instanceof PhysicsJoint) {
+                    removeJoint((PhysicsJoint) obj);
+                } else {
+                    throw (new UnsupportedOperationException("Cannot remove this kind of object from the physics space."));
+                }
+				return null;
+			}
+
+        },true);
+       
+    }
+   
+    public void removeCollisionObject(final PhysicsCollisionObject obj) {
+        safeRun(new Callable<Void>(){
+
+			@Override
+            public Void call() throws Exception {
+                if (obj instanceof PhysicsGhostObject) {
+                    removeGhostObject((PhysicsGhostObject) obj);
+                } else if (obj instanceof PhysicsRigidBody) {
+                    removeRigidBody((PhysicsRigidBody) obj);
+                } else if (obj instanceof PhysicsCharacter) {
+                    removeCharacter((PhysicsCharacter) obj);
+                }
+				return null;
+			}
+
+        },true);
+        
     }
 
     /**
@@ -625,7 +598,12 @@ public class PhysicsSpace {
      * (e.g. after loading from disk) - recursive if node
      * @param spatial the rootnode containing the physics objects
      */
-    public void addAll(Spatial spatial) {
+    public void addAll(final Spatial spatial) {
+        safeRun(new Callable<Void>(){
+
+			@Override
+            public Void call() throws Exception {
+               
         add(spatial);
 
         if (spatial.getControl(RigidBodyControl.class) != null) {
@@ -648,6 +626,11 @@ public class PhysicsSpace {
                 addAll(spat);
             }
         }
+				return null;
+			}
+
+        },true);
+        
     }
 
     /**
@@ -655,29 +638,41 @@ public class PhysicsSpace {
      * (e.g. before saving to disk) - recursive if node
      * @param spatial the rootnode containing the physics objects
      */
-    public void removeAll(Spatial spatial) {
-        if (spatial.getControl(RigidBodyControl.class) != null) {
-            RigidBodyControl physicsNode = spatial.getControl(RigidBodyControl.class);
-            //remove joints with physicsNode as BodyA
-            List<PhysicsJoint> joints = physicsNode.getJoints();
-            for (Iterator<PhysicsJoint> it1 = joints.iterator(); it1.hasNext();) {
-                PhysicsJoint physicsJoint = it1.next();
-                if (physicsNode.equals(physicsJoint.getBodyA())) {
-                    removeJoint(physicsJoint);
-                    //remove(physicsJoint.getBodyB());
+    public void removeAll(final Spatial spatial) {
+        safeRun(new Callable<Void>(){
+
+			@Override
+            public Void call() throws Exception {
+                if(spatial.getControl(RigidBodyControl.class)!=null){
+                    final RigidBodyControl physicsNode=spatial.getControl(RigidBodyControl.class);
+                    //remove joints with physicsNode as BodyA
+                    List<PhysicsJoint> joints=physicsNode.getJoints();
+                            for(Iterator<PhysicsJoint> it1=joints.iterator();it1.hasNext();){
+                                final PhysicsJoint physicsJoint=it1.next();
+                                if(physicsNode.equals(physicsJoint.getBodyA())){
+        
+                                    removeJoint(physicsJoint);
+        
+                                }
+                            }
+                    
                 }
-            }
-        }
-            
-        remove(spatial);
-        //recursion
-        if (spatial instanceof Node) {
-            List<Spatial> children = ((Node) spatial).getChildren();
-            for (Iterator<Spatial> it = children.iterator(); it.hasNext();) {
-                Spatial spat = it.next();
-                removeAll(spat);
-            }
-        }
+                    
+                remove(spatial);
+                //recursion
+                if (spatial instanceof Node) {
+                    List<Spatial> children = ((Node) spatial).getChildren();
+                    for (Iterator<Spatial> it = children.iterator(); it.hasNext();) {
+                        Spatial spat = it.next();
+                        removeAll(spat);
+                    }
+                }
+				return null;
+			}
+
+        },true);
+        
+       
     }
 
     private native void addCollisionObject(long space, long id);
