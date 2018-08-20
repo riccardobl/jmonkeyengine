@@ -139,7 +139,7 @@ public class VehicleControl extends PhysicsVehicle implements PhysicsControl, Jm
         control.setSuspensionCompression(tuning.suspensionCompression);
         control.setSuspensionDamping(tuning.suspensionDamping);
         control.setMaxSuspensionForce(getMaxSuspensionForce());
-    
+
         for (Iterator<VehicleWheel> it = wheels.iterator(); it.hasNext();) {
             VehicleWheel wheel = it.next();
             VehicleWheel newWheel = control.addWheel(wheel.getLocation(), wheel.getDirection(), wheel.getAxle(), wheel.getRestLength(), wheel.getRadius(), wheel.isFrontWheel());
@@ -164,7 +164,7 @@ public class VehicleControl extends PhysicsVehicle implements PhysicsControl, Jm
     @Override   
     public void cloneFields( Cloner cloner, Object original ) {
         this.spatial = cloner.clone(spatial);
-         
+        setUserObject(this.spatial);         
         for( VehicleWheel wheel : wheels ) {
             Spatial spatial = cloner.clone(wheel.getWheelSpatial());
             wheel.setWheelSpatial(spatial);

@@ -116,8 +116,9 @@ public class GhostControl extends PhysicsGhostObject implements PhysicsControl, 
     }     
 
     @Override   
-    public void cloneFields( Cloner cloner, Object original ) { 
+    public void cloneFields(Cloner cloner, Object original) {
         this.spatial = cloner.clone(spatial);
+        setUserObject(this.spatial);
     }
          
     public void setSpatial(Spatial spatial) {
