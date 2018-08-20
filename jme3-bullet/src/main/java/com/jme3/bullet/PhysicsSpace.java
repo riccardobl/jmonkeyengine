@@ -106,7 +106,8 @@ public class PhysicsSpace {
     private Vector3f worldMin = new Vector3f(-10000f, -10000f, -10000f);
     private Vector3f worldMax = new Vector3f(10000f, 10000f, 10000f);
     private float accuracy = 1f / 60f;
-    private int maxSubSteps = 4, rayTestFlags = 1 << 2;
+    private int maxSubSteps=4,rayTestFlags=1<<2;
+    private int solverThreadsN=1;
     private int solverNumIterations = 10;
     private JNICache cache=new JNICache();
     
@@ -136,21 +137,22 @@ public class PhysicsSpace {
     }
 
     public PhysicsSpace() {
-        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), BroadphaseType.DBVT);
+        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), BroadphaseType.DBVT,1);
     }
 
     public PhysicsSpace(BroadphaseType broadphaseType) {
-        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), broadphaseType);
+        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), broadphaseType,1);
     }
 
     public PhysicsSpace(Vector3f worldMin, Vector3f worldMax) {
-        this(worldMin, worldMax, BroadphaseType.AXIS_SWEEP_3);
+        this(worldMin, worldMax, BroadphaseType.AXIS_SWEEP_3,1);
     }
 
-    public PhysicsSpace(Vector3f worldMin, Vector3f worldMax, BroadphaseType broadphaseType) {
+    public PhysicsSpace(Vector3f worldMin, Vector3f worldMax, BroadphaseType broadphaseType,int solverThreadsN) {
         this.worldMin.set(worldMin);
         this.worldMax.set(worldMax);
-        this.broadphaseType = broadphaseType;
+        this.broadphaseType=broadphaseType;
+        this.solverThreadsN=solverThreadsN;
         create();
     }
 
@@ -162,7 +164,7 @@ public class PhysicsSpace {
      * Has to be called from the (designated) physics thread
      */
     public void create() {
-        physicsSpaceId = createPhysicsSpace(worldMin.x, worldMin.y, worldMin.z, worldMax.x, worldMax.y, worldMax.z, broadphaseType.ordinal(), false);
+        physicsSpaceId = createPhysicsSpace(worldMin.x, worldMin.y, worldMin.z, worldMax.x, worldMax.y, worldMax.z, broadphaseType.ordinal(), solverThreadsN);
         pQueueTL.set(pQueue);
         physicsSpaceTL.set(this);
 
@@ -198,7 +200,7 @@ public class PhysicsSpace {
 //        setOverlapFilterCallback();
     }
 
-    private native long createPhysicsSpace(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int broadphaseType, boolean threading);
+    private native long createPhysicsSpace(float minX, float minY, float minZ, float maxX, float maxY, float maxZ, int broadphaseType, int threads);
 
     private void preTick_native(float f) {
 

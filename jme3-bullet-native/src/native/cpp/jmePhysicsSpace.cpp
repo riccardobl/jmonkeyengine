@@ -32,6 +32,34 @@
 #include "jmePhysicsSpace.h"
 #include "jmeBulletUtil.h"
 
+#ifdef BT_THREADSAFE
+    #ifdef JLOCK_IS_SPINLOCK
+        btSpinMutex java_safecall_mutex;
+        #define jlockinit(dw) {}
+        #define jlock(dw) if(dw->is_multithread)  java_safecall_mutex.lock()
+        #define junlock(dw) if(dw->is_multithread) java_safecall_mutex.unlock()
+        #define jlockdestroy(dw) {}
+    #elif defined( BT_USE_OPENMP)
+        #include <omp.h>
+        omp_lock_t java_safecall_mutex;
+        #define jlockinit(dw) if(dw->is_multithread) omp_init_lock(&java_safecall_mutex)
+        #define jlock(dw) if(dw->is_multithread)  omp_set_lock(&java_safecall_mutex)
+        #define junlock(dw) if(dw->is_multithread) omp_unset_lock(&java_safecall_mutex)
+        #define jlockdestroy(dw) if(dw->is_multithread) omp_destroy_lock(&java_safecall_mutex)
+    #else
+        #include <pthread.h>
+        pthread_mutex_t java_safecall_mutex;
+        #define jlockinit(dw) if(dw->is_multithread) pthread_mutex_init(&java_safecall_mutex, NULL)
+        #define jlock(dw) if(dw->is_multithread) pthread_mutex_lock(&java_safecall_mutex)
+        #define junlock(dw) if(dw->is_multithread)  pthread_mutex_unlock(&java_safecall_mutex)
+        #define jlockdestroy(dw) if(dw->is_multithread)    pthread_mutex_destroy(&java_safecall_mutex)
+    #endif
+#else
+    #define jlockinit(dw) {}
+    #define jlock(dw) {}
+    #define junlock(dw) {}
+    #define jlockdestroy(dw) {}
+#endif
 /**
  * Author: Normen Hansen
  */
@@ -65,7 +93,7 @@ void jmePhysicsSpace::stepSimulation(jfloat tpf, jint maxSteps, jfloat accuracy)
     dynamicsWorld->stepSimulation(tpf, maxSteps, accuracy);
 }
 
-void jmePhysicsSpace::createPhysicsSpace(jfloat minX, jfloat minY, jfloat minZ, jfloat maxX, jfloat maxY, jfloat maxZ, jint broadphaseId, jboolean threading /*unused*/) {
+void jmePhysicsSpace::createPhysicsSpace(jfloat minX, jfloat minY, jfloat minZ, jfloat maxX, jfloat maxY, jfloat maxZ, jint broadphaseId, jint threads) {
     btCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
 
     btVector3 min = btVector3(minX, minY, minZ);
@@ -88,17 +116,53 @@ void jmePhysicsSpace::createPhysicsSpace(jfloat minX, jfloat minY, jfloat minZ, 
             broadphase = new btDbvtBroadphase();
             break;
     }
+    btDiscreteDynamicsWorld* world;
+    printf("############ INITIALIZING PHYSICS SPACE ###########\n");
 
+    #ifdef BT_THREADSAFE
+    if(threads>1){
+      this->is_multithread=true;
+      #ifdef BT_USE_OPENMP
+        printf("Use Multithread solver with %d openmp threads\n",threads);
+        btSetTaskScheduler(btGetOpenMPTaskScheduler());
+      #else
+        printf("Use Multithread solver with %d posix threads\n",threads);
+        btSetTaskScheduler(btCreateDefaultTaskScheduler());
+      #endif
+      btCollisionDispatcherMt* dispatcher =
+          new btCollisionDispatcherMt(collisionConfiguration, 40);
+      btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
+      btConstraintSolverPoolMt* solver_pool =
+          new btConstraintSolverPoolMt(threads);
+      // create parallel solver
+      btConstraintSolver* solver = new btSequentialImpulseConstraintSolverMt();
+      world = new btDiscreteDynamicsWorldMt(dispatcher, broadphase, solver_pool,
+                                            solver, collisionConfiguration);
+    }else{    
+        this->is_multithread=false;
+
+    #else
+    if(threads>1){
+        printf("Warning: Cannot run multithread solver, this build is not threadsafe. A single thread solver will be used insted.\n");
+    }   
+    #endif
+  
+  
+    printf("Using Single thread solver\n");
 
     btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
     btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher);
-
-
     btConstraintSolver* solver = new btSequentialImpulseConstraintSolver();
-
     //create dynamics world
-    btDiscreteDynamicsWorld* world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+    
+    #ifdef BT_THREADSAFE
+    }
+    #endif
+
     dynamicsWorld = world;
+    jlockinit(this);
+
     dynamicsWorld->setWorldUserInfo(this);
 
     broadphase->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
@@ -159,6 +223,7 @@ void jmePhysicsSpace::createPhysicsSpace(jfloat minX, jfloat minY, jfloat minZ, 
 
 void jmePhysicsSpace::preTickCallback(btDynamicsWorld *world, btScalar timeStep) {
     jmePhysicsSpace* dynamicsWorld = (jmePhysicsSpace*) world->getWorldUserInfo();
+    // jlock(dynamicsWorld);
     JNIEnv* env = dynamicsWorld->getEnv();
     jobject javaPhysicsSpace = env->NewLocalRef(dynamicsWorld->getJavaPhysicsSpace());
     if (javaPhysicsSpace != NULL) {
@@ -166,13 +231,16 @@ void jmePhysicsSpace::preTickCallback(btDynamicsWorld *world, btScalar timeStep)
         env->DeleteLocalRef(javaPhysicsSpace);
         if (env->ExceptionCheck()) {
             env->Throw(env->ExceptionOccurred());
+            // junlock(dynamicsWorld);
             return;
         }
     }
+    // junlock(dynamicsWorld);
 }
 
 void jmePhysicsSpace::postTickCallback(btDynamicsWorld *world, btScalar timeStep) {
     jmePhysicsSpace* dynamicsWorld = (jmePhysicsSpace*) world->getWorldUserInfo();
+    // jlock(dynamicsWorld);
     JNIEnv* env = dynamicsWorld->getEnv();
     jobject javaPhysicsSpace = env->NewLocalRef(dynamicsWorld->getJavaPhysicsSpace());
     if (javaPhysicsSpace != NULL) {
@@ -180,19 +248,23 @@ void jmePhysicsSpace::postTickCallback(btDynamicsWorld *world, btScalar timeStep
         env->DeleteLocalRef(javaPhysicsSpace);
         if (env->ExceptionCheck()) {
             env->Throw(env->ExceptionOccurred());
+            // junlock(dynamicsWorld);
             return;
         }
     }
+    // junlock(dynamicsWorld);
 }
 
 bool jmePhysicsSpace::contactProcessedCallback(btManifoldPoint &cp, void *body0, void *body1) {
     //    printf("contactProcessedCallback %d %dn", body0, body1);
-    btCollisionObject* co0 = (btCollisionObject*) body0;
+    btCollisionObject* co0 = (btCollisionObject*)body0;
     jmeUserPointer *up0 = (jmeUserPointer*) co0 -> getUserPointer();
     btCollisionObject* co1 = (btCollisionObject*) body1;
     jmeUserPointer *up1 = (jmeUserPointer*) co1 -> getUserPointer();
     if (up0 != NULL) {
         jmePhysicsSpace *dynamicsWorld = (jmePhysicsSpace *)up0->space;
+        jlock(dynamicsWorld);
+
         if (dynamicsWorld != NULL) {
             JNIEnv* env = dynamicsWorld->getEnv();
             jobject javaPhysicsSpace = env->NewLocalRef(dynamicsWorld->getJavaPhysicsSpace());
@@ -205,10 +277,12 @@ bool jmePhysicsSpace::contactProcessedCallback(btManifoldPoint &cp, void *body0,
                 env->DeleteLocalRef(javaCollisionObject1);
                 if (env->ExceptionCheck()) {
                     env->Throw(env->ExceptionOccurred());
+                    junlock(dynamicsWorld);
                     return true;
                 }
             }
         }
+        junlock(dynamicsWorld);
     }
     return true;
 }
@@ -222,5 +296,7 @@ jobject jmePhysicsSpace::getJavaPhysicsSpace() {
 }
 
 jmePhysicsSpace::~jmePhysicsSpace() {
+    jmePhysicsSpace *jmeDynamicsWorld = (jmePhysicsSpace *)dynamicsWorld;
+    jlockdestroy(jmeDynamicsWorld);
     delete(dynamicsWorld);
 }

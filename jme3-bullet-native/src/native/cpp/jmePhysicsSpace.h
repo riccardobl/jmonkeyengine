@@ -42,6 +42,13 @@
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 #include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
 
+#ifdef BT_THREADSAFE
+        #include "BulletCollision/CollisionDispatch/btCollisionDispatcherMt.h"
+        #include "BulletDynamics/Dynamics/btSimulationIslandManagerMt.h"  // for setSplitIslands()
+        #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorldMt.h"
+        #include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolverMt.h"
+#endif
+
 /**
  * Author: Normen Hansen
  */
@@ -51,14 +58,14 @@ private:
 	JavaVM* vm;
 	btDynamicsWorld* dynamicsWorld;
 	jobject javaPhysicsSpace;
-
+        bool is_multithread;
         void attachThread();
 public:
 	jmePhysicsSpace(){};
 	~jmePhysicsSpace();
         jmePhysicsSpace(JNIEnv*, jobject);
 	void stepSimulation(jfloat, jint, jfloat);
-        void createPhysicsSpace(jfloat, jfloat, jfloat, jfloat, jfloat, jfloat, jint, jboolean);
+        void createPhysicsSpace(jfloat, jfloat, jfloat, jfloat, jfloat, jfloat, jint, jint);
         btDynamicsWorld* getDynamicsWorld();
         jobject getJavaPhysicsSpace();
         JNIEnv* getEnv();

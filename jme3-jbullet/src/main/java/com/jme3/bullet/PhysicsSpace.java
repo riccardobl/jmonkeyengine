@@ -161,18 +161,18 @@ public class PhysicsSpace {
     }
 
     public PhysicsSpace() {
-        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), BroadphaseType.DBVT);
+        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), BroadphaseType.DBVT,1);
     }
 
     public PhysicsSpace(BroadphaseType broadphaseType) {
-        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), broadphaseType);
+        this(new Vector3f(-10000f, -10000f, -10000f), new Vector3f(10000f, 10000f, 10000f), broadphaseType,1);
     }
 
     public PhysicsSpace(Vector3f worldMin, Vector3f worldMax) {
-        this(worldMin, worldMax, BroadphaseType.AXIS_SWEEP_3);
+        this(worldMin, worldMax, BroadphaseType.AXIS_SWEEP_3,1);
     }
 
-    public PhysicsSpace(Vector3f worldMin, Vector3f worldMax, BroadphaseType broadphaseType) {
+    public PhysicsSpace(Vector3f worldMin, Vector3f worldMax, BroadphaseType broadphaseType,int solverThreads /*unused*/) {
         this.worldMin.set(worldMin);
         this.worldMax.set(worldMax);
         this.broadphaseType = broadphaseType;
