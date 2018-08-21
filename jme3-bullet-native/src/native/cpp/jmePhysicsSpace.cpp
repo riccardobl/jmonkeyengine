@@ -47,12 +47,21 @@
         #define junlock(dw) if(dw->is_multithread) omp_unset_lock(&java_safecall_mutex)
         #define jlockdestroy(dw) if(dw->is_multithread) omp_destroy_lock(&java_safecall_mutex)
     #else
-        #include <pthread.h>
-        pthread_mutex_t java_safecall_mutex;
-        #define jlockinit(dw) if(dw->is_multithread) pthread_mutex_init(&java_safecall_mutex, NULL)
-        #define jlock(dw) if(dw->is_multithread) pthread_mutex_lock(&java_safecall_mutex)
-        #define junlock(dw) if(dw->is_multithread)  pthread_mutex_unlock(&java_safecall_mutex)
-        #define jlockdestroy(dw) if(dw->is_multithread)    pthread_mutex_destroy(&java_safecall_mutex)
+        #ifdef _WIN32
+            #include <windows.h>
+            HANDLE java_safecall_mutex; 
+            #define jlockinit(dw) if(dw->is_multithread) java_safecall_mutex=CreateMutex(NULL,FALSE, NULL)
+            #define jlock(dw) if(dw->is_multithread)  WaitForSingleObject(java_safecall_mutex,INFINITE)
+            #define junlock(dw) if(dw->is_multithread)  ReleaseMutex(java_safecall_mutex)
+            #define jlockdestroy(dw) if(dw->is_multithread)  CloseHandle(java_safecall_mutex)
+        #else
+            #include <pthread.h>
+            pthread_mutex_t java_safecall_mutex;
+            #define jlockinit(dw) if(dw->is_multithread) pthread_mutex_init(&java_safecall_mutex, NULL)
+            #define jlock(dw) if(dw->is_multithread) pthread_mutex_lock(&java_safecall_mutex)
+            #define junlock(dw) if(dw->is_multithread)  pthread_mutex_unlock(&java_safecall_mutex)
+            #define jlockdestroy(dw) if(dw->is_multithread)    pthread_mutex_destroy(&java_safecall_mutex)
+        #endif
     #endif
 #else
     #define jlockinit(dw) {}
