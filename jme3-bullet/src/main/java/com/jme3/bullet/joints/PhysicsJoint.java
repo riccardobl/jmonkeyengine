@@ -91,7 +91,7 @@ public abstract class PhysicsJoint implements Savable {
     	setBreakingImpulseThreshold(objectId,tr);
     }
     
-    private native float setBreakingImpulseThreshold(long objectId,float tr);
+    private native void setBreakingImpulseThreshold(long objectId,float tr);
     
     public float getBreakingImpulseThreshold(){
     	return getBreakingImpulseThreshold(objectId);
