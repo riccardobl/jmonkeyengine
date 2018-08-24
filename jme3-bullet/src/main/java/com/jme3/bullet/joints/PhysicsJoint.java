@@ -63,6 +63,13 @@ public abstract class PhysicsJoint implements Savable {
         this.nodeB = nodeB;
         this.pivotA = pivotA;
         this.pivotB = pivotB;
+
+        // If there is a gap between the pivot points, move nodeB closer to nodeA.
+        Vector3f pivotGap = nodeA.getPhysicsLocation().add(pivotA).subtractLocal(nodeB.getPhysicsLocation().add(pivotB));
+        if(pivotGap.length() > 0){
+            nodeB.setPhysicsLocation(nodeB.getPhysicsLocation().addLocal(pivotGap));
+        }
+
         nodeA.addJoint(this);
         nodeB.addJoint(this);
     }
