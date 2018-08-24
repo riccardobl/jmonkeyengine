@@ -210,15 +210,26 @@ extern "C" {
         jmeClasses::initJavaClasses(env);
         btRigidBody* bodyA = reinterpret_cast<btRigidBody*>(bodyIdA);
         btRigidBody* bodyB = reinterpret_cast<btRigidBody*>(bodyIdB);
-        btVector3 vec1 = btVector3();
-        btVector3 vec2 = btVector3();
-        btVector3 vec3 = btVector3();
-        btVector3 vec4 = btVector3();
-        jmeBulletUtil::convert(env, pivotA, &vec1);
-        jmeBulletUtil::convert(env, pivotB, &vec2);
-        jmeBulletUtil::convert(env, axisA, &vec3);
-        jmeBulletUtil::convert(env, axisB, &vec4);
-        btHingeConstraint* joint = new btHingeConstraint(*bodyA, *bodyB, vec1, vec2, vec3, vec4);
+
+        btVector3 pivotAbt = btVector3();
+        btVector3 pivotBbt = btVector3();
+        btVector3 axisAbt = btVector3();
+        btVector3 axisBbt = btVector3();
+        
+        jmeBulletUtil::convert(env, pivotA, &pivotAbt);
+        jmeBulletUtil::convert(env, pivotB, &pivotBbt);
+        jmeBulletUtil::convert(env, axisA, &axisAbt);
+        jmeBulletUtil::convert(env, axisB, &axisBbt);
+
+        btHingeConstraint *joint;
+
+        // If bodyA is static, use a static point instead of a rigidbody. Fix issue #877
+        if(bodyA->getCollisionFlags()&btCollisionObject::CF_STATIC_OBJECT==btCollisionObject::CF_STATIC_OBJECT){   
+            joint = new btHingeConstraint(*bodyB, pivotBbt, axisBbt);
+        }else{
+            joint = new btHingeConstraint(*bodyA, *bodyB, pivotAbt, pivotBbt, axisAbt, axisBbt);
+        }
+      
         return reinterpret_cast<jlong>(joint);
     }
 #ifdef __cplusplus
