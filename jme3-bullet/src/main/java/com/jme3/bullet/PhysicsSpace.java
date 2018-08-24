@@ -443,7 +443,7 @@ public class PhysicsSpace {
 
     public <V> Future<V> safeRun(final Callable<V> callable, final boolean wait) {
         AppTask task;
-            if(updateThread==null||Thread.currentThread()!=updateThread){
+            if(updateThread!=null&&Thread.currentThread()!=updateThread){
             final Thread thread=Thread.currentThread();
             task=(AppTask)enqueue(new Callable<V>(){
                 @Override
