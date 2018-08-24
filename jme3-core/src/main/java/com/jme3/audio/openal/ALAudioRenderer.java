@@ -57,7 +57,7 @@ public class ALAudioRenderer implements AudioRenderer, Runnable {
     // which is exactly 1 second of audio.
     private static final int BUFFER_SIZE = 35280;
     private static final int STREAMING_BUFFER_COUNT = 5;
-    private final static int MAX_NUM_CHANNELS = 64;
+    public static int MAX_NUM_CHANNELS = 1024;
     private IntBuffer ib = BufferUtils.createIntBuffer(1);
     private final FloatBuffer fb = BufferUtils.createVector3Buffer(2);
     private final ByteBuffer nativeBuf = BufferUtils.createByteBuffer(BUFFER_SIZE);
@@ -104,7 +104,8 @@ public class ALAudioRenderer implements AudioRenderer, Runnable {
         ArrayList<Integer> channelList = new ArrayList<Integer>();
         for (int i = 0; i < MAX_NUM_CHANNELS; i++) {
             int chan = al.alGenSources();
-            if (al.alGetError() != 0) {
+            if(al.alGetError()!=0){
+                MAX_NUM_CHANNELS=i;
                 break;
             } else {
                 channelList.add(chan);
