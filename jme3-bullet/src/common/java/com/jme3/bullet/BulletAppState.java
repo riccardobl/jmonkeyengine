@@ -191,9 +191,10 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         }else if(threadingType==ThreadingType.DETACHED){
             startPhysicsOnExecutor();
         }else {
-            pSpace = new PhysicsSpace(worldMin, worldMax, broadphaseType,solverThreadsN);
+            pSpace=new PhysicsSpace(worldMin,worldMax,broadphaseType,solverThreadsN);
+            pSpace.addTickListener(this);
+
         }
-        pSpace.addTickListener(this);
         initialized = true;
     }
 
