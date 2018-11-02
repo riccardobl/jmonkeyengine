@@ -281,7 +281,9 @@ public abstract class LwjglWindow extends LwjglContext implements Runnable {
         glfwMakeContextCurrent(window);
 
         // Enable vsync
-        if (settings.isVSync()) {
+        if(settings.isAdaptiveVSync()){
+            glfwSwapInterval(-1);
+        }else if (settings.isVSync()) {
             glfwSwapInterval(1);
         } else {
             glfwSwapInterval(0);

@@ -127,8 +127,12 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
             Display.setIcon(imagesToByteBuffers(settings.getIcons()));
         }
         
-        Display.setVSyncEnabled(settings.isVSync());
-        
+        if(settings.isAdaptiveVSync()){
+            Display.setVSyncEnabled(true);
+            Display.setSwapInterval(-1);
+        }else{
+            Display.setVSyncEnabled(settings.isVSync());
+        }        
         if (created.get() && !pixelFormatChanged) {
             Display.releaseContext();
             Display.makeCurrent();

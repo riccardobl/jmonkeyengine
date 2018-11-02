@@ -457,10 +457,14 @@ public class LwjglCanvas extends LwjglAbstractDisplay implements JmeCanvasContex
                 
                 try {
                     Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                }
+                }catch(InterruptedException ex){}
                 
-                Display.setVSyncEnabled(settings.isVSync());
+                if(settings.isAdaptiveVSync()){
+                    Display.setVSyncEnabled(true);
+                    Display.setSwapInterval(-1);
+                }else{
+                    Display.setVSyncEnabled(settings.isVSync());
+                }
                 Display.setParent(canvas);
                 
                 if (USE_SHARED_CONTEXT){

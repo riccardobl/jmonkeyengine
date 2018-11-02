@@ -224,7 +224,9 @@ public final class AppSettings extends HashMap<String, Object> {
         defaults.put("AudioRenderer", LWJGL_OPENAL);
         defaults.put("DisableJoysticks", true);
         defaults.put("UseInput", true);
-        defaults.put("VSync", false);
+        defaults.put("VSync",false);
+        defaults.put("AdaptiveVSync", false);
+
         defaults.put("FrameRate", -1);
         defaults.put("SettingsDialogImage", "/com/jme3/app/Monkey.png");
         defaults.put("MinHeight", 0);
@@ -810,7 +812,11 @@ public final class AppSettings extends HashMap<String, Object> {
      * (Default: false)
      */
     public void setVSync(boolean value) {
-        putBoolean("VSync", value);
+        putBoolean("VSync",value);
+    }
+    
+    public void setAdaptiveVSync(boolean value) {
+        putBoolean("AdaptiveVSync", value);
     }
 
     /**
@@ -987,6 +993,10 @@ public final class AppSettings extends HashMap<String, Object> {
      */
     public boolean isVSync() {
         return getBoolean("VSync");
+    }
+
+    public boolean isAdaptiveVSync() {
+        return getBoolean("AdaptiveVSync");
     }
 
     /**
