@@ -193,7 +193,7 @@ public class BulletAppState implements AppState, PhysicsTickListener {
         }else {
             pSpace=new PhysicsSpace(worldMin,worldMax,broadphaseType,solverThreadsN);
             pSpace.addTickListener(this);
-
+            
         }
         initialized = true;
     }

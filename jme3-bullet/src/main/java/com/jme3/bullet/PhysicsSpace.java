@@ -443,7 +443,9 @@ public class PhysicsSpace {
 
     public <V> Future<V> safeRun(final Callable<V> callable, final boolean wait) {
         AppTask task;
-            if(updateThread!=null&&Thread.currentThread()!=updateThread){
+        if(updateThread!=null&&Thread.currentThread()!=updateThread){
+            System.out.println("Calling from "+Thread.currentThread()+" will be enqueued to "+updateThread);
+            // new Exception().printStackTrace();
             final Thread thread=Thread.currentThread();
             task=(AppTask)enqueue(new Callable<V>(){
                 @Override
@@ -453,6 +455,15 @@ public class PhysicsSpace {
                 }
             });         
 
+            if(wait) try{
+                task.get();
+            }catch(InterruptedException e){
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }catch(ExecutionException e){
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }else{
             task=new AppTask<V>(callable);
             try{
@@ -462,15 +473,6 @@ public class PhysicsSpace {
             }
         }
 
-        if(wait) try{
-			task.get();
-		}catch(InterruptedException e){
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}catch(ExecutionException e){
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
         return task;
     }
     /**
