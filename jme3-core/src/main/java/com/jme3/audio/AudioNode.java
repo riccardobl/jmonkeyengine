@@ -130,7 +130,8 @@ public class AudioNode extends Node implements AudioSource {
      * @param audioKey The audio key that was used to load the AudioData
      */
     public AudioNode(AudioData audioData, AudioKey audioKey) {
-        setAudioData(audioData, audioKey);
+        setAudioData(audioData,audioKey);
+        
     }
 
     /**
@@ -160,7 +161,8 @@ public class AudioNode extends Node implements AudioSource {
      */
     public AudioNode(AssetManager assetManager, String name, boolean stream, boolean streamCache) {
         this.audioKey = new AudioKey(name, stream, streamCache);
-        this.data = (AudioData) assetManager.loadAsset(audioKey);
+        this.data=(AudioData)assetManager.loadAsset(audioKey);
+        setName(name);
       }
 
     /**
