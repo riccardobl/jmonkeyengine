@@ -580,7 +580,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
             worldLights.update(localLights, null);
             refreshFlags &= ~RF_LIGHTLIST;
         } else {
-            assert (parent.refreshFlags & RF_LIGHTLIST) == 0;
+            // assert (parent.refreshFlags & RF_LIGHTLIST) == 0;
             worldLights.update(localLights, parent.worldLights);
             refreshFlags &= ~RF_LIGHTLIST;
         }
@@ -593,7 +593,7 @@ public abstract class Spatial implements Savable, Cloneable, Collidable, Cloneab
         if (parent == null) {
             worldOverrides.addAll(localOverrides);
         } else {
-            assert (parent.refreshFlags & RF_MATPARAM_OVERRIDE) == 0;
+            // assert (parent.refreshFlags & RF_MATPARAM_OVERRIDE) == 0;
             worldOverrides.addAll(parent.worldOverrides);
             worldOverrides.addAll(localOverrides);
         }

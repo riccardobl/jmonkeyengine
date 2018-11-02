@@ -63,8 +63,8 @@ public final class Intersection {
     }
     
     public static boolean intersect(BoundingBox bbox, Vector3f center, float radius) {
-        assert Vector3f.isValidVector(center) && Vector3f.isValidVector(bbox.center);
-
+        // assert Vector3f.isValidVector(center) && Vector3f.isValidVector(bbox.center);
+        if(!(Vector3f.isValidVector(center)&&Vector3f.isValidVector(bbox.center))) return false; // TODO: hotfix, this should be revertex
         // Arvo's algorithm 
         float distSqr = radius * radius;
         

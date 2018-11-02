@@ -605,7 +605,8 @@ public class BoundingBox extends BoundingVolume {
      * @see BoundingVolume#intersectsBoundingBox(com.jme3.bounding.BoundingBox)
      */
     public boolean intersectsBoundingBox(BoundingBox bb) {
-        assert Vector3f.isValidVector(center) && Vector3f.isValidVector(bb.center);
+        if(!(Vector3f.isValidVector(center)&&Vector3f.isValidVector(bb.center))) return false;
+        // assert Vector3f.isValidVector(center) && Vector3f.isValidVector(bb.center);
 
         if (center.x + xExtent < bb.center.x - bb.xExtent
                 || center.x - xExtent > bb.center.x + bb.xExtent) {
