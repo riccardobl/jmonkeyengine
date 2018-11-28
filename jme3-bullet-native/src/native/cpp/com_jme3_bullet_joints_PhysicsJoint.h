@@ -18,7 +18,7 @@ JNIEXPORT jfloat JNICALL Java_com_jme3_bullet_joints_PhysicsJoint_getAppliedImpu
 /*
  * Class:     com_jme3_bullet_joints_PhysicsJoint
  * Method:    setBreakingImpulseThreshold
- * Signature: (JF)F
+ * Signature: (JF)V
  */
 JNIEXPORT void JNICALL Java_com_jme3_bullet_joints_PhysicsJoint_setBreakingImpulseThreshold
   (JNIEnv *, jobject, jlong, jfloat);
