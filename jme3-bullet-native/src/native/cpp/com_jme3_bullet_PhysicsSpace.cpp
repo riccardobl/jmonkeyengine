@@ -46,7 +46,7 @@ extern "C" {
      * Signature: (FFFFFFI)J
      */
     JNIEXPORT jlong JNICALL Java_com_jme3_bullet_PhysicsSpace_createPhysicsSpace
-    (JNIEnv * env, jobject object, jfloat minX, jfloat minY, jfloat minZ, jfloat maxX, jfloat maxY, jfloat maxZ, jint broadphase, jboolean threading) {
+    (JNIEnv * env, jobject object, jfloat minX, jfloat minY, jfloat minZ, jfloat maxX, jfloat maxY, jfloat maxZ, jint broadphase, jint threading) {
         jmeClasses::initJavaClasses(env);
         jmePhysicsSpace* space = new jmePhysicsSpace(env, object);
         if (space == NULL) {
