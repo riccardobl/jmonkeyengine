@@ -150,7 +150,16 @@ extern "C" {
         btVector3 pivotBIn;
         jmeBulletUtil::convert(env, pivotA, &pivotAIn);
         jmeBulletUtil::convert(env, pivotB, &pivotBIn);
-        btPoint2PointConstraint * joint = new btPoint2PointConstraint(*bodyA, *bodyB, pivotAIn, pivotBIn);
+
+        btPoint2PointConstraint *joint;
+        if (bodyA->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT) { // If bodyA is static
+            joint = new btPoint2PointConstraint(*bodyB,  pivotBIn);
+        }else if(bodyB->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT){  // If bodyB is static
+            joint = new btPoint2PointConstraint(*bodyA,  pivotAIn);
+        }else{
+            joint = new btPoint2PointConstraint(*bodyA, *bodyB, pivotAIn, pivotBIn);
+        }
+
         return reinterpret_cast<jlong>(joint);
     }
 

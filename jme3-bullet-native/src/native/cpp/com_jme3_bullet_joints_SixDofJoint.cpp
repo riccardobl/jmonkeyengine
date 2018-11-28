@@ -162,7 +162,17 @@ extern "C" {
         btTransform transB = btTransform(mtx2);
         jmeBulletUtil::convert(env, pivotB, &transB.getOrigin());
         jmeBulletUtil::convert(env, rotB, &transB.getBasis());
-        btGeneric6DofConstraint* joint = new btGeneric6DofConstraint(*bodyA, *bodyB, transA, transB, useLinearReferenceFrameA);
+
+        btGeneric6DofConstraint *joint;
+        if (bodyA->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT) { // If bodyA is static
+            joint =  new btGeneric6DofConstraint(*bodyB, transB, useLinearReferenceFrameA);
+        }else if(bodyB->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT){  // If bodyB is static
+            joint =  new btGeneric6DofConstraint(*bodyA, transA, useLinearReferenceFrameA);
+        }else{
+            joint =  new btGeneric6DofConstraint(*bodyA, *bodyB, transA, transB, useLinearReferenceFrameA);
+        }
+
+
         return reinterpret_cast<jlong>(joint);
     }
 #ifdef __cplusplus

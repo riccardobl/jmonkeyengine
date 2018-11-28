@@ -91,7 +91,17 @@ extern "C" {
         btTransform transB = btTransform(mtx2);
         jmeBulletUtil::convert(env, pivotB, &transB.getOrigin());
         jmeBulletUtil::convert(env, rotB, &transB.getBasis());
-        btConeTwistConstraint* joint = new btConeTwistConstraint(*bodyA, *bodyB, transA, transB);
+
+        btConeTwistConstraint *joint;
+
+        if (bodyA->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT) { // If bodyA is static
+            joint = new btConeTwistConstraint(*bodyB, transB);
+        }else if(bodyB->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT){  // If bodyB is static
+            joint = new btConeTwistConstraint(*bodyA, transA);
+        }else{
+            joint = new btConeTwistConstraint(*bodyA, *bodyB, transA, transB);
+        }
+
         return reinterpret_cast<jlong>(joint);
     }
 

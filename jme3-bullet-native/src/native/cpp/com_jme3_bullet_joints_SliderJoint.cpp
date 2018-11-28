@@ -954,7 +954,17 @@ extern "C" {
         btTransform transB = btTransform(mtx2);
         jmeBulletUtil::convert(env, pivotB, &transB.getOrigin());
         jmeBulletUtil::convert(env, rotB, &transB.getBasis());
-        btSliderConstraint* joint = new btSliderConstraint(*bodyA, *bodyB, transA, transB, useLinearReferenceFrameA);
+
+        btSliderConstraint *joint;
+        if (bodyA->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT) { // If bodyA is static
+            joint = new btSliderConstraint(*bodyB,  transB, useLinearReferenceFrameA);
+        }else if(bodyB->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT){  // If bodyB is static
+            joint = new btSliderConstraint(*bodyA,  transA,  useLinearReferenceFrameA);
+        }else{
+            joint = new btSliderConstraint(*bodyA, *bodyB, transA, transB, useLinearReferenceFrameA);
+        }
+
+
         return reinterpret_cast<jlong>(joint);
     }
 

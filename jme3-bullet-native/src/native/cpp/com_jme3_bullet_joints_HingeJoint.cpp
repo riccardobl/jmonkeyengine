@@ -223,13 +223,13 @@ extern "C" {
 
         btHingeConstraint *joint;
 
-        // If bodyA is static, use a static point instead of a rigidbody. Fix issue #877
-        if(bodyA->getCollisionFlags()&btCollisionObject::CF_STATIC_OBJECT==btCollisionObject::CF_STATIC_OBJECT){   
+        if(bodyA->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT){ // If bodyA is static
             joint = new btHingeConstraint(*bodyB, pivotBbt, axisBbt);
+        }else if(bodyB->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT == btCollisionObject::CF_STATIC_OBJECT){  // If bodyB is static
+            joint = new btHingeConstraint(*bodyA, pivotAbt, axisAbt);
         }else{
             joint = new btHingeConstraint(*bodyA, *bodyB, pivotAbt, pivotBbt, axisAbt, axisBbt);
         }
-      
         return reinterpret_cast<jlong>(joint);
     }
 #ifdef __cplusplus
