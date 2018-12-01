@@ -198,9 +198,21 @@ public abstract class PhysicsCollisionObject implements Savable {
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
-        Logger.getLogger(this.getClass().getName()).log(Level.FINE, "Finalizing CollisionObject {0}", Long.toHexString(objectId));
+        Logger.getLogger(this.getClass().getName()).log(Level.FINE,"Finalizing CollisionObject {0}",Long.toHexString(objectId));
         finalizeNative(objectId);
-    }
+    }    
 
     protected native void finalizeNative(long objectId);
+
+    public void setCollisionFlags(int flags){
+        setCollisionFlagsNative(objectId,flags);
+    }
+
+    public int getCollisionFlags(){
+        return getCollisionFlagsNative(objectId);
+    }
+
+    protected native void setCollisionFlagsNative(long objectId,int flags);
+
+    protected native int getCollisionFlagsNative(long objectId);
 }

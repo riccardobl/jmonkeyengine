@@ -143,6 +143,31 @@ extern "C" {
         }
     }
 
+
+
+    JNIEXPORT void JNICALL Java_com_jme3_bullet_collision_PhysicsCollisionObject_setCollisionFlagsNative
+    (JNIEnv *env, jobject object, jlong objectId, jint flags){
+        btCollisionObject* collisionObject = reinterpret_cast<btCollisionObject*>(objectId);
+        if (collisionObject == NULL) {
+            jclass newExc = env->FindClass("java/lang/NullPointerException");
+            env->ThrowNew(newExc, "The native object does not exist.");
+            return;
+        }
+        collisionObject->setCollisionFlags(flags);
+    }
+
+    JNIEXPORT jint JNICALL Java_com_jme3_bullet_collision_PhysicsCollisionObject_getCollisionFlagsNative
+    (JNIEnv *env, jobject object, jlong objectId){
+        btCollisionObject* collisionObject = reinterpret_cast<btCollisionObject*>(objectId);
+        if (collisionObject == NULL) {
+            jclass newExc = env->FindClass("java/lang/NullPointerException");
+            env->ThrowNew(newExc, "The native object does not exist.");
+            return;
+        }
+        return collisionObject->getCollisionFlags();
+
+    }
+
 #ifdef __cplusplus
 }
 #endif
