@@ -51,7 +51,7 @@ import org.lwjgl.opengl.OpenGLException;
 import org.lwjgl.opengl.Util;
 
 public abstract class LwjglAbstractDisplay extends LwjglContext implements Runnable {
-
+    public static boolean IGNORE_ERRORS=false;
     private static final Logger logger = Logger.getLogger(LwjglAbstractDisplay.class.getName());
 
     protected AtomicBoolean needClose = new AtomicBoolean(false);
@@ -154,7 +154,7 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
         // If the canvas is not active, there's no need to waste time
         // doing that ..
         if (renderable.get()){
-            assert checkGLError();
+            if(!IGNORE_ERRORS)assert checkGLError();
 
             // calls swap buffers, etc.
             try {
