@@ -659,4 +659,26 @@ public class JoglGL implements GL, GL2, GL3, GL4 {
     public void glUniformBlockBinding(final int program, final int uniformBlockIndex, final int uniformBlockBinding) {
         GLContext.getCurrentGL().getGL3bc().glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
     }
+
+
+    @Override
+    public void glBeginTransformFeedback(int primitiveMode){
+        GLContext.getCurrentGL().getGL3().glBeginTransformFeedback(primitiveMode);
+    }
+
+    @Override
+    public void glEndTransformFeedback(){
+        GLContext.getCurrentGL().getGL3().glEndTransformFeedback();
+    }
+
+    @Override
+    public void glDeleteQueries(IntBuffer param1) {
+        checkLimit(param1);
+        GLContext.getCurrentGL().getGL2ES2().glDeleteQueries(param1.limit(), param1);
+    }
+
+    @Override
+    public void glBindBufferRange(int target, int index, int buffer, int offset, int size) {
+        GLContext.getCurrentGL().getGL3().glBindBufferRange(target, index, buffer, offset, size);
+    }
 }

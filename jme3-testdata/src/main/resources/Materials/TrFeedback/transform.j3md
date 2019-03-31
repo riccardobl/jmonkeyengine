@@ -1,0 +1,14 @@
+MaterialDef TransformFeedback Transform {
+    MaterialParameters {
+    }
+
+    Technique {
+        VertexShader GLSL150:  Materials/TrFeedback/transform.vert
+        WorldParameters {
+            Time
+        }        
+        Defines {
+            
+        }
+    }
+}

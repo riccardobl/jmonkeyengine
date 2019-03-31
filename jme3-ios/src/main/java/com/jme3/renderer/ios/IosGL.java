@@ -616,4 +616,9 @@ public class IosGL implements GL, GLExt, GLFbo {
     public void glFramebufferTextureLayerEXT(int target, int attachment, int texture, int level, int layer) {
         throw new UnsupportedOperationException("OpenGL ES 2 does not support texture arrays");
     }
+
+    @Override
+    public void glDeleteQueries(IntBuffer ids) {
+        throw new UnsupportedOperationException("Today is not a good day for this");
+    }
 }

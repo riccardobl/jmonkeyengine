@@ -50,6 +50,9 @@ import com.jme3.util.clone.JmeCloneable;
 import java.io.IOException;
 import java.nio.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import java.util.Map;
 
 /**
  * <code>Mesh</code> is used to store rendering data.
@@ -184,11 +187,35 @@ public class Mesh implements Savable, Cloneable, JmeCloneable {
     private Mode mode = Mode.Triangles;
 
     private SafeArrayList<MorphTarget> morphTargets;
+   
+    private QueryObject countFeedbackPrimitives=null;
+    private final Map<Object,VertexBuffer> transformFeedbackOutputs=new HashMap<Object,VertexBuffer> ();
 
     /**
      * Creates a new mesh with no {@link VertexBuffer vertex buffers}.
      */
     public Mesh(){
+    }
+
+    public Map<Object,VertexBuffer> getTransformFeedbackOutputs(){
+        return transformFeedbackOutputs;        
+    }
+            
+    public void setFeedbackOutput(Integer key,VertexBuffer bo){
+        transformFeedbackOutputs.put(key,bo);
+    }
+
+    public void clearFeedbackOutputs(){
+        transformFeedbackOutputs.clear();
+    }
+
+    public void setCountFeedbackPrimitives(boolean v){
+        if(v)countFeedbackPrimitives=new QueryObject(QueryObject.Type.FeedBackPrimitivesCount);  
+        else countFeedbackPrimitives=null;
+    }
+
+    public QueryObject getCountFeedbackPrimitivesQuery(){
+        return countFeedbackPrimitives;
     }
 
     /**
@@ -828,10 +855,10 @@ public class Mesh implements Savable, Cloneable, JmeCloneable {
 
         VertexBuffer pb = getBuffer(Type.Position);
         VertexBuffer ib = getBuffer(Type.Index);
-        if (pb != null){
+        if (pb != null && pb.getData()!=null){
             vertCount = pb.getData().limit() / pb.getNumComponents();
         }
-        if (ib != null){
+        if (ib != null && ib.getData()!=null){
             elementCount = computeNumElements(ib.getData().limit());
         }else{
             elementCount = computeNumElements(vertCount);
@@ -1050,6 +1077,14 @@ public class Mesh implements Savable, Cloneable, JmeCloneable {
         buffers.put(vb.getBufferType().ordinal(), vb);
         buffersList.add(vb);
         updateCounts();
+    }
+
+    public void setOrReplaceBuffer(VertexBuffer vb) {
+        VertexBuffer ovb = buffers.remove(vb.getBufferType().ordinal());
+        if (vb != null) {
+            buffersList.remove(ovb);
+        }
+        setBuffer(vb);
     }
 
     /**

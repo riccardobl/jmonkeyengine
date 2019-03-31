@@ -643,7 +643,29 @@ public class LwjglGL extends LwjglRender implements GL, GL2, GL3, GL4 {
     }
 
     @Override
+    public void glBindBufferRange(final int target, final int index, final int buffer,final int offset, final int size) {
+        GL30.glBindBufferRange(target, index, buffer, offset, size);
+    }
+
+    @Override
     public void glUniformBlockBinding(final int program, final int uniformBlockIndex, final int uniformBlockBinding) {
         GL31.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
+    }
+
+
+    @Override
+    public void glBeginTransformFeedback(int primitiveMode){
+        GL30.glBeginTransformFeedback(primitiveMode);
+    }
+
+    @Override
+    public void glEndTransformFeedback(){
+        GL30.glEndTransformFeedback();
+    }
+
+    @Override
+    public void glDeleteQueries(IntBuffer param1) {
+        checkLimit(param1);
+        GL15.glDeleteQueries(param1);
     }
 }

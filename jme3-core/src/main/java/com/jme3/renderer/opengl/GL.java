@@ -757,7 +757,7 @@ public interface GL {
      * @param ids a buffer in which the generated query object names are stored.
      */
     public void glGenQueries(int number, IntBuffer ids);
-
+    public void glDeleteQueries(IntBuffer ids);
     /**
      * <p><a target="_blank" href="http://docs.gl/gl4/glGetAttribLocation">Reference Page</a></p>
      * <p>

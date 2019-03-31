@@ -1,0 +1,19 @@
+MaterialDef TransformFeedback Render {
+    MaterialParameters {
+      
+    }
+
+    Technique {
+        VertexShader GLSL150:  Materials/TrFeedback/render.vert
+        FragmentShader GLSL150: Materials/TrFeedback/render.frag
+
+        WorldParameters {
+           ViewProjectionMatrix
+        }
+        
+
+        Defines {
+            
+        }
+    }
+}

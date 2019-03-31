@@ -96,7 +96,10 @@ public class Geometry extends Spatial {
     // can't be handled on the cpu on each frame.
     private MorphTarget fallbackMorphTarget;
     private int nbSimultaneousGPUMorph = -1;
+    
+    private int instances=1;
 
+    
     /**
      * Serialization only. Do not use.
      */
@@ -706,4 +709,18 @@ public class Geometry extends Spatial {
             }
         }
     }
+
+
+
+    /** 
+    * Render this geometry multiple times
+    */
+    public void setNumInstances(int v){
+        instances=v;
+    }
+
+    public int getNumInstances(){
+        return instances;
+    }
+
 }
