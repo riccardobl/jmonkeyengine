@@ -214,6 +214,8 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
          */
         InstanceData,
 
+        BufferObject,
+
         /**
          * Morph animations targets.
          * Supports up tp 14 morph target buffers at the same time
@@ -1216,4 +1218,23 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         }
     }
 
+    public VertexBuffer makePointer(Type type, Usage usage, int components, Format format, int instanceSpan) {
+        VertexBuffer store = new VertexBuffer(type);
+        store.usage = usage;
+        store.components = components;
+        store.format = format;
+        store.setInstanceSpan(instanceSpan);
+        return makePointer(store);
+    }
+
+
+
+    public VertexBuffer makePointer(VertexBuffer store) {
+        store.data = data;
+        store.id = id;
+        if (!isUpdateNeeded())
+            store.clearUpdateNeeded();
+        return store;
+            }
+        
 }

@@ -131,4 +131,23 @@ public class GLDebugDesktop extends GLDebugES implements GL2, GL3, GL4 {
         gl3.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
         checkError();
     }
+
+    @Override
+    public void glBindBufferRange(int target, int index, int buffer, int offset, int size) {
+        gl3.glBindBufferRange(target, index, buffer, offset, size);
+        checkError();
+    }
+
+    @Override
+    public void glBeginTransformFeedback(int primitiveMode){
+        gl3.glBeginTransformFeedback(primitiveMode);
+        checkError();
+    }
+
+    @Override
+    public void glEndTransformFeedback(){
+        gl3.glEndTransformFeedback();
+        checkError();
+    }
+    
 }

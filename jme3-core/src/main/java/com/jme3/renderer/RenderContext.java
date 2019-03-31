@@ -255,6 +255,11 @@ public class RenderContext {
      */
     public VertexBuffer[] boundAttribs = new VertexBuffer[16];
 
+
+    public VertexBuffer[] boundTransformFeedbacks = new VertexBuffer[16];
+    public IDList transformFeedbacksIndexList = new IDList();
+   
+    
     /**
      * IDList for vertex attributes
      */

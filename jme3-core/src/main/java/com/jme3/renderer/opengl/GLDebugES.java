@@ -224,6 +224,12 @@ public class GLDebugES extends GLDebug implements GL, GLFbo, GLExt {
         glGenQueries(num, ids);
         checkError();
     }
+    
+    @Override
+    public void glDeleteQueries(IntBuffer ids) {
+        glDeleteQueries(ids);
+        checkError();
+    }
 
     public int glGetAttribLocation(int program, String name) {
         int location = gl.glGetAttribLocation(program, name);

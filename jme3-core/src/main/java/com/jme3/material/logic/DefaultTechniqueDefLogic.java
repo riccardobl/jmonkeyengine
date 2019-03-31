@@ -62,7 +62,9 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     public static void renderMeshFromGeometry(Renderer renderer, Geometry geom) {
         Mesh mesh = geom.getMesh();
         int lodLevel = geom.getLodLevel();
-        if (geom instanceof InstancedGeometry) {
+        if(geom.getNumInstances()>1){
+            renderer.renderMesh(mesh, lodLevel, geom.getNumInstances(),null);            
+        }else if (geom instanceof InstancedGeometry) {
             InstancedGeometry instGeom = (InstancedGeometry) geom;
             renderer.renderMesh(mesh, lodLevel, instGeom.getActualNumInstances(),
                     instGeom.getAllInstanceData());

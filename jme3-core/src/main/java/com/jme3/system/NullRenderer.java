@@ -40,6 +40,7 @@ import com.jme3.renderer.Limits;
 import com.jme3.renderer.Renderer;
 import com.jme3.renderer.Statistics;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.QueryObject;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.shader.BufferObject;
 import com.jme3.shader.Shader;
@@ -47,7 +48,6 @@ import com.jme3.shader.Shader.ShaderSource;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
-
 import java.nio.ByteBuffer;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -77,7 +77,7 @@ public class NullRenderer implements Renderer {
         return stats;
     }
 
-    public void invalidateState(){
+    public void invalidateState() {
     }
 
     public void clearBuffers(boolean color, boolean depth, boolean stencil) {
@@ -127,10 +127,10 @@ public class NullRenderer implements Renderer {
 
     public void copyFrameBuffer(FrameBuffer src, FrameBuffer dst, boolean copyDepth) {
     }
-    
+
     public void setMainFrameBufferOverride(FrameBuffer fb) {
     }
-    
+
     public void setFrameBuffer(FrameBuffer fb) {
     }
 
@@ -152,6 +152,7 @@ public class NullRenderer implements Renderer {
     @Override
     public void updateBufferData(BufferObject bo) {
     }
+
     public void deleteBuffer(VertexBuffer vb) {
     }
 
@@ -175,10 +176,10 @@ public class NullRenderer implements Renderer {
     public void setAlphaToCoverage(boolean value) {
     }
 
-    public void setMainFrameBufferSrgb(boolean srgb) {     
+    public void setMainFrameBufferSrgb(boolean srgb) {
     }
 
-    public void setLinearizeSrgbImages(boolean linearize) {    
+    public void setLinearizeSrgbImages(boolean linearize) {
     }
 
     @Override
@@ -206,10 +207,30 @@ public class NullRenderer implements Renderer {
         return false;
     }
 
-    public void readFrameBufferWithFormat(FrameBuffer fb, ByteBuffer byteBuf, Image.Format format) {        
+    public void readFrameBufferWithFormat(FrameBuffer fb, ByteBuffer byteBuf, Image.Format format) {
     }
 
     @Override
     public void setDefaultAnisotropicFilter(int level) {
+    }
+
+    @Override
+    public void updateQuery(QueryObject query) {
+
+    }
+
+    @Override
+    public long collectQueryOutputLong(QueryObject query) {
+        return 0;
+    }
+
+    @Override
+    public int collectQueryOutputInt(QueryObject query) {
+        return 0;
+    }
+
+    @Override
+    public void deleteQuery(QueryObject query) {
+
     }
 }

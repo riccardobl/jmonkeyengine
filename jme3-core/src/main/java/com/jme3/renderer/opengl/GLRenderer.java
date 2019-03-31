@@ -70,6 +70,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.jme3.scene.QueryObject;
+import java.util.Map.Entry;
 
 public final class GLRenderer implements Renderer {
 
@@ -2699,6 +2701,43 @@ public final class GLRenderer implements Renderer {
         context.attribIndexList.copyNewToOld();
     }
 
+
+ 
+
+    public void clearTransformFeedback() {
+        IDList trList = context.transformFeedbacksIndexList;
+        for (int i = 0; i < trList.oldLen; i++) {
+            int idx = trList.oldList[i];
+            gl3.glBindBufferBase(GL3.GL_TRANSFORM_FEEDBACK_BUFFER, idx, 0);  
+            context.boundTransformFeedbacks[idx] = null;        
+        }        
+        context.transformFeedbacksIndexList.copyNewToOld();
+    }
+    
+    public void setTransformFeedback(Object key, VertexBuffer vb) {
+        int index = 0;        
+        if (key instanceof Integer) {        
+            key = (Integer)key;
+        } else {        
+            throw new UnsupportedOperationException(); //varyings binding not supported
+        }
+        
+        if(context.boundTransformFeedbacks[index]!=vb){
+            if (vb.getOffset() > 0) {
+                int offset = vb.getOffset() * vb.getNumComponents();
+                int length = vb.getNumComponents() * vb.getNumElements() - offset;
+                gl3.glBindBufferRange(GL3.GL_TRANSFORM_FEEDBACK_BUFFER, index, vb.getId(), offset, length);
+            } else {
+                gl3.glBindBufferBase(GL3.GL_TRANSFORM_FEEDBACK_BUFFER, index, vb.getId());
+            }
+            context.boundTransformFeedbacks[index]=vb;
+        }
+        
+        context.transformFeedbacksIndexList.moveToNew(index);
+    }
+    
+        
+
     public void setVertexAttrib(VertexBuffer vb, VertexBuffer idb) {
         if (vb.getBufferType() == VertexBuffer.Type.Index) {
             throw new IllegalArgumentException("Index buffers not allowed to be set to vertex attrib");
@@ -3004,8 +3043,80 @@ public final class GLRenderer implements Renderer {
         clearVertexAttribs();
     }
 
-    private void renderMeshDefault(Mesh mesh, int lod, int count, VertexBuffer[] instanceData) {
+    public void beginTransformFeedback(Mesh mesh){
+        QueryObject trquery = mesh.getCountFeedbackPrimitivesQuery();
+        if (trquery != null) {
+            if (trquery.isUpdateNeeded()) {
+                updateQuery(trquery);
+            }
+            int qtype = convertQueryType(trquery.getType());
+            if (qtype != -1)
+                gl.glBeginQuery(qtype, trquery.getId());
+        }
+        gl3.glBeginTransformFeedback(convertElementMode(mesh.getMode()));
+    }
+        
+    private int convertQueryType(QueryObject.Type type) {
+        switch (type) {
+            case FeedBackPrimitivesCount :
+                return GL3.GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
+        }
+        return -1;
+    }
 
+    @Override
+    public int collectQueryOutputInt(QueryObject query) {
+        return gl.glGetQueryObjectiv(query.getId(), GL.GL_QUERY_RESULT);
+    }
+
+
+
+    @Override
+    public long collectQueryOutputLong(QueryObject query) {
+        return gl.glGetQueryObjectui64(query.getId(), GL.GL_QUERY_RESULT);
+    }
+
+    @Override
+    public void updateQuery(QueryObject query) {
+        if (query.getId() == -1) {
+            intBuf1.position(0).limit(1);
+            gl.glGenQueries(1, intBuf1);
+            int id = intBuf1.get();
+            query.setId(id);
+            query.setRenderer(this);
+        }
+        query.clearUpdateNeeded();
+    }
+
+
+
+    @Override
+    public void deleteQuery(QueryObject query) {
+        if (query.getId() != -1) {
+            intBuf1.put(0, query.getId());
+            intBuf1.position(0).limit(1);
+            gl.glDeleteQueries(intBuf1);
+            query.resetObject();
+        }
+    }
+
+    public void endTransformFeedback(Mesh mesh) {
+        gl3.glEndTransformFeedback();
+        if (mesh.getCountFeedbackPrimitivesQuery() != null) {
+            QueryObject trquery = mesh.getCountFeedbackPrimitivesQuery();
+            if (trquery != null) {
+                if (trquery.isUpdateNeeded()) {
+                    updateQuery(trquery);
+                }
+                int qtype = convertQueryType(trquery.getType());
+                if (qtype != -1) {
+                    gl.glEndQuery(qtype);
+                }
+            }
+        }
+    }
+
+    private void renderMeshDefault(Mesh mesh, int lod, int count, VertexBuffer[] instanceData) {
         // Here while count is still passed in.  Can be removed when/if
         // the method is collapsed again.  -pspeed        
         count = Math.max(mesh.getInstanceCount(), count);
@@ -3046,11 +3157,32 @@ public final class GLRenderer implements Renderer {
 
         clearVertexAttribs();
         
+        Map<Object, VertexBuffer> tbos = mesh.getTransformFeedbackOutputs();
+        for (Entry<Object, VertexBuffer> etbo : tbos.entrySet()) {
+            VertexBuffer tbo = etbo.getValue();
+            if (tbo.isUpdateNeeded()) {
+                updateBufferData(tbo);
+            }
+            setTransformFeedback(etbo.getKey(), tbo);
+        }
+
+        if (tbos.size() > 0) {
+            beginTransformFeedback(mesh);
+        }  
+        
+        clearTransformFeedback();
+
         if (indices != null) {
             drawTriangleList(indices, mesh, count);
         } else {
             drawTriangleArray(mesh.getMode(), count, mesh.getVertexCount());
         }
+
+        if (tbos.size() > 0) {
+            endTransformFeedback(mesh);
+        }
+
+      
     }
 
     public void renderMesh(Mesh mesh, int lod, int count, VertexBuffer[] instanceData) {

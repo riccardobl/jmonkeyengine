@@ -46,6 +46,7 @@ import com.jme3.util.NativeObject;
 import java.nio.ByteBuffer;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import com.jme3.scene.QueryObject;
 
 /**
  * The <code>Renderer</code> is responsible for taking rendering commands and
@@ -444,4 +445,12 @@ public interface Renderer {
      */
     public boolean isTaskResultAvailable(int taskId);
 
+
+     
+
+  public void updateQuery(QueryObject query);
+  public long collectQueryOutputLong(QueryObject query);
+  public int collectQueryOutputInt(QueryObject query);
+  public void deleteQuery(QueryObject query);
+  
 }

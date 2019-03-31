@@ -126,7 +126,9 @@ public interface GL3 extends GL2 {
      * BindBufferRange, BindBufferOffset and BindBufferBase.
      */
     public static final int GL_TRANSFORM_FEEDBACK_BUFFER = 0x8C8E;
-
+    
+    public static final int GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN = 0x8C88;
+    
     /**
      * <p><a target="_blank" href="http://docs.gl/gl4/glBindFragDataLocation">Reference Page</a></p>
      * <p>
@@ -196,6 +198,9 @@ public interface GL3 extends GL2 {
      */
     public void glBindBufferBase(int target, int index, int buffer);
 
+
+    public void glBindBufferRange(int target, int index, int buffer, int offset, int size);
+
     /**
      * Binding points for active uniform blocks are assigned using glUniformBlockBinding. Each of a program's active
      * uniform blocks has a corresponding uniform buffer binding point. program is the name of a program object for
@@ -215,4 +220,8 @@ public interface GL3 extends GL2 {
      *                            uniformBlockIndex within program.
      */
     public void glUniformBlockBinding(int program, int uniformBlockIndex, int uniformBlockBinding);
+
+    public void glBeginTransformFeedback(int primitiveMode);
+
+    public void glEndTransformFeedback();
 }
