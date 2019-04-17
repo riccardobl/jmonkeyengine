@@ -45,6 +45,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.instancing.InstancedGeometry;
 import com.jme3.shader.*;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
@@ -987,6 +988,41 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      * @param renderManager The render manager requesting the rendering
      */
     public void render(Geometry geometry, LightList lights, RenderManager renderManager) {
+        if(geometry instanceof InstancedGeometry){
+            InstancedGeometry instGeom=(InstancedGeometry)geometry;
+            int lodLevels=geometry.getMesh().getNumLodLevels();
+            boolean noLod=false;
+            
+            if(lodLevels==0){
+                noLod=true;
+                lodLevels=1;
+            }
+         
+            int clod=-1;     
+            for(int lodLevel=0;lodLevel<lodLevels;lodLevel++){
+                instGeom.updateInstanceControl(renderManager,lodLevel,lodLevels-1,this);
+
+                if(!noLod){
+                    geometry.setLodLevel(lodLevel);
+                    clod=geometry.getLodLevel();
+                }
+            
+                _render(geometry,lights,renderManager);
+
+                if(!noLod){
+                    geometry.setLodLevel(clod);
+                }
+
+            }
+        
+        }else{
+            _render(geometry,lights,renderManager);
+
+        }
+    }
+
+    public void _render(Geometry geometry, LightList lights, RenderManager renderManager) {
+   
         if (technique == null) {
             selectTechnique(TechniqueDef.DEFAULT_TECHNIQUE_NAME, renderManager);
         }

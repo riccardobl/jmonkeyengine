@@ -183,6 +183,10 @@ public class Camera implements Savable, Cloneable {
      * Array holding the planes that this camera will check for culling.
      */
     protected Plane[] worldPlane;
+
+
+    protected Vector4f[] worldPlanesVec4;
+
     /**
      * A mask value set during contains() that allows fast culling of a Node's
      * children.
@@ -209,8 +213,11 @@ public class Camera implements Savable, Cloneable {
      */
     public Camera() {
         worldPlane = new Plane[MAX_WORLD_PLANES];
+        worldPlanesVec4=new Vector4f[MAX_WORLD_PLANES];
         for (int i = 0; i < MAX_WORLD_PLANES; i++) {
             worldPlane[i] = new Plane();
+            worldPlanesVec4[i]=new Vector4f();
+            worldPlane[i].toVector4f(worldPlanesVec4[i]);
         }
     }
 
@@ -258,8 +265,10 @@ public class Camera implements Savable, Cloneable {
             cam.planeState = 0;
 
             cam.worldPlane = new Plane[MAX_WORLD_PLANES];
+            cam.worldPlanesVec4 = new Vector4f[MAX_WORLD_PLANES];
             for (int i = 0; i < worldPlane.length; i++) {
                 cam.worldPlane[i] = worldPlane[i].clone();
+                cam.worldPlanesVec4[i] = worldPlanesVec4[i].clone();
             }
 
             cam.coeffLeft = new float[2];
@@ -326,6 +335,7 @@ public class Camera implements Savable, Cloneable {
         for (int i = 0; i < MAX_WORLD_PLANES; ++i) {
             worldPlane[i].setNormal(cam.worldPlane[i].getNormal());
             worldPlane[i].setConstant(cam.worldPlane[i].getConstant());
+            worldPlane[i].toVector4f(worldPlanesVec4[i]);
         }
         
         this.parallelProjection = cam.parallelProjection;
@@ -1289,6 +1299,9 @@ public class Camera implements Savable, Cloneable {
         // near plane
         worldPlane[NEAR_PLANE].setNormal(direction.x, direction.y, direction.z);
         worldPlane[NEAR_PLANE].setConstant(dirDotLocation + frustumNear);
+        for (int i = 0; i < MAX_WORLD_PLANES; ++i) {
+            worldPlane[i].toVector4f(worldPlanesVec4[i]);    
+        }
 
         viewMatrix.fromFrame(location, direction, up, left);
         
@@ -1296,6 +1309,10 @@ public class Camera implements Savable, Cloneable {
         
 //        viewMatrix.transposeLocal();
         updateViewProjection();
+    }
+    
+    public Vector4f[] getCompactWorldPlanes() {
+        return worldPlanesVec4;
     }
 
     /**

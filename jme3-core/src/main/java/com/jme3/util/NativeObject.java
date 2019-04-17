@@ -228,4 +228,8 @@ public abstract class NativeObject implements Cloneable {
             objectManager.enqueueUnusedObject(this);
         }
     }
+
+    public void forceId(int id){
+       this.id = id;
+    }
 }

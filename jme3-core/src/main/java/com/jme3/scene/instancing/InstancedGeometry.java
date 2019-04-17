@@ -31,21 +31,35 @@
  */
 package com.jme3.scene.instancing;
 
+import com.jme3.bounding.BoundingBox;
+import com.jme3.bounding.BoundingSphere;
 import com.jme3.bounding.BoundingVolume;
 import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
 import com.jme3.export.Savable;
+import com.jme3.light.LightList;
+import com.jme3.material.Material;
+import com.jme3.material.RenderState;
+import com.jme3.material.Technique;
+import com.jme3.material.TechniqueDef;
 import com.jme3.math.Matrix3f;
 import com.jme3.math.Matrix4f;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
+import com.jme3.math.Vector4f;
+import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.VertexBufferPointer;
+import com.jme3.scene.Mesh.Mode;
 import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.VertexBuffer.Usage;
+import com.jme3.shader.VarType;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.TempVars;
 import com.jme3.util.clone.Cloner;
@@ -61,8 +75,11 @@ public class InstancedGeometry extends Geometry {
     private VertexBuffer[] globalInstanceData;
     private VertexBuffer transformInstanceData;
     private Geometry[] geometries = new Geometry[1];
-
+    private VertexBuffer culledInstancedData;
+    private VertexBuffer bboxInstancedData;
     private int firstUnusedIndex = 0;
+    private Geometry culler;
+    private boolean enableCulling;
 
     /**
      * Serialization only. Do not use.
@@ -196,6 +213,8 @@ public class InstancedGeometry extends Geometry {
         if (transformInstanceData != null) {
             BufferUtils.destroyDirectBuffer(transformInstanceData.getData());
             transformInstanceData.updateData(BufferUtils.createFloatBuffer(geometries.length * INSTANCE_SIZE));
+            culledInstancedData.updateData(BufferUtils.createFloatBuffer(geometries.length * INSTANCE_SIZE));
+            bboxInstancedData.updateData(BufferUtils.createFloatBuffer(geometries.length * 3));
         } else if (transformInstanceData == null) {
             transformInstanceData = new VertexBuffer(Type.InstanceData);
             transformInstanceData.setInstanced(true);
@@ -203,7 +222,39 @@ public class InstancedGeometry extends Geometry {
                     INSTANCE_SIZE,
                     Format.Float,
                     BufferUtils.createFloatBuffer(geometries.length * INSTANCE_SIZE));
+            culledInstancedData = new VertexBuffer(Type.InstanceData);
+            culledInstancedData.setInstanceSpan(1);
+            culledInstancedData.setupData(Usage.Stream,
+                INSTANCE_SIZE, Format.Float, BufferUtils.createFloatBuffer(
+                geometries.length * INSTANCE_SIZE));          
+                
+            
+            bboxInstancedData = new VertexBuffer(Type.Size);
+            bboxInstancedData.setInstanceSpan(0);
+            bboxInstancedData.setupData(
+                            Usage.Stream,
+                        3, Format.Float, BufferUtils.createFloatBuffer(
+                                geometries.length * 3));
+    
         }
+
+        if (culler == null) {
+            culler = new Geometry("CullGeom", new Mesh());
+            culler.getMesh().setMode(Mode.Points);
+            culler.getMesh()
+                    .setBuffer(new VertexBufferPointer(Type.Position,
+                            INSTANCE_SIZE, Format.Float, 0)
+                                    .ref(transformInstanceData)); // input
+            culler.getMesh()
+                    .setFeedbackOutput(0,
+                            new VertexBufferPointer(Type.Position,
+                                    INSTANCE_SIZE, Format.Float, 0)
+                                            .ref(culledInstancedData)); // output
+            culler.getMesh().setBuffer(bboxInstancedData);
+            culler.getMesh().setCountFeedbackPrimitives(true);
+        }
+
+        culler.getMesh().updateCounts();
     }
 
     public int getMaxNumInstances() {
@@ -211,8 +262,15 @@ public class InstancedGeometry extends Geometry {
     }
 
     public int getActualNumInstances() {
-        return firstUnusedIndex;
+        if (enableCulling) {
+            int instances = culler.getMesh().getCountFeedbackPrimitivesQuery()
+                    .getInt();
+            return instances;
+        } else {
+            return firstUnusedIndex;
+        }
     }
+
 
     private void swap(int idx1, int idx2) {
         Geometry g = geometries[idx1];
@@ -253,7 +311,14 @@ public class InstancedGeometry extends Geometry {
         fb.limit(fb.capacity());
         fb.position(0);
 
+        FloatBuffer bbox=(FloatBuffer) bboxInstancedData.getData();
+        bbox.limit(bbox.capacity());
+        bbox.position(0);
+
+
         TempVars vars = TempVars.get();
+        Vector3f wbbox=vars.vect1;
+
         {
             float[] temp = vars.matrixWrite;
 
@@ -277,18 +342,94 @@ public class InstancedGeometry extends Geometry {
                 Matrix4f worldMatrix = geom.getWorldMatrix();
                 updateInstance(worldMatrix, temp, 0, vars.tempMat3, vars.quat1);
                 fb.put(temp);
+
+                BoundingVolume vol = geom.getWorldBound();
+                if(vol instanceof BoundingSphere){
+                    BoundingSphere sph=(BoundingSphere)vol;
+                    wbbox.x=sph.getRadius();
+                    wbbox.y=sph.getRadius();
+                    wbbox.z=sph.getRadius();
+                    
+                }  else{
+                    BoundingBox sph=(BoundingBox)vol;
+                    sph.getExtent(wbbox);
+                }
+                
+                bbox.put(wbbox.x);
+                bbox.put(wbbox.y);
+                bbox.put(wbbox.z);
             }
         }
         vars.release();
 
         fb.flip();
+        bbox.flip();
 
         if (fb.limit() / INSTANCE_SIZE != firstUnusedIndex) {
             throw new AssertionError();
         }
 
         transformInstanceData.updateData(fb);
+        bboxInstancedData.updateData(bbox);
+        culler.getMesh().updateCounts();
     }
+    
+    final Vector3f tmp_culler_bboxExtents=new Vector3f();
+    final LightList tmp_EmptyLightList=new LightList();
+    public void updateInstanceControl(RenderManager renderManager,int lodLevel,int maxLodLevel,Material mat){
+        enableCulling = mat.getMaterialDef().getTechniqueDefs("InstanceControl") != null;
+        if (enableCulling) {
+     
+            culler.setMaterial(mat);
+
+            Technique activeTechnique = culler.getMaterial().getActiveTechnique();
+
+            String previousTechniqueName = activeTechnique != null
+                    ? activeTechnique.getDef().getName()
+                    : TechniqueDef.DEFAULT_TECHNIQUE_NAME;
+            
+            culler.getMaterial().selectTechnique("InstanceControl", renderManager);
+
+            Vector4f planes[] = renderManager.getCurrentCamera().getCompactWorldPlanes();
+            if(culler.getMaterial().getMaterialDef().getMaterialParam("InstanceControl_Planes")!=null){
+                culler.getMaterial().setParam("InstanceControl_Planes", VarType.Vector4Array, planes);
+            }
+
+            if(
+                getMesh().getBound() instanceof BoundingBox
+                &&culler.getMaterial().getMaterialDef().getMaterialParam("InstanceControl_BoundingBoxExtents")!=null
+            ){
+                BoundingBox bbox = (BoundingBox) getMesh().getBound();
+                culler.getMaterial().setParam("InstanceControl_BoundingBoxExtents", VarType.Vector3,
+                    bbox.getExtent(tmp_culler_bboxExtents)
+                );
+            }
+
+            if(culler.getMaterial().getMaterialDef().getMaterialParam("InstanceControl_LodLevel")!=null){
+                culler.getMaterial().setParam("InstanceControl_LodLevel", VarType.Int, lodLevel);
+            }
+
+            if(culler.getMaterial().getMaterialDef().getMaterialParam("InstanceControl_MaxLodLevel")!=null){
+                culler.getMaterial().setParam("InstanceControl_MaxLodLevel", VarType.Int, maxLodLevel);
+            }
+
+
+            RenderState cstate=renderManager.getForcedRenderState();
+            RenderState state=new RenderState();state.setColorWrite(false); state.setDepthWrite(false);
+
+            renderManager.setForcedRenderState(state);
+            mat.render(culler, tmp_EmptyLightList, renderManager);
+            renderManager.setForcedRenderState(cstate);
+
+            culler.getMaterial().clearParam("InstanceControl_Planes");
+            culler.getMaterial().clearParam("InstanceControl_BoundingBoxExtents");
+            culler.getMaterial().clearParam("InstanceControl_LodLevel");
+
+            culler.getMaterial().selectTechnique(previousTechniqueName, renderManager);
+
+        }
+    }
+
 
     public void deleteInstance(Geometry geom) {
         int idx = InstancedNode.getGeometryStartIndex2(geom);
@@ -362,8 +503,14 @@ public class InstancedGeometry extends Geometry {
 
     public VertexBuffer[] getAllInstanceData() {
         ArrayList<VertexBuffer> allData = new ArrayList();
-        if (transformInstanceData != null) {
-            allData.add(transformInstanceData);
+        if (enableCulling) {
+            if (culledInstancedData != null) {
+                allData.add(culledInstancedData);
+            }
+        } else {
+            if (transformInstanceData != null) {
+                allData.add(transformInstanceData);
+            }
         }
         if (globalInstanceData != null) {
             allData.addAll(Arrays.asList(globalInstanceData));
@@ -380,6 +527,7 @@ public class InstancedGeometry extends Geometry {
 
         this.globalInstanceData = cloner.clone(globalInstanceData);
         this.transformInstanceData = cloner.clone(transformInstanceData);
+        this.bboxInstancedData = cloner.clone(bboxInstancedData);
         this.geometries = cloner.clone(geometries);
     }
 

@@ -3081,7 +3081,7 @@ public final class GLRenderer implements Renderer {
         if (query.getId() == -1) {
             intBuf1.position(0).limit(1);
             gl.glGenQueries(1, intBuf1);
-            int id = intBuf1.get();
+            int id = intBuf1.get(0);
             query.setId(id);
             query.setRenderer(this);
         }

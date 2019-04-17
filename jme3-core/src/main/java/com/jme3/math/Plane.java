@@ -57,7 +57,14 @@ public class Plane implements Savable, Cloneable, java.io.Serializable {
         Positive,
         Negative
     }
-
+    
+    public void toVector4f(Vector4f store){
+        store.x=normal.x;
+        store.y=normal.y;
+        store.z=normal.z;
+        store.w=constant;
+    }
+        
     /** 
      * Vector normal to the plane.
      */

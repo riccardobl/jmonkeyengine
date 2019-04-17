@@ -1218,23 +1218,20 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         }
     }
 
-    public VertexBuffer makePointer(Type type, Usage usage, int components, Format format, int instanceSpan) {
-        VertexBuffer store = new VertexBuffer(type);
-        store.usage = usage;
-        store.components = components;
-        store.format = format;
-        store.setInstanceSpan(instanceSpan);
-        return makePointer(store);
+  
+
+    public void setBufferType(Type t){
+        bufType=t;
     }
 
+    public void setFormat(Format f){
+        format=f;    
+    }
+               
 
+    public void setNumComponents(int n){
+        components=n;
+    }
 
-    public VertexBuffer makePointer(VertexBuffer store) {
-        store.data = data;
-        store.id = id;
-        if (!isUpdateNeeded())
-            store.clearUpdateNeeded();
-        return store;
-            }
         
 }
