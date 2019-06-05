@@ -1,0 +1,95 @@
+/**
+*   Occlusion Parallax Mapping
+*   The implementation is based on this: https://learnopengl.com/Advanced-Lighting/Parallax-Mapping
+*
+*       - Riccardo Balbo
+*/
+
+#ifndef _OCCLUSION_PARALLAX_
+    #define _OCCLUSION_PARALLAX_
+     
+    #ifndef Texture_sample
+        #define Texture_sample texture
+    #endif
+
+    // #define HEIGHT_MAP R_COMPONENT
+    // #define DEPTH_MAP R_COMPONENT
+    
+    #define R_COMPONENT 0
+    #define G_COMPONENT 1
+    #define B_COMPONENT 2    
+    #define A_COMPONENT 3
+
+    #if !defined(HEIGHT_MAP) && !defined(DEPTH_MAP)
+        #define HEIGHT_MAP R_COMPONENT
+    #endif
+    
+    #ifdef DEPTH_MAP
+        #define HEIGHT_MAP DEPTH_MAP
+    #endif
+
+     struct _ParallaxData{
+        vec2 deltaTexCoords;
+        float layerDepth;
+    } ParallaxData;
+
+    
+    void Parallax_initFor(in vec3 viewDir,in float heightScale){
+        const float minLayers = 8.;
+        const float maxLayers = 64.;
+
+        float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir))); 
+
+        vec2 P = viewDir.xy / viewDir.z * heightScale;
+
+        ParallaxData.layerDepth = 1.0 / numLayers;
+        ParallaxData.deltaTexCoords = P / numLayers;
+    }
+
+    float _Parallax_selectDepth(in vec4 d){
+        float depth;
+        
+        #if HEIGHT_MAP==R_COMPONENT
+            depth=d.r;
+        #elif HEIGHT_MAP==G_COMPONENT
+            depth=d.g;
+        #elif HEIGHT_MAP==B_COMPONENT
+            depth=d.b;
+        #else 
+            depth=d.a;            
+        #endif
+
+        #ifndef DEPTH_MAP
+            depth=1.-depth;
+        #endif
+
+        return depth;
+    }
+
+    float _Parallax_sampleDepth(in sampler2D depthMap,in vec2 uv){
+        vec4 d=Texture_sample(depthMap,uv);
+        return _Parallax_selectDepth(d);
+    }
+
+
+    void Parallax_displaceCoords(inout vec2 texCoords,in sampler2D depthMap){
+        vec2 currentTexCoords = texCoords;
+        float currentDepthMapValue = (_Parallax_sampleDepth(depthMap, currentTexCoords));
+        float currentLayerDepth = 0.0;
+
+        while(currentLayerDepth < currentDepthMapValue){
+            currentTexCoords -= ParallaxData.deltaTexCoords;
+            currentDepthMapValue = (_Parallax_sampleDepth(depthMap, currentTexCoords));
+            currentLayerDepth += ParallaxData.layerDepth;
+        }
+
+        vec2 prevTexCoords = currentTexCoords + ParallaxData.deltaTexCoords;
+        float afterDepth = currentDepthMapValue - currentLayerDepth;
+        float beforeDepth = (_Parallax_sampleDepth(depthMap, prevTexCoords)) - currentLayerDepth + ParallaxData.layerDepth;
+
+        float weight = afterDepth / (afterDepth - beforeDepth);
+        texCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+    }
+
+   
+#endif

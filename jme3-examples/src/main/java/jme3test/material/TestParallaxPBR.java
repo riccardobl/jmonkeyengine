@@ -118,11 +118,11 @@ public class TestParallaxPBR extends SimpleApplication {
 
             public void onAnalog(String name, float value, float tpf) {
                 if ("heightUP".equals(name)) {
-                    parallaxHeigh += 0.01;
+                    parallaxHeigh += 0.001;
                     mat.setFloat("ParallaxHeight", parallaxHeigh);
                 }
                 if ("heightDown".equals(name)) {
-                    parallaxHeigh -= 0.01;
+                    parallaxHeigh -= 0.001;
                     parallaxHeigh = Math.max(parallaxHeigh, 0);
                     mat.setFloat("ParallaxHeight", parallaxHeigh);
                 }
@@ -136,8 +136,25 @@ public class TestParallaxPBR extends SimpleApplication {
 
             public void onAction(String name, boolean isPressed, float tpf) {
                 if (isPressed && "toggleSteep".equals(name)) {
-                    steep = !steep;
-                    mat.setBoolean("SteepParallax", steep);
+                    type++;
+                    if(type>2){
+                        type=0;
+                    }
+                    if(type==0){
+                        mat.setBoolean("SteepParallax", false);
+                        mat.setBoolean("OcclusionParallax", false);
+                        System.out.println("Set common parallax mapping");
+                    } else if(type==1){
+                        mat.setBoolean("SteepParallax", true);
+                        mat.setBoolean("OcclusionParallax", false);
+                        System.out.println("Set steep parallax mapping");
+                    }else if(type==2){
+                        mat.setBoolean("SteepParallax", false);
+                        mat.setBoolean("OcclusionParallax", true);
+                        System.out.println("Set parallax occlusion mapping");
+
+                    }
+                   
                 }
             }
         }, "toggleSteep");
@@ -145,7 +162,7 @@ public class TestParallaxPBR extends SimpleApplication {
     }
     float parallaxHeigh = 0.05f;
     float time = 0;
-    boolean steep = false;
+    int type = 0;
 
     @Override
     public void simpleUpdate(float tpf) {

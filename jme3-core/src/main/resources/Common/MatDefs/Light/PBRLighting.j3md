@@ -62,6 +62,8 @@ MaterialDef PBR Lighting {
         //Set to true to activate Steep Parallax mapping
         Boolean SteepParallax
 
+        Boolean OcclusionParallax
+
         //Horizon fade
         Boolean HorizonFade
 
@@ -146,6 +148,7 @@ MaterialDef PBR Lighting {
             PARALLAXMAP : ParallaxMap
             NORMALMAP_PARALLAX : PackedNormalParallax
             STEEP_PARALLAX : SteepParallax
+            OCCLUSION_PARALLAX: OcclusionParallax
             LIGHTMAP : LightMap
             SEPARATE_TEXCOORD : SeparateTexCoord
             DISCARD_ALPHA : AlphaDiscardThreshold                        

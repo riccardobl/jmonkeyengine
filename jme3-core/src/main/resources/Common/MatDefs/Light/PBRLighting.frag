@@ -81,6 +81,16 @@ varying vec3 wPosition;
     uniform float m_ParallaxHeight;
 #endif
 
+#ifdef OCCLUSION_PARALLAX
+    // Configure height channel
+    #ifdef NORMALMAP_PARALLAX
+      #define HEIGHT_MAP A_COMPONENT
+    #else
+      #define HEIGHT_MAP R_COMPONENT
+    #endif
+    #import "Common/ShaderLib/OcclusionParallax.glsllib"
+#endif
+
 #ifdef LIGHTMAP
   uniform sampler2D m_LightMap;
 #endif
@@ -107,7 +117,15 @@ void main(){
 
     #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP)))
        vec3 vViewDir =  viewDir * tbnMat;  
-       #ifdef STEEP_PARALLAX
+       #if defined(OCCLUSION_PARALLAX)
+           Parallax_initFor(vViewDir,m_ParallaxHeight);
+           newTexCoord=texCoord;
+           #ifdef NORMALMAP_PARALLAX
+              Parallax_displaceCoords(newTexCoord,m_NormalMap);
+           #else
+              Parallax_displaceCoords(newTexCoord,m_ParallaxMap);
+           #endif
+       #elif defined(STEEP_PARALLAX)
            #ifdef NORMALMAP_PARALLAX
                //parallax map is stored in the alpha channel of the normal map         
                newTexCoord = steepParallaxOffset(m_NormalMap, vViewDir, texCoord, m_ParallaxHeight);
