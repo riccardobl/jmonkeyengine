@@ -440,14 +440,71 @@ public final class SettingsDialog extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
                 if (verifyAndSaveCurrentSelection()) {
-                    setUserSelection(APPROVE_SELECTION);
                     dispose();
+
+                    System.gc();
+
+                    ArrayList<Thread> waitForThreads=new ArrayList<Thread>();  
+                                    
+                    ThreadGroup threadGroup=Thread.currentThread().getThreadGroup();
+                    while (threadGroup.getParent() != null) threadGroup = threadGroup.getParent();
+                    System.out.println("Found main ThreadGroup "+threadGroup);
+
+                    try {                       
+                        Thread threads[] = new Thread[1024];
+                        int n=threadGroup.enumerate(threads,true);
+                        
+                        for (int i=0;i<n;i++) {
+                            Thread t=threads[i];
+                            // Wait for AWT shutdown
+                            if (
+                                t.getName().equals("AWT-Shutdown")
+                                    || t.getName().contains("AWT-EventQueue-")) {
+                                waitForThreads.add(t);
+                            }
+                            // Terminate and wait for X thread shutdown (is this really needed?)
+                            else if (t.getName().equals("AWT-XAWT")) {
+                                try {
+                                    Class SunToolkit_c = getClass().getClassLoader().loadClass("sun.awt.SunToolkit");
+                                    Method awtLock_m = SunToolkit_c.getDeclaredMethod("awtLock");
+                                    Method awtUnlock_m = SunToolkit_c.getDeclaredMethod("awtUnlock");
+                                    awtLock_m.invoke(null);
+                                    try {
+                                        t.stop();
+                                        System.out.println("Stop " + t);
+                                        waitForThreads.add(t);
+                                    } catch (Exception e1) {
+                                        e1.printStackTrace();
+                                    }
+                                    awtUnlock_m.invoke(null);
+                                } catch (Exception e2) {
+                                    e2.printStackTrace();
+                                }                                
+                            }
+                        }
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
                     
-                    // System.gc() should be called to prevent "X Error of failed request: RenderBadPicture (invalid Picture parameter)"
-                    // on Linux when using AWT/Swing + GLFW. 
-                    // For more info see: https://github.com/LWJGL/lwjgl3/issues/149, https://hub.jmonkeyengine.org/t/experimenting-lwjgl3/37275
-                    System.gc();
-                    System.gc();
+                    if (waitForThreads.size()>0) {
+                        Thread t = new Thread(() -> {                                           
+                            for(Thread w:waitForThreads){
+                                try{
+                                    System.out.println("Wait for termination of " + w);
+                                    w.join();
+                                }catch(Exception ex){
+                                    ex.printStackTrace();
+                                }
+                            }
+                            setUserSelection(APPROVE_SELECTION);
+                        });
+                        t.setName("AwtCleanup");
+                        t.setDaemon(true);
+                        t.start();
+                    } else {
+                        setUserSelection(APPROVE_SELECTION);
+                    }
+                  
                 }
             }
         });
