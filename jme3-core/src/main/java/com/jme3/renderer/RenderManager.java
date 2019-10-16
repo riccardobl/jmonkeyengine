@@ -870,17 +870,27 @@ public class RenderManager {
         RenderQueue rq = vp.getQueue();
         Camera cam = vp.getCamera();
         boolean depthRangeChanged = false;
+        SafeArrayList<SceneProcessor> processors = vp.getProcessors();
 
         // render opaque objects with default depth range
         // opaque objects are sorted front-to-back, reducing overdraw
         if (prof!=null) prof.vpStep(VpStep.RenderBucket, vp, Bucket.Opaque);
-        rq.renderQueue(Bucket.Opaque, this, cam, flush);
+
+        for(SceneProcessor p:processors)p.preBucketFlush(Bucket.Opaque,rq,cam);
+        rq.renderQueue(Bucket.Opaque, this, cam, false);
+        for(SceneProcessor p:processors)p.postBucketFlush(Bucket.Opaque,rq,cam);
+        if(flush)rq.clearQueue(Bucket.Opaque);
 
         // render the sky, with depth range set to the farthest
         if (!rq.isQueueEmpty(Bucket.Sky)) {
             if (prof!=null) prof.vpStep(VpStep.RenderBucket, vp, Bucket.Sky);
             renderer.setDepthRange(1, 1);
-            rq.renderQueue(Bucket.Sky, this, cam, flush);
+
+            for(SceneProcessor p:processors)p.preBucketFlush(Bucket.Sky,rq,cam);
+            rq.renderQueue(Bucket.Sky, this, cam, false);
+            for(SceneProcessor p:processors)p.postBucketFlush(Bucket.Sky,rq,cam);
+            if(flush)rq.clearQueue(Bucket.Sky);
+
             depthRangeChanged = true;
         }
 
@@ -895,14 +905,23 @@ public class RenderManager {
                 depthRangeChanged = false;
             }
 
-            rq.renderQueue(Bucket.Transparent, this, cam, flush);
+            for(SceneProcessor p:processors)p.preBucketFlush(Bucket.Transparent,rq,cam);
+            rq.renderQueue(Bucket.Transparent, this, cam, false);
+            for(SceneProcessor p:processors)p.postBucketFlush(Bucket.Transparent,rq,cam);
+            if(flush)rq.clearQueue(Bucket.Transparent);
+
         }
 
         if (!rq.isQueueEmpty(Bucket.Gui)) {
             if (prof!=null) prof.vpStep(VpStep.RenderBucket, vp, Bucket.Gui);
             renderer.setDepthRange(0, 0);
             setCamera(cam, true);
-            rq.renderQueue(Bucket.Gui, this, cam, flush);
+
+            for(SceneProcessor p:processors)p.preBucketFlush(Bucket.Gui,rq,cam);
+            rq.renderQueue(Bucket.Gui, this, cam, false);
+            for(SceneProcessor p:processors)p.preBucketFlush(Bucket.Gui,rq,cam);
+            if(flush)rq.clearQueue(Bucket.Gui);
+
             setCamera(cam, false);
             depthRangeChanged = true;
         }

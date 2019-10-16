@@ -32,9 +32,11 @@
 package com.jme3.post;
 
 import com.jme3.profile.AppProfiler;
+import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.texture.FrameBuffer;
 
 /**
@@ -98,4 +100,12 @@ public interface SceneProcessor {
      */
     public void setProfiler(AppProfiler profiler);
 
+
+    public default void preBucketFlush(Bucket bucket,RenderQueue rq,Camera cam){
+
+    }
+    public default void postBucketFlush(Bucket bucket,RenderQueue rq,Camera cam){
+
+    }
+    
 }

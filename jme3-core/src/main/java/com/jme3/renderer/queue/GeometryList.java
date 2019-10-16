@@ -72,6 +72,20 @@ public class GeometryList implements Iterable<Geometry>{
         this.comparator = comparator;
     }
 
+    public void compact(){
+        Geometry compact[]=new Geometry[geometries.length];
+        int i=0;
+        for(Geometry g:geometries){
+            if(g!=null)   compact[i++]=g;            
+        }
+        geometries=compact;
+        size=i;
+        for(int j=0;j<size;j++){
+            assert geometries[j]!=null : "Geometry "+j+" is null";
+        }
+
+    }
+
     /**
      * Returns the GeometryComparator that this Geometry list uses
      * for sorting.

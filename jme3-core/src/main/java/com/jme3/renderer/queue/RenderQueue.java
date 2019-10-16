@@ -292,31 +292,33 @@ public class RenderQueue {
         }
     }
 
+    public GeometryList getGeometryList(Bucket bucket){
+        switch (bucket) {
+            case Gui:
+                return guiList;
+            case Opaque:
+                return opaqueList;
+            case Sky:
+                return skyList;
+            case Transparent:
+                return transparentList;
+            case Translucent:
+                return translucentList;
+            default:
+                throw new UnsupportedOperationException("Unsupported bucket type: " + bucket);
+        }
+    }
+
     public void renderQueue(Bucket bucket, RenderManager rm, Camera cam) {
         renderQueue(bucket, rm, cam, true);
     }
 
-    public void renderQueue(Bucket bucket, RenderManager rm, Camera cam, boolean clear) {
-        switch (bucket) {
-            case Gui:
-                renderGeometryList(guiList, rm, cam, clear);
-                break;
-            case Opaque:
-                renderGeometryList(opaqueList, rm, cam, clear);
-                break;
-            case Sky:
-                renderGeometryList(skyList, rm, cam, clear);
-                break;
-            case Transparent:
-                renderGeometryList(transparentList, rm, cam, clear);
-                break;
-            case Translucent:
-                renderGeometryList(translucentList, rm, cam, clear);
-                break;
+    public void  clearQueue(Bucket bucket) {
+        getGeometryList(bucket).clear();
+    }
 
-            default:
-                throw new UnsupportedOperationException("Unsupported bucket type: " + bucket);
-        }
+    public void renderQueue(Bucket bucket, RenderManager rm, Camera cam, boolean clear) {
+        renderGeometryList(getGeometryList(bucket), rm, cam, clear);
     }
 
     public void clear() {
