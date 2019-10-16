@@ -201,7 +201,7 @@ public class RenderContext {
      */
     public int boundVertexArray;
 
-    /**
+   /**
      * Currently bound array vertex buffer.
      * 
      * @see Renderer#renderMesh(com.jme3.scene.Mesh, int, int, com.jme3.scene.VertexBuffer[]) 
@@ -214,7 +214,7 @@ public class RenderContext {
     public int boundPixelPackPBO;
 
     public int numTexturesSet = 0;
-
+    
     /**
      * Current bound texture IDs for each texture unit.
      * 
@@ -303,9 +303,9 @@ public class RenderContext {
         boundRB = 0;
         boundDrawBuf = -1; 
         boundReadBuf = -1;
-        boundElementArrayVBO = 0;
+       boundElementArrayVBO = 0;
         boundVertexArray = 0;
-        boundArrayVBO = 0;
+       boundArrayVBO = 0;
         boundPixelPackPBO = 0;
         numTexturesSet = 0;
         for (int i = 0; i < boundTextures.length; i++)

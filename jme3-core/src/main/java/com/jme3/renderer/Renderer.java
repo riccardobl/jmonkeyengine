@@ -457,4 +457,33 @@ public interface Renderer {
      */
     public int getDefaultAnisotropicFilter();
 
+   
+    /**
+     * Returns true is query results is ready.
+     * @param q query object
+     * @return true is result is ready
+     */
+    public boolean isQueryResultReady(QueryObject q);
+    /**
+     * Retrieves the query result, blocking if query has
+     * not completed yet.
+     * @param q query object
+     * @return value of the query
+     */
+    public long getQueryResult(QueryObject q);
+    /**
+     * Start the query.
+     * @param q query object
+     */
+    public void beginQuery(QueryObject q);
+    /**
+     * Ends the query.
+     * @param q query object.
+     */
+    public void endQuery(QueryObject q);
+    /**
+     * Deletes the query.
+     * @param q query object.
+     */
+    public void deleteQuery(QueryObject q);
 }

@@ -514,4 +514,16 @@ public final class LwjglGL implements GL, GL2, GL3, GL4 {
     public void glUniformBlockBinding(final int program, final int uniformBlockIndex, final int uniformBlockBinding) {
         GL31.glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
     }
+
+
+    @Override
+    public void glGetQuery(int target, int pname, IntBuffer params) {
+        GL15.glGetQuery(target, pname, params);
+    }
+
+    @Override
+    public void glDeleteQueries(IntBuffer ib) {
+        GL15.glDeleteQueries(ib);
+    }
+
 }

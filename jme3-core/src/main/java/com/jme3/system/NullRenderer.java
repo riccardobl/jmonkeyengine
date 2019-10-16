@@ -37,6 +37,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Matrix4f;
 import com.jme3.renderer.Caps;
 import com.jme3.renderer.Limits;
+import com.jme3.renderer.QueryObject;
 import com.jme3.renderer.Renderer;
 import com.jme3.renderer.Statistics;
 import com.jme3.scene.Mesh;
@@ -221,5 +222,29 @@ public class NullRenderer implements Renderer {
     @Override
     public int getDefaultAnisotropicFilter() {
         return 0;
+    }
+
+    @Override
+    public boolean isQueryResultReady(QueryObject q) {
+		return false;
+	}
+    @Override
+    public long getQueryResult(QueryObject q) {
+        return 0;
+    }
+
+    @Override
+    public void beginQuery(QueryObject q) {
+
+    }
+
+    @Override
+    public void endQuery(QueryObject q) {
+
+    }
+
+    @Override
+    public void deleteQuery(QueryObject q) {
+
     }
 }

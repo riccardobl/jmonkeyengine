@@ -391,7 +391,7 @@ public final class GLRenderer implements Renderer {
                     + "support non-power-of-2 textures. "
                     + "Some features might not work.");
         }
-
+        
         if (caps.contains(Caps.OpenGLES20)) {
             // OpenGL ES 2 has some limited support for NPOT textures
             caps.add(Caps.PartialNonPowerOfTwoTextures);
@@ -497,6 +497,29 @@ public final class GLRenderer implements Renderer {
             limits.put(Limits.UniformBufferObjectMaxFragmentBlocks, getInteger(GL3.GL_MAX_FRAGMENT_UNIFORM_BLOCKS));
             limits.put(Limits.UniformBufferObjectMaxVertexBlocks, getInteger(GL3.GL_MAX_VERTEX_UNIFORM_BLOCKS));
         }
+        
+      
+        //Query objects
+        //Note: according to GLES doc: http://docs.gl/es3/glGetQueryiv
+        //cannot find counter bits for queries on ES
+        //is there a default value in the ES spec or can zero still be returned?
+        if(gl2 != null) limits.put(Limits.QuerySamplesPassedCounterBits, getQueryCounterBits(QueryObject.Type.SamplesPassed));
+        if(caps.contains(Caps.OpenGL33) || hasExtension("GL_ARB_timer_query") || hasExtension("GL_EXT_timer_query")) {
+            caps.add(Caps.TimerQuery);
+            if(gl2 != null) { 
+                limits.put(Limits.QueryTimeElapsedCounterBits, getQueryCounterBits(QueryObject.Type.TimeElapsed));
+                limits.put(Limits.QueryTimestampCounterBits, getQueryCounterBits(GL3.GL_TIMESTAMP));
+            }
+        }
+        if(caps.contains(Caps.OpenGL33) || hasExtension("GL_ARB_occlusion_query2")) {
+            caps.add(Caps.OcclusionQuery2);
+            if(gl2 != null) limits.put(Limits.QueryAnySamplesCounterBits, getQueryCounterBits(QueryObject.Type.AnySamplesPassed));
+        }
+        if(caps.contains(Caps.OpenGL43) || hasExtension("GL_ARB_ES3_compatibility")) {
+            caps.add(Caps.OcclusionQueryConservative);
+            if(gl2 != null && caps.contains(Caps.OpenGL43)) limits.put(Limits.QueryAnySamplesCounterBits, getQueryCounterBits(QueryObject.Type.AnySamplesPassedConservative));
+        }
+        
 
         // Print context information
         logger.log(Level.INFO, "OpenGL Renderer Information\n" +
@@ -1422,7 +1445,7 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    public void updateShaderData(Shader shader) {
+    public void updateShaderData(Shader shader) {       
         int id = shader.getId();
         boolean needRegister = false;
         if (id == -1) {
@@ -1459,7 +1482,7 @@ public final class GLRenderer implements Renderer {
                 gl3.glBindFragDataLocation(id, i, "outFragData[" + i + "]");
             }
         }
-
+          
         // Link shaders to program
         gl.glLinkProgram(id);
 
@@ -2504,7 +2527,7 @@ public final class GLRenderer implements Renderer {
     /*********************************************************************\
      |* Vertex Buffers and Attributes                                     *|
      \*********************************************************************/
-    private int convertUsage(Usage usage) {
+     private int convertUsage(Usage usage) {
         switch (usage) {
             case Static:
                 return GL.GL_STATIC_DRAW;
@@ -2537,10 +2560,10 @@ public final class GLRenderer implements Renderer {
                 return GL.GL_DOUBLE;
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
-
+        
         }
     }
-
+    
     public void updateBufferData(VertexBuffer vb) {
         int bufId = vb.getId();
         boolean created = false;
@@ -3134,7 +3157,92 @@ public final class GLRenderer implements Renderer {
 
     @Override
     public boolean isTaskResultAvailable(int taskId) {
+        //glGetQueryObjectiv generates error if query is not started
         return gl.glGetQueryObjectiv(taskId, GL.GL_QUERY_RESULT_AVAILABLE) == 1;
+    }
+   
+    /**********************************************************************\
+    |* Queries                                                            *|
+    \**********************************************************************/
+    public int convertQueryType(QueryObject.Type type) {
+        switch (type) {
+            case AnySamplesPassed:
+                return GL3.GL_ANY_SAMPLES_PASSED;
+            case AnySamplesPassedConservative:
+                return GL4.GL_ANY_SAMPLES_PASSED_CONSERVATIVE;
+            case SamplesPassed:
+                return GL.GL_SAMPLES_PASSED;
+            case TimeElapsed:
+                return GL3.GL_TIME_ELAPSED;
+            default:
+                throw new UnsupportedOperationException("Unrecognized query object type: " + type);
+        }
+    }
+
+    private int getQueryCounterBits(QueryObject.Type type) {
+        return getQueryCounterBits(convertQueryType(type));
+    }
+    
+    private int getQueryCounterBits(int target) {
+        intBuf1.clear();
+        gl.glGetQuery(target, GL.GL_QUERY_COUNTER_BITS, intBuf1);
+        return intBuf1.get(0);
+    }
+
+    @Override
+    public boolean isQueryResultReady(QueryObject q) {
+        int id = q.getId();
+        if(id == -1) throw new RendererException("Id cannot be -1");
+        return gl.glGetQueryObjectiv(id, GL.GL_QUERY_RESULT_AVAILABLE) == GL.GL_TRUE;
+    }
+
+    @Override
+    public long getQueryResult(QueryObject q) {
+        int id = q.getId();
+        if(id == -1) throw new RendererException("Id cannot be -1");
+        //TODO
+        //return 64 bit value is possible (requires openGL 3.3+)
+        //currently glGetQueryObjectui64 is implemented
+        //in jme-lwjgl with ARBTimerQuery.glGetQueryObjectui64(query, target);
+        //thus its used with timeElapsed only for now.
+        if(q.getType() == QueryObject.Type.TimeElapsed)
+            return gl.glGetQueryObjectui64(id, GL.GL_QUERY_RESULT);
+        return gl.glGetQueryObjectiv(id, GL.GL_QUERY_RESULT);
+    }
+
+    @Override
+    public void beginQuery(QueryObject q) {
+        int target = convertQueryType(q.getType());
+        int id = q.getId();
+        if(id == -1) {
+            if(!Caps.supports(caps, q))
+                throw new RendererException("Query of type and index is not supported by video hardware. Type: " + q.getType());
+            gl.glGenQueries(1, intBuf1);
+            id = intBuf1.get(0);
+            q.setId(id);
+            objManager.registerObject(q);
+        }
+        gl.glBeginQuery(target, id);
+    }
+
+    @Override
+    public void endQuery(QueryObject q) {
+        int id = q.getId();
+        if(id == -1) throw new RendererException("Id cannot be -1");
+        int target = convertQueryType(q.getType());
+        gl.glEndQuery(target);
+    }
+
+    @Override
+    public void deleteQuery(QueryObject q) {
+        int id = q.getId();
+        if (id != -1) {
+            // delete query
+            intBuf1.put(0,id);
+            intBuf1.position(0);
+            gl.glDeleteQueries(intBuf1);
+            q.resetObject();
+        }
     }
     @Override
     public boolean getAlphaToCoverage() {

@@ -52,7 +52,8 @@ public interface GL4 extends GL3 {
      */
     public static final int GL_SHADER_STORAGE_BUFFER = 0x90D2;
     public static final int GL_SHADER_STORAGE_BLOCK = 0x92E6;
-
+    
+    public static final int GL_QUERY_BUFFER = 0x9192;
     /**
      *  Accepted by the &lt;pname&gt; parameter of GetIntegerv, GetBooleanv,
      *  GetInteger64v, GetFloatv, and GetDoublev:
@@ -67,6 +68,12 @@ public interface GL4 extends GL3 {
     public static final int GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS = 0x90DD;
     public static final int GL_MAX_SHADER_STORAGE_BLOCK_SIZE = 0x90DE;
     public static final int GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT = 0x90DF;
+    
+
+    /**
+     * Query target (OpenGL 4.3+)
+     */
+    public static final int GL_ANY_SAMPLES_PASSED_CONSERVATIVE = 36202;
 
     /**
      * <p><a target="_blank" href="http://docs.gl/gl4/glPatchParameteri">Reference Page</a></p>

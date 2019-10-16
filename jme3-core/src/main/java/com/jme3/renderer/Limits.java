@@ -78,4 +78,16 @@ public enum Limits {
     ShaderStorageBufferObjectMaxTessEvaluationBlocks,
     ShaderStorageBufferObjectMaxComputeBlocks,
     ShaderStorageBufferObjectMaxCombineBlocks,
+
+    
+    //Query objects
+    QuerySamplesPassedCounterBits,
+    QueryAnySamplesCounterBits,
+    QueryAnySamplesConservativeCounterBits,
+    QueryPrimitivesGeneratedCounterBits,
+    QueryTransformFeedbackPrimitivesWrittenCounterBits,
+    QueryTimeElapsedCounterBits,
+    QueryTimestampCounterBits
+    
+    
 }

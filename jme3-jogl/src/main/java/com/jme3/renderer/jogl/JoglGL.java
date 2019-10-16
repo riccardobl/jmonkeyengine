@@ -659,4 +659,17 @@ public class JoglGL implements GL, GL2, GL3, GL4 {
     public void glUniformBlockBinding(final int program, final int uniformBlockIndex, final int uniformBlockBinding) {
         GLContext.getCurrentGL().getGL3bc().glUniformBlockBinding(program, uniformBlockIndex, uniformBlockBinding);
     }
+
+
+    @Override
+    public void glGetQuery(int target, int pname, IntBuffer value) {
+        GLContext.getCurrentGL().getGL2().glGetQueryiv(target, pname, value);
+    }
+
+    @Override
+    public void glDeleteQueries(IntBuffer ib) {
+        GLContext.getCurrentGL().getGL2().glDeleteQueries(ib.limit(), ib);
+    }
+
+ 
 }

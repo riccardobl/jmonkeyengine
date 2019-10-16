@@ -403,7 +403,30 @@ public enum Caps {
     /**
      * Supporting working with ShaderStorageBufferObjects.
      */
-    ShaderStorageBufferObject;
+    ShaderStorageBufferObject,
+    /**
+     * Supports TimerQueries
+     * GL3.3 is available or (GL_ARB_timer_query) or (GL_EXT_timer_query)
+     * 
+     * TODO
+     * GLES: add support for (EXT_disjoint_timer_query)
+     */
+    TimerQuery,
+    /**
+     * Supports for GL_ANY_SAMPLES_PASSED query.
+     * GL3.3 is available or (GL_ARB_occlusion_query2)
+     * 
+     */
+    OcclusionQuery2,
+    /**
+     * Supports for GL_ANY_SAMPLES_PASSED_CONSERVATIVE query.
+     * GL4.3 is available or (GL_ARB_ES3_compatibility)
+     * 
+     */
+    OcclusionQueryConservative,
+
+    
+    ;
 
     /**
      * Returns true if given the renderer capabilities, the texture
@@ -551,8 +574,30 @@ public enum Caps {
                         return false;
                 }
             }
-        }
+        }      
         return true;
     }
-
+    /**
+     * Returns true if given the renderer capabilities, the query object
+     * can be supported by the renderer.
+     * 
+     * @param caps The collection of renderer capabilities {@link Renderer#getCaps() }.
+     * @param query The query object to check
+     * @return True if it is supported, false otherwise.
+     */
+    public static boolean supports(Collection<Caps> caps, QueryObject query) {
+        switch(query.getType()) {
+            case SamplesPassed:
+                //GL1.5 is available or (GL_ARB_occlusion_query)
+                return true;
+            case AnySamplesPassed: 
+                return caps.contains(Caps.OcclusionQuery2);
+            case TimeElapsed: 
+                return caps.contains(Caps.TimerQuery);
+            case AnySamplesPassedConservative: 
+                return caps.contains(Caps.OcclusionQueryConservative);
+            default:
+                throw new UnsupportedOperationException("Unrecognized query object type: " + query.getType());
+        }
+    }
 }
