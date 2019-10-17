@@ -72,15 +72,23 @@ public class GeometryList implements Iterable<Geometry>{
         this.comparator = comparator;
     }
 
+    /**
+     * Compact the list. 
+     * Moves all the nulls to the end and set the new size.
+     */
     public void compact(){
-        Geometry compact[]=new Geometry[geometries.length];
-        int i=0;
-        for(Geometry g:geometries){
-            if(g!=null)   compact[i++]=g;            
+        int j=0;
+        for(int i=0;i<geometries.length;i++){
+            if(geometries[i]!=null){
+                Geometry g=geometries[i];
+                geometries[i]=null;
+                geometries[j++]=g;
+            }
         }
-        geometries=compact;
-        size=i;
-        for(int j=0;j<size;j++){
+        size=j;
+
+        // debug
+        for( j=0;j<size;j++){
             assert geometries[j]!=null : "Geometry "+j+" is null";
         }
 
