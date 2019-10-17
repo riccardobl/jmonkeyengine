@@ -161,6 +161,8 @@ public class OcclusionSceneProcessor implements SceneProcessor {
                 if(ocquery==null){
                     QueryObject query=new QueryObject(renderManager.getRenderer(),QueryObject.Type.AnySamplesPassed);
                     queries.put(geom,ocquery=new OcclusionQuery(query));
+                }else{
+                    if(!ocquery.obj.isResultReady())continue;
                 }
                 Geometry testGeom=logic.getOcclusionGeometry(geom);
                 ocquery.obj.begin();
