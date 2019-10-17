@@ -38,10 +38,10 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.jme3.post.OcclusionSceneProcessor;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.LodControl;
+import com.jme3.scene.occlusion.OcclusionSceneProcessor;
 import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 
