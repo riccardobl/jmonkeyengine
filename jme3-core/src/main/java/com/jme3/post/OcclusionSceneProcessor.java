@@ -29,7 +29,15 @@ public class OcclusionSceneProcessor implements SceneProcessor {
     RenderManager renderManager;
     ViewPort viewPort;
     boolean initialized=false;
-    Map<Spatial,QueryObject> queries=new WeakHashMap<Spatial,QueryObject>();
+
+    class OcclusionQuery{
+        QueryObject obj;
+        boolean cachedResult=true;
+        OcclusionQuery(QueryObject obj){
+            this.obj=obj;
+        }
+    }
+    Map<Spatial,OcclusionQuery> queries=new WeakHashMap<Spatial,OcclusionQuery>();
     GeometryList opaqueOccludables=new GeometryList(new OpaqueComparator());
 
     interface OcclusionLogic {
@@ -64,7 +72,7 @@ public class OcclusionSceneProcessor implements SceneProcessor {
         @Override
         public Geometry getOcclusionGeometry(Geometry geom) {
             olod=-1;
-            boolean useLod = geom.getMesh().getNumLodLevels()>0; // todo make configurable
+            boolean useLod =  false;//geom.getMesh().getNumLodLevels()>0; // todo make configurable
             if (useLod) {
                 olod=testGeom.getLodLevel();
                 testGeom.setMesh(geom.getMesh());
@@ -117,6 +125,7 @@ public class OcclusionSceneProcessor implements SceneProcessor {
     }
 
     public void preBucketFlush(Bucket bucket,RenderQueue rq,Camera cam){
+        boolean wait=false;
         if(bucket==Bucket.Opaque){
             opaqueOccludables.clear();
             GeometryList glist=rq.getGeometryList(Bucket.Opaque);
@@ -124,10 +133,14 @@ public class OcclusionSceneProcessor implements SceneProcessor {
             for (int i=0;i<glist.size();i++){
                 Geometry g=glist.get(i);
                 opaqueOccludables.add(g);
-                QueryObject query=queries.get(g);
-                if(query==null||!query.isResultReady())continue;
-                // assert query.isResultReady() : "Query not ready.";
-                if(query.getAndWait()<=0)    glist.set(i,null);            
+                OcclusionQuery ocquery=queries.get(g);
+                if(ocquery==null)continue;
+                boolean result=ocquery.cachedResult;
+                if(ocquery.obj.isResultReady()||wait){
+                    result=ocquery.obj.getAndWait()>0;
+                    ocquery.cachedResult=result;
+                }
+                if(!result)    glist.set(i,null);            
             }
             glist.compact();
             System.out.println("Culled "+(ngeom-glist.size())+" geometries");
@@ -144,15 +157,15 @@ public class OcclusionSceneProcessor implements SceneProcessor {
             renderManager.setForcedTechnique("OcclusionTest");
             for (Geometry geom:glist){
                 assert geom != null;
-                QueryObject query=queries.get(geom);
-                if(query==null){
-                    query=new QueryObject(renderManager.getRenderer(),QueryObject.Type.AnySamplesPassed);
-                    queries.put(geom,query);
+                OcclusionQuery ocquery=queries.get(geom);
+                if(ocquery==null){
+                    QueryObject query=new QueryObject(renderManager.getRenderer(),QueryObject.Type.AnySamplesPassed);
+                    queries.put(geom,ocquery=new OcclusionQuery(query));
                 }
                 Geometry testGeom=logic.getOcclusionGeometry(geom);
-                query.begin();
+                ocquery.obj.begin();
                 renderManager.renderGeometry(testGeom);
-                query.end();
+                ocquery.obj.end();
                 logic.cleanup();
             }
             renderManager.setForcedTechnique(oftech);
