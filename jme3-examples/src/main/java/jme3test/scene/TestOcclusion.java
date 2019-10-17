@@ -35,12 +35,14 @@ package jme3test.scene;
 import com.jme3.app.SimpleApplication;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState.FaceCullMode;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.post.OcclusionSceneProcessor;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.LodControl;
+import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 
 public class TestOcclusion extends SimpleApplication {
@@ -80,18 +82,24 @@ public class TestOcclusion extends SimpleApplication {
 
         for (int y = -10; y < 10; y++){
             for (int x = -10; x < 10; x++){
-                Geometry clonePot = teapot.clone();
-                
-                //clonePot.setMaterial(mat);
-                clonePot.setLocalTranslation(x * .5f, 0, y * .5f);
-                clonePot.setLocalScale(.15f);
-                
-                LodControl control = new LodControl();
-                clonePot.addControl(control);
-                rootNode.attachChild(clonePot);
-            }
+                    Geometry clonePot = teapot.clone();
+                    
+                    //clonePot.setMaterial(mat);
+                    clonePot.setLocalTranslation(x * .5f, 0, y * .5f);
+                    clonePot.setLocalScale(.15f);
+                    
+                    LodControl control = new LodControl();
+                    clonePot.addControl(control);
+                    rootNode.attachChild(clonePot);
+                }
         }
 
+        Geometry occluder=new Geometry("Occluder",new Quad(100,100));
+        Material mat2=mat.clone();
+        mat2.getAdditionalRenderState().setFaceCullMode(FaceCullMode.Off);
+        occluder.setMaterial(mat2);
+        rootNode.attachChild(occluder);
+        occluder.setLocalTranslation(0,0,10);
         cam.setLocation(new Vector3f(8.378951f, 5.4324f, 8.795956f));
         cam.setRotation(new Quaternion(-0.083419204f, 0.90370524f, -0.20599906f, -0.36595422f));
     }
