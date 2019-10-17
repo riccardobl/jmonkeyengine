@@ -248,6 +248,8 @@ MaterialDef Phong Lighting {
             DepthWrite Off
             ColorWrite Off
             DepthFunc LessOrEqual
+            FaceCull Off 
+            PolyOffset -0.1 0
         }
 
     }
