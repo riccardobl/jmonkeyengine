@@ -70,6 +70,7 @@ model {
                         exclude 'Bullet3OpenCL/**'
                         exclude 'Bullet3Serialize/**'
                         include '**/*.cpp'
+                        exclude '**/*All.cpp'
                     }
                     exportedHeaders {
                         srcDir 'src/native/cpp'
