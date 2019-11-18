@@ -52,6 +52,7 @@ import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.FrameBuffer.RenderBuffer;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
+import com.jme3.texture.Texture2D;
 import com.jme3.texture.Texture.ShadowCompareMode;
 import com.jme3.texture.Texture.WrapAxis;
 import com.jme3.texture.image.LastTextureState;
@@ -496,6 +497,10 @@ public final class GLRenderer implements Renderer {
             limits.put(Limits.UniformBufferObjectMaxGeometryBlocks, getInteger(GL3.GL_MAX_GEOMETRY_UNIFORM_BLOCKS));
             limits.put(Limits.UniformBufferObjectMaxFragmentBlocks, getInteger(GL3.GL_MAX_FRAGMENT_UNIFORM_BLOCKS));
             limits.put(Limits.UniformBufferObjectMaxVertexBlocks, getInteger(GL3.GL_MAX_VERTEX_UNIFORM_BLOCKS));
+        }
+
+        if(caps.contains(Caps.OpenGL20)){
+            caps.add(Caps.UnpackRowLength);
         }
 
         // Print context information
@@ -2486,9 +2491,26 @@ public final class GLRenderer implements Renderer {
     public void modifyTexture(Texture tex, Image pixels, int x, int y) {
         setTexture(0, tex);
         int target = convertTextureType(tex.getType(), pixels.getMultiSamples(), -1);
-        texUtil.uploadSubTexture(pixels, target, 0, x, y, linearizeSrgbImages);
+        texUtil.uploadSubTexture(target,pixels, 0, x, y,0,0,pixels.getWidth(),pixels.getHeight(), linearizeSrgbImages);     
     }
 
+     /**
+     * Copy a part of an image to a texture 2d.
+     * @param dest The destination image, where the source will be copied
+     * @param src The source image that contains the data to copy
+     * @param destX First pixel of the destination image from where the src image will be drawn (x component)
+     * @param destY First pixel of the destination image from where the src image will be drawn (y component)
+     * @param srcX  First pixel to copy (x component)
+     * @param srcY  First pixel to copy (y component)
+     * @param areaW Width of the area to copy
+     * @param areaH Height of the area to copy
+     */
+    public void modifyTexture(Texture2D dest, Image src, int destX, int destY, int srcX, int srcY, int areaW, int areaH) {
+        setTexture(0, dest);
+        int target = convertTextureType(dest.getType(), src.getMultiSamples(), -1);
+        texUtil.uploadSubTexture(target, src, 0, destX, destY, srcX, srcY, areaW, areaH, linearizeSrgbImages);
+    }
+  
     public void deleteImage(Image image) {
         int texId = image.getId();
         if (texId != -1) {

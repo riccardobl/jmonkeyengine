@@ -403,7 +403,10 @@ public enum Caps {
     /**
      * Supporting working with ShaderStorageBufferObjects.
      */
-    ShaderStorageBufferObject;
+    ShaderStorageBufferObject,
+    
+    UnpackRowLength
+    ;
 
     /**
      * Returns true if given the renderer capabilities, the texture
