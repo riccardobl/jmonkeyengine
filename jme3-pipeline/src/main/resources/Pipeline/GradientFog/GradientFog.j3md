@@ -1,0 +1,20 @@
+MaterialDef GradientFog {
+    MaterialParameters {
+        Texture2D Scene 
+        Texture2D Depth 
+        Texture2D FogGradient 
+
+        Vector2 FrustumNearFar
+    }
+
+    Technique {
+        VertexShader GLSL150:  Pipeline/GradientFog/gradientFog.vert
+        FragmentShader GLSL150: Pipeline/GradientFog/gradientFog.frag
+
+     
+
+        Defines {
+     
+        }
+    }
+}

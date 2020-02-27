@@ -259,7 +259,9 @@ public class FrameBuffer extends NativeObject {
         // check that resolution matches texture resolution
         if (width != img.getWidth() || height != img.getHeight())
             throw new IllegalArgumentException("Texture image resolution " +
-                                               "must match FB resolution");
+                                               "must match FB resolution. "+
+                                            "FB resolution: "+width+"x"+height+"; Texture image resolution: "+img.getWidth()+"x"+img.getHeight()
+                                               );
 
         if (samples != tex.getImage().getMultiSamples())
             throw new IllegalStateException("Texture samples must match framebuffer samples");
