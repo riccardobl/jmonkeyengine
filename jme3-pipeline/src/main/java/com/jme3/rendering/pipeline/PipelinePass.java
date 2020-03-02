@@ -20,33 +20,33 @@ public abstract class PipelinePass{
 
     protected void setPipeline(RenderPipeline pipeline){
         this.pipeline=pipeline;
-
-    }
-    public void cleanup() {
-
     }
 
-    public void setId(int id) {
+    protected void cleanup() {
+
+    }
+
+    protected void setId(int id) {
         this.id=id;
     }
 
-    public int getId() {
+    protected int getId() {
         return this.id;
     }
 
-    public void preAttach() {
+    protected void preAttach() {
 
     }
 
-    public void postAttach() {
+    protected void postAttach() {
 
     }
 
-    public void preDetach() {
+    protected void preDetach() {
 
     }
 
-    public void postDetach() {
+    protected void postDetach() {
 
     }
 
@@ -96,9 +96,9 @@ public abstract class PipelinePass{
 
     }
 
-    public abstract void onRun(float tpf);
-    public abstract void onInput(Object key,Object value);
-    public abstract void onOutput(Object key,Object value);
+    protected abstract void onRun(float tpf);
+    protected abstract void onInput(Object key,Object value);
+    protected abstract void onOutput(Object key,Object value);
 
     public final void run(float tpf){
         assert pipeline!=null;

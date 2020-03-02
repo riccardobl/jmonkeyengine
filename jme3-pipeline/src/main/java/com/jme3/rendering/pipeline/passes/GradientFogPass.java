@@ -52,7 +52,7 @@ public class GradientFogPass  extends TexturePass{
     }
     
     @Override
-    public void onInput(Object key,Object value){
+    protected void onInput(Object key,Object value){
         super.onInput(key, value);
         if(key==PassIn.CAMERA){
             Camera cam=(Camera)value;

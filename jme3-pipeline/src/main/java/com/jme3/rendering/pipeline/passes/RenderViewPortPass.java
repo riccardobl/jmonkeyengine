@@ -31,7 +31,7 @@ public class RenderViewPortPass extends RenderPass{
 	}
 
 	@Override
-    public void onRender(final float tpf,final int w,final int h,final FrameBuffer outFb) {
+    protected void onRender(final float tpf,final int w,final int h,final FrameBuffer outFb) {
         final RenderManager renderManager= getRenderManager();
 
         if(viewPort==null)return;
@@ -70,7 +70,7 @@ public class RenderViewPortPass extends RenderPass{
 	}
 
     @Override
-    public void onInput(final Object key, final Object value) {
+    protected void onInput(final Object key, final Object value) {
         if(key==INPUT_VIEWPORT)viewPort=(ViewPort)value;
     }
 

@@ -156,7 +156,7 @@ public abstract class RenderPass extends PipelinePass{
     }
 
 
-    public void onOutput(Object key,Object value){
+    protected void onOutput(Object key,Object value){
         if(key instanceof Number){
             int keyn=((Number)key).intValue();
 
@@ -179,10 +179,10 @@ public abstract class RenderPass extends PipelinePass{
         } 
     }
 
-    public abstract void onRender(float tpf,int w,int h,FrameBuffer outFb);
+    protected abstract void onRender(float tpf,int w,int h,FrameBuffer outFb);
 
     @Override
-    public void onRun(float tpf){
+    protected void onRun(float tpf){
         if(outDepth==null&&(outColors==null||outColors.size()==0))return;
         FrameBuffer outFb=getFrameBuffer(outColors,outDepth);
 

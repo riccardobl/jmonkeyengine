@@ -29,7 +29,7 @@ public class FXAAPass extends TexturePass{
 
    
     @Override
-    public void onOutput(Object key,Object value){
+    protected void onOutput(Object key,Object value){
         super.onOutput(key, value);
         if(key instanceof Number&&((Number)key).intValue()==RenderPass.RENDER_OUT_COLOR){
             Texture tx=(Texture) value;

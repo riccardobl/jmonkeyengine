@@ -42,7 +42,7 @@ public class TexturePass extends RenderPass{
     }
 
 
-    private void checkWp(){
+    protected void checkWp(){
         for(TechniqueDef t:mat.getMaterialDef().getTechniqueDefs(getTechnique())){
             if(t.getWorldBindings().size()>0){
                 throw new RuntimeException("You cannot use WorldParameters in TexturePass");
@@ -61,7 +61,7 @@ public class TexturePass extends RenderPass{
 
 
     @Override
-    public void onRender(float tpf,int w,int h,FrameBuffer outFb) {
+    protected void onRender(float tpf,int w,int h,FrameBuffer outFb) {
         RenderManager renderManager= getRenderManager();
               
         cam.resize(w, h, false);
@@ -75,7 +75,7 @@ public class TexturePass extends RenderPass{
         renderManager.renderGeometry(screen);
     }
 
-    public void onInput(Object key,Object value){
+    protected void onInput(Object key,Object value){
         if(key instanceof String)applyParam((String)key,value);
     }
 
