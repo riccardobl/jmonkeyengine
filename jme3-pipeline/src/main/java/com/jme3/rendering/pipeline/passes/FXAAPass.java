@@ -1,14 +1,9 @@
 package com.jme3.rendering.pipeline.passes;
 
-import java.util.Arrays;
-
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector2f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
-import com.jme3.rendering.pipeline.params.PipelineParam;
-import com.jme3.rendering.pipeline.params.PipelineParamPointer;
-import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Texture;
 
 /**
@@ -19,26 +14,29 @@ public class FXAAPass extends TexturePass{
     
     public FXAAPass(RenderManager renderManager,AssetManager assetManager,FrameBufferFactory fbFactory){
         super(renderManager,assetManager,fbFactory,"Pipeline/FXAA/FXAA.j3md");
+        useInput("ResolutionInverse", resInverse);
     }
     
-    public FXAAPass inScene(PipelineParamPointer<Texture> inScene){
-        inParam("Scene",inScene);
+    public FXAAPass inColor(Texture inScene){
+        useInput("Scene",inScene);
         return this;
     }
 
-
-    public FXAAPass outScene(PipelineParamPointer<Texture> inScene){
-        outColors(Arrays.asList(inScene));
+    public FXAAPass outColor(Texture outScene){
+        useOutput(RenderPass.RENDER_OUT_COLOR,outScene);
         return this;
     }
 
-
+   
     @Override
-    public void afterFrameBufferUpdate(FrameBuffer fb){
-        int width=getFbFactory().getFrameBufferWidth(fb);
-        int height=getFbFactory().getFrameBufferHeight(fb);
-        resInverse.set(1f / width, 1f / height);
-        inParam("ResolutionInverse", PipelineParam.from(resInverse));
+    public void onOutput(Object key,Object value){
+        super.onOutput(key, value);
+        if(key instanceof Number&&((Number)key).intValue()==RenderPass.RENDER_OUT_COLOR){
+            Texture tx=(Texture) value;
+            int width=tx.getImage().getWidth();
+            int height=tx.getImage().getHeight();
+            resInverse.set(1f / width, 1f / height);
+        }
     }
-    
+
 }

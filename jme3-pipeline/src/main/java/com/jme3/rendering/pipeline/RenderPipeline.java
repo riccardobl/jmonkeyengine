@@ -12,9 +12,16 @@ public class RenderPipeline {
     private ArrayList<PipelinePass> passes=new ArrayList<PipelinePass>();
 
 
-    
+    public int size(){
+        return passes.size();
+    }
+
+    public PipelinePass get(int i){
+        return passes.get(i);
+    }
     
     public void add(PipelinePass pass){
+        pass.setPipeline(this);
         pass.preAttach();
         passes.add(pass);
         pass.postAttach();
@@ -22,6 +29,7 @@ public class RenderPipeline {
     }
 
     public void add(int at,PipelinePass pass){
+        pass.setPipeline(this);
         pass.preAttach();
         passes.add(at, pass);
         pass.postAttach();
@@ -29,6 +37,7 @@ public class RenderPipeline {
     }
 
     public void set(int at,PipelinePass pass){
+        pass.setPipeline(this);
         pass.preAttach();
         passes.set(at, pass);
         pass.postAttach();
@@ -75,16 +84,5 @@ public class RenderPipeline {
         return passes;
     }
 
-    public void run(float tpf){
-        for(PipelinePass p:passes){
-            p.preRun(tpf);        
-        }        
-        for(PipelinePass p:passes){
-            p.run(tpf);        
-        }
-        for(PipelinePass p:passes){
-            p.postRun(tpf);
-        }        
-    }
 
 }

@@ -38,6 +38,7 @@ public class PipelineRunner {
         if(action==null){
             action=(pipeline,tpf)->{
                 for(PipelinePass p:pipeline.getPasses()){
+                    
                     p.run(tpf);
                 }
             };

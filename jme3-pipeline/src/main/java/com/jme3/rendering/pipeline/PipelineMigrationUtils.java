@@ -7,8 +7,12 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.renderer.ViewPort;
 import com.jme3.rendering.pipeline.params.literalpointers.PipelineLiteralPointers;
+import com.jme3.rendering.pipeline.params.texture.SmartTexture;
+import com.jme3.rendering.pipeline.params.texture.SmartTexture2D;
+
 import com.jme3.rendering.pipeline.test.TestApp;
 import com.jme3.scene.Spatial;
+import com.jme3.texture.Texture2D;
 import com.jme3.texture.Image.Format;
 import com.jme3.texture.image.ColorSpace;
 
@@ -66,13 +70,15 @@ public class PipelineMigrationUtils {
         int numSamples=1;
 
         PipelineLiteralPointers pointers=new PipelineLiteralPointers();
-        pointers.setDefaultTextureInitializer(
-            (tx)->{
-                tx.width(width);
-                tx.height(height);
-                tx.format(format);
-                tx.colorSpace(colorSpace);
-                tx.numSamples(numSamples);                
+        pointers.setDefaultConstructor(Texture2D.class,
+            (pass,tx)->{
+                SmartTexture2D txb=SmartTexture.from(tx);
+                txb.width(width);
+                txb.height(height);
+                txb.format(format);
+                txb.colorSpace(colorSpace);
+                txb.numSamples(numSamples);              
+                return txb.get(pass);
             }
         );
 		return pointers;

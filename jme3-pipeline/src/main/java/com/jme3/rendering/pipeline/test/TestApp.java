@@ -6,10 +6,12 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.renderer.ViewPort;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
 import com.jme3.rendering.pipeline.PipelineMigrationUtils;
+import com.jme3.rendering.pipeline.PipelinePass;
 import com.jme3.rendering.pipeline.PipelineRunnerAppState;
 import com.jme3.rendering.pipeline.RenderPipeline;
-import com.jme3.rendering.pipeline.params.PipelineParamPointer;
 import com.jme3.rendering.pipeline.params.literalpointers.PipelineLiteralPointers;
+import com.jme3.rendering.pipeline.params.texture.SmartTexture;
+import com.jme3.rendering.pipeline.params.texture.SmartTexture2D;
 import com.jme3.rendering.pipeline.passes.FXAAPass;
 import com.jme3.rendering.pipeline.passes.GradientFogPass;
 import com.jme3.rendering.pipeline.passes.RenderViewPortPass;
@@ -21,6 +23,8 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
+import com.jme3.texture.Texture;
+import com.jme3.texture.Texture2D;
 import com.jme3.texture.Image.Format;
 
 /**
@@ -58,25 +62,31 @@ public class TestApp extends SimpleApplication{
             new RenderViewPortPass(renderManager, fbFactory)
             .viewPort(mainVp)
             .outColors(Arrays.asList(
-                pointers.newTexturePointer(">-scene").format(colorFormat)
+                pointers.newPointer(Texture2D.class).rel().next("scene")
             ))
             .outDepth(
-                pointers.newTexturePointer(">-depth").format(depthFormat)
-            )
-        );
+                pointers.newPointer(Texture2D.class,
+                (pass,tx)->{
+                    SmartTexture2D txb=SmartTexture.from(tx);
+                    txb.format(depthFormat);
+                    return txb.get(pass);
+                }
+            ).rel().next("depth")
+            
+        ));
 
         pipeline.add(
             new GradientFogPass(renderManager,assetManager, fbFactory)
             .sceneCamera(mainVp.getCamera())
-            .inScene(pointers.newTexturePointer("<-scene"))
-            .inDepth(pointers.newTexturePointer("<-depth"))
-            .outScene(pointers.newTexturePointer(">-scene"))
+            .inColor(pointers.newPointer(Texture2D.class).rel().previous("scene"))
+            .inDepth(pointers.newPointer(Texture2D.class).rel().previous("depth"))
+            .outColor(pointers.newPointer(Texture2D.class).rel().next("scene"))
         );
 
         pipeline.add(
             new FXAAPass(renderManager,assetManager, fbFactory)
-            .inScene(pointers.newTexturePointer("<-scene"))
-            .outScene(PipelineParamPointer.DEFAULT_OUT)
+            .inColor(pointers.newPointer(Texture2D.class).rel().previous("scene"))
+            .outColor(fbFactory.getDefaultTarget())
         );
 
     }

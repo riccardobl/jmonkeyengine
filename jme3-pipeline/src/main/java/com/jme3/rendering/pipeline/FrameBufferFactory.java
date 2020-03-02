@@ -9,6 +9,7 @@ import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.Image.Format;
+import com.jme3.texture.image.ColorSpace;
 
 /**
  * FramebufferFactory
@@ -17,11 +18,19 @@ public class FrameBufferFactory {
     private Map<Integer,FrameBuffer> framebufferCache=new HashMap<Integer,FrameBuffer>();
     protected FrameBuffer defaultFrameBuffer=null;
     protected int defaultFbWidth=2,defaultFbHeight=2;
+    Texture2D defaultTg=null;
 
     public void setDefaultFrameBuffer(int width,int height,FrameBuffer fb){
         defaultFrameBuffer=fb;
         defaultFbHeight=height;
         defaultFbWidth=width;
+        defaultTg=null;
+    }
+
+
+    public Texture2D getDefaultTarget(){
+        if(defaultTg==null)defaultTg=new Texture2D(defaultFbWidth, defaultFbHeight, Format.RGB8);
+        return defaultTg;
     }
 
 
@@ -44,7 +53,12 @@ public class FrameBufferFactory {
         boolean srgb,
         int samples
     ){
-        return Objects.hash(width,height,colorFormat.hashCode(),depthFormat.hashCode(),colorOut.hashCode(),depthOut.hashCode(),srgb);
+        return Objects.hash(width,height,
+        colorFormat==null?0:colorFormat.hashCode(),
+        depthFormat==null?0:depthFormat.hashCode(),
+        colorOut==null||colorOut.size()==0?0:colorOut.hashCode(),
+        depthOut==null?0:depthOut.hashCode(),srgb
+        );
     }
     
     public FrameBuffer get(
@@ -56,8 +70,8 @@ public class FrameBufferFactory {
             boolean srgb,
             int samples
     ) {
-        if(depthOut==null)return defaultFrameBuffer;
-        for(Texture t:colorOut)       if(t==null)return defaultFrameBuffer;
+        if(depthOut==getDefaultTarget())return defaultFrameBuffer;
+        for(Texture t:colorOut)       if(t==getDefaultTarget())return defaultFrameBuffer;
         
         Integer hash=hashFb(width,height,colorFormat,depthFormat,colorOut,depthOut,srgb,samples);
         FrameBuffer fb=framebufferCache.get(hash);
