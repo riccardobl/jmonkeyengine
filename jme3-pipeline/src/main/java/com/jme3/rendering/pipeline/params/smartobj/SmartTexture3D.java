@@ -1,4 +1,4 @@
-package com.jme3.rendering.pipeline.params.texture;
+package com.jme3.rendering.pipeline.params.smartobj;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -8,7 +8,8 @@ import com.jme3.texture.Texture2D;
 import com.jme3.texture.Texture3D;
 
 /**
- * Texture3DMutable
+ * A SmartObject used to manipulate Texture3D
+ * @author Riccardo Balbo
  */
 public class SmartTexture3D   extends SmartTexture<Texture3D> {
         protected int depth3d=0;

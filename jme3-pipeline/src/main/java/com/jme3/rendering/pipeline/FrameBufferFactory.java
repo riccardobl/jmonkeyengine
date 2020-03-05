@@ -9,17 +9,23 @@ import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.Image.Format;
-import com.jme3.texture.image.ColorSpace;
 
 /**
- * FramebufferFactory
+ * Handles creation and caching of framebuffers.
+ * @author Riccardo Balbo
  */
 public class FrameBufferFactory {
-    private Map<Integer,FrameBuffer> framebufferCache=new HashMap<Integer,FrameBuffer>();
+    protected Map<Integer,FrameBuffer> framebufferCache=new HashMap<Integer,FrameBuffer>();
     protected FrameBuffer defaultFrameBuffer=null;
     protected int defaultFbWidth=2,defaultFbHeight=2;
-    Texture2D defaultTg=null;
+    protected Texture2D defaultTg=null;
 
+    /**
+     * Set the default framebuffer on which the final output is supposed to be rendered.
+     * @param width Width of the frame buffer
+     * @param height Height of the frame buffer
+     * @param fb The framebuffer. Null to output to screen.
+     */
     public void setDefaultFrameBuffer(int width,int height,FrameBuffer fb){
         defaultFrameBuffer=fb;
         defaultFbHeight=height;
@@ -28,39 +34,39 @@ public class FrameBufferFactory {
     }
 
 
+    /**
+     * Get texture target used to output on the default framebuffer
+     */
     public Texture2D getDefaultTarget(){
         if(defaultTg==null)defaultTg=new Texture2D(defaultFbWidth, defaultFbHeight, Format.RGB8);
         return defaultTg;
     }
 
-
+    
+    /**
+     * Get framebuffer width, or screen width if fb = null
+     * @param fb
+     * @return
+     */
     public int getFrameBufferWidth(FrameBuffer fb){
         if(fb==null)return defaultFbWidth;
-        return fb.getWidth();
+        else return fb.getWidth();
     }
 
+        /**
+     * Get framebuffer height, or screen height if fb = null
+     * @param fb
+     * @return
+     */
     public int getFrameBufferHeight(FrameBuffer fb){
         if(fb==null)return defaultFbHeight;
-        return fb.getHeight();
+        else return fb.getHeight();
     }
 
-    protected int hashFb( 
-        int width, int height, 
-        Format colorFormat, 				
-        Format depthFormat,
-        Collection colorOut, 
-        Object depthOut ,
-        boolean srgb,
-        int samples
-    ){
-        return Objects.hash(width,height,
-        colorFormat==null?0:colorFormat.hashCode(),
-        depthFormat==null?0:depthFormat.hashCode(),
-        colorOut==null||colorOut.size()==0?0:colorOut.hashCode(),
-        depthOut==null?0:depthOut.hashCode(),srgb
-        );
-    }
-    
+    /**
+     * Get a framebuffer that has the required properties. If unavailable, a new framebuffer will be created.
+     * @return The framebuffer or NULL if default framebuffer.
+     */
     public FrameBuffer get(
             int width, int height, 
             Format colorFormat, 				
@@ -96,5 +102,24 @@ public class FrameBufferFactory {
             framebufferCache.put(hash,fb);
          }
          return fb;
+    }
+
+
+
+    protected int hashFb( 
+        int width, int height, 
+        Format colorFormat, 				
+        Format depthFormat,
+        Collection colorOut, 
+        Object depthOut ,
+        boolean srgb,
+        int samples
+    ){
+        return Objects.hash(width,height,
+        colorFormat==null?0:colorFormat.hashCode(),
+        depthFormat==null?0:depthFormat.hashCode(),
+        colorOut==null||colorOut.size()==0?0:colorOut.hashCode(),
+        depthOut==null?0:depthOut.hashCode(),srgb
+        );
     }
 }

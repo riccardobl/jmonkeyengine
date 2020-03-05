@@ -5,13 +5,13 @@ import java.util.Arrays;
 import com.jme3.app.SimpleApplication;
 import com.jme3.renderer.ViewPort;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
-import com.jme3.rendering.pipeline.PipelineMigrationUtils;
+import com.jme3.rendering.pipeline.integration.PipelineMigrationUtils;
 import com.jme3.rendering.pipeline.PipelinePass;
-import com.jme3.rendering.pipeline.PipelineRunnerAppState;
-import com.jme3.rendering.pipeline.RenderPipeline;
-import com.jme3.rendering.pipeline.params.literalpointers.PipelineLiteralPointers;
-import com.jme3.rendering.pipeline.params.texture.SmartTexture;
-import com.jme3.rendering.pipeline.params.texture.SmartTexture2D;
+import com.jme3.rendering.pipeline.integration.PipelineRunnerAppState;
+import com.jme3.rendering.pipeline.Pipeline;
+import com.jme3.rendering.pipeline.params.literalpointers.PipelinePointers;
+import com.jme3.rendering.pipeline.params.smartobj.SmartTexture;
+import com.jme3.rendering.pipeline.params.smartobj.SmartTexture2D;
 import com.jme3.rendering.pipeline.passes.FXAAPass;
 import com.jme3.rendering.pipeline.passes.GradientFogPass;
 import com.jme3.rendering.pipeline.passes.RenderViewPortPass;
@@ -46,10 +46,10 @@ public class TestApp extends SimpleApplication{
 
         // initialization
         FrameBufferFactory fbFactory=PipelineMigrationUtils.getFrameBufferFactory(this);
-        PipelineLiteralPointers pointers=PipelineMigrationUtils.getLiteralPointers(this);
+        PipelinePointers pointers=PipelineMigrationUtils.getPointerFactory(this);
     
 
-        RenderPipeline pipeline=new RenderPipeline();
+        Pipeline pipeline=new Pipeline();
 
         // runner
         PipelineRunnerAppState pipelineAppState=new PipelineRunnerAppState();
@@ -61,18 +61,15 @@ public class TestApp extends SimpleApplication{
         pipeline.add(
             new RenderViewPortPass(renderManager, fbFactory)
             .viewPort(mainVp)
-            .outColors(Arrays.asList(
-                pointers.newPointer(Texture2D.class).rel().next("scene")
-            ))
+            .outColors(  pointers.newPointer(Texture2D.class).rel().next("scene"))
             .outDepth(
                 pointers.newPointer(Texture2D.class,
-                (pass,tx)->{
+                (pp,pass,tx)->{
                     SmartTexture2D txb=SmartTexture.from(tx);
                     txb.format(depthFormat);
-                    return txb.get(pass);
+                    return txb.get(pp,pass);
                 }
-            ).rel().next("depth")
-            
+            ).rel().next("depth")            
         ));
 
         pipeline.add(

@@ -8,6 +8,7 @@ import com.jme3.material.TechniqueDef;
 import com.jme3.renderer.RenderManager;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
 import com.jme3.rendering.pipeline.PipelinePass;
+import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.shader.VarType;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Image;
@@ -15,6 +16,10 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Image.Format;
 import com.jme3.texture.image.ColorSpace;
 
+/**
+ * An abstract pass that renders something.
+ * @author Riccardo Balbo
+ */
 public abstract class RenderPass extends PipelinePass{
 
     private FrameBuffer outFb;
@@ -156,34 +161,26 @@ public abstract class RenderPass extends PipelinePass{
     }
 
 
-    protected void onOutput(Object key,Object value){
+    @Override
+    protected void onOutput(Pipeline pipeline,Object key,Object value){
         if(key instanceof Number){
             int keyn=((Number)key).intValue();
-
             if(keyn==RENDER_OUT_DEPTH){
                 outDepth=(Texture)value;   
-                    // invalidateFrameBuffer();
             }else if(keyn>=RENDER_OUT_COLOR){
-                // List<Texture> cls=(List<Texture>)value;
                 int tid=keyn-RENDER_OUT_COLOR;
                 while(outColors.size()<=tid)outColors.add(null);
                 outColors.set(tid, (Texture)value);
-                // invalidateFrameBuffer();
-
-                // if(cls.size()!=outColors.size()||!outColors.containsAll(cls)){
-                //     outColors.clear();
-                //     for(Texture pp:cls)outColors.add(pp);        
-                //     invalidateFrameBuffer();
-                // }         
             }
         } 
     }
 
-    protected abstract void onRender(float tpf,int w,int h,FrameBuffer outFb);
+    protected abstract void onRender(Pipeline pipeline,float tpf,int w,int h,FrameBuffer outFb);
 
     @Override
-    protected void onRun(float tpf){
+    protected void onRun(Pipeline pipeline,float tpf){
         if(outDepth==null&&(outColors==null||outColors.size()==0))return;
+        
         FrameBuffer outFb=getFrameBuffer(outColors,outDepth);
 
         int w=getFbFactory().getFrameBufferWidth(outFb);
@@ -194,7 +191,7 @@ public abstract class RenderPass extends PipelinePass{
         renderManager.setForcedTechnique(useTechnique);
         renderManager.addForcedMatParam(mrtParam);
 
-        onRender(tpf,w,h,outFb);
+        onRender(pipeline,tpf,w,h,outFb);
 
         renderManager.removeForcedMatParam(mrtParam);    
         renderManager.setForcedTechnique(otch);
