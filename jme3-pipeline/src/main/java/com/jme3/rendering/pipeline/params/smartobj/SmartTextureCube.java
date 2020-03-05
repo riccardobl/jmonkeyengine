@@ -1,4 +1,4 @@
-package com.jme3.rendering.pipeline.params.texture;
+package com.jme3.rendering.pipeline.params.smartobj;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -7,7 +7,8 @@ import com.jme3.texture.Image;
 import com.jme3.texture.TextureCubeMap;
 
 /**
- * TextureCubeBind
+ * A SmartObject used to manipulate TextureCube
+ * @author Riccardo Balbo
  */
 public class SmartTextureCube extends SmartTexture<TextureCubeMap> {
  

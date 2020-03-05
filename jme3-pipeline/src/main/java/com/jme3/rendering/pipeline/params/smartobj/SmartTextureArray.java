@@ -1,4 +1,4 @@
-package com.jme3.rendering.pipeline.params.texture;
+package com.jme3.rendering.pipeline.params.smartobj;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -8,7 +8,8 @@ import com.jme3.texture.TextureArray;
 import com.jme3.texture.image.ColorSpace;
 
 /**
- * TextureArrayBind
+ * A SmartObject used to manipulate TextureArray
+ * @author Riccardo Balbo
  */
 public class SmartTextureArray extends SmartTexture<TextureArray> {
     protected int length=0;

@@ -1,4 +1,4 @@
-package com.jme3.rendering.pipeline.params.texture;
+package com.jme3.rendering.pipeline.params.smartobj;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,6 +24,11 @@ import com.jme3.texture.Texture3D;
 import com.jme3.texture.TextureArray;
 import com.jme3.texture.TextureCubeMap;
 import com.jme3.texture.image.ColorSpace;
+
+/**
+ * A SmartObject used to manipulate Texture
+ * @author Riccardo Balbo
+ */
 public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
 
     static class SmartTextureKey extends TextureKey{

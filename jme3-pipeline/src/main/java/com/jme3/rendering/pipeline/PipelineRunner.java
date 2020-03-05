@@ -10,23 +10,31 @@ import com.jme3.app.state.BaseAppState;
 import com.jme3.renderer.RenderManager;
 
 /**
- * PipelineRunner
+ * Runs the pipeline
+ * @author Riccardo Balbo
  */
 public class PipelineRunner {
 
-    protected List<RenderPipeline> pipelines=new ArrayList<RenderPipeline>();
+    protected List<Pipeline> pipelines=new ArrayList<Pipeline>();
     protected float speed;
-    protected BiConsumer<RenderPipeline,Float> runnerAction;
+    protected BiConsumer<Pipeline,Float> runnerAction;
+    
+
+    public void run(float tpf){
+        for(Pipeline p : pipelines){
+            runnerAction.accept(p,tpf);
+        }
+    }
     
     public PipelineRunner(){
         setRunner(null);
     }
 
-    public void addPipeline(RenderPipeline p){
+    public void addPipeline(Pipeline p){
         pipelines.add(p);
     }
 
-    public void removePipeline(RenderPipeline p){
+    public void removePipeline(Pipeline p){
         pipelines.remove(p);
     }
 
@@ -34,22 +42,18 @@ public class PipelineRunner {
         this.speed=speed;
     }
 
-    public void setRunner(BiConsumer<RenderPipeline,Float> action){
+    public void setRunner(BiConsumer<Pipeline,Float> action){
         if(action==null){
             action=(pipeline,tpf)->{
                 for(PipelinePass p:pipeline.getPasses()){
                     
-                    p.run(tpf);
+                    p.run(pipeline,tpf);
                 }
             };
         }
         this.runnerAction=action;
     }
 
-    public void run(float tpf){
-        for(RenderPipeline p : pipelines){
-            runnerAction.accept(p,tpf);
-        }
-    }
+
     
 }

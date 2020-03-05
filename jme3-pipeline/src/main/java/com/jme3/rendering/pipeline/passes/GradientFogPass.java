@@ -1,18 +1,18 @@
 package com.jme3.rendering.pipeline.passes;
 
-import java.util.Arrays;
-
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
+import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.texture.Texture;
 
 /**
- * GradientFogPass
+ * Gradient based fog
+ * @author Riccardo Balbo
  */
-public class GradientFogPass  extends TexturePass{
+public class GradientFogPass  extends MaterialPass{
     private final Vector2f frustumNearFar=new Vector2f();
     public static enum PassIn{
         CAMERA
@@ -52,8 +52,8 @@ public class GradientFogPass  extends TexturePass{
     }
     
     @Override
-    protected void onInput(Object key,Object value){
-        super.onInput(key, value);
+    protected void onInput(Pipeline pipeline,Object key,Object value){
+        super.onInput(pipeline,key, value);
         if(key==PassIn.CAMERA){
             Camera cam=(Camera)value;
             frustumNearFar.set(cam.getFrustumNear(),cam.getFrustumFar());

@@ -12,22 +12,22 @@ import com.jme3.math.Vector4f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
+import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.shader.VarType;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Texture;
 import com.jme3.ui.Picture;
 
 /**
- * TexturePass
+ * An abstract pass that execute a shader on an 1x1 quad.
+ * @author Riccardo Balbo
  */
-public class TexturePass extends RenderPass{
-    protected final Material mat;
-
-
-	protected Picture screen;
-    protected Camera cam;
+public class MaterialPass extends RenderPass{
+    private final Material mat;
+	private Picture screen;
+    private Camera cam;
     
-    public TexturePass(RenderManager renderManager,AssetManager assetManager,FrameBufferFactory fbFactory,String matDef){
+    protected MaterialPass(RenderManager renderManager,AssetManager assetManager,FrameBufferFactory fbFactory,String matDef){
         super(renderManager, fbFactory);
         mat=new Material(assetManager,matDef);
         
@@ -42,7 +42,7 @@ public class TexturePass extends RenderPass{
     }
 
 
-    protected void checkWp(){
+    private void checkWp(){
         for(TechniqueDef t:mat.getMaterialDef().getTechniqueDefs(getTechnique())){
             if(t.getWorldBindings().size()>0){
                 throw new RuntimeException("You cannot use WorldParameters in TexturePass");
@@ -51,7 +51,7 @@ public class TexturePass extends RenderPass{
     }
 
     @Override
-    public TexturePass technique(String tech){
+    public MaterialPass technique(String tech){
         super.technique(tech);
         checkWp();
         return this;
@@ -61,7 +61,7 @@ public class TexturePass extends RenderPass{
 
 
     @Override
-    protected void onRender(float tpf,int w,int h,FrameBuffer outFb) {
+    protected void onRender(Pipeline pipeline,float tpf,int w,int h,FrameBuffer outFb) {
         RenderManager renderManager= getRenderManager();
               
         cam.resize(w, h, false);
@@ -75,11 +75,13 @@ public class TexturePass extends RenderPass{
         renderManager.renderGeometry(screen);
     }
 
-    protected void onInput(Object key,Object value){
+    @Override
+    protected void onInput(Pipeline pipeline,Object key,Object value){
         if(key instanceof String)applyParam((String)key,value);
     }
 
     protected void applyParam(String name, Object value) {
+        if(mat.getMaterialDef().getMaterialParam(name)==null)return;
         if(value instanceof Integer){
             mat.setParam(name,VarType.Int,value);
         }else if(value instanceof Float){
@@ -114,11 +116,7 @@ public class TexturePass extends RenderPass{
             mat.setParam(name,VarType.Matrix4Array,value);
         }else if(value instanceof Matrix3f[]){
             mat.setParam(name,VarType.Matrix3Array,value);
-        }else{
-            // throw new UnsupportedDataTypeException();
         }
-
-
     }
 
 

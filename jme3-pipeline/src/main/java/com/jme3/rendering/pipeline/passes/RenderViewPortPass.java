@@ -8,6 +8,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
 import com.jme3.rendering.pipeline.PipelinePass;
+import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.shader.VarType;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Image;
@@ -16,14 +17,14 @@ import com.jme3.texture.Image.Format;
 import com.jme3.texture.image.ColorSpace;
 
 /**
- * RenderViewPortPass
+ * A pass that renders a viewport. Used to migrate from jme core pipeline.
+ * @author Riccardo Balbo
+ * @deprecated
  */
+@Deprecated
 public class RenderViewPortPass extends RenderPass{
-
     private static final Object INPUT_VIEWPORT=new Object();
-
-    private ViewPort viewPort;
-    
+    private ViewPort viewPort;  
 
 
 	public RenderViewPortPass(final RenderManager renderManager,final FrameBufferFactory fbFactory){
@@ -31,7 +32,7 @@ public class RenderViewPortPass extends RenderPass{
 	}
 
 	@Override
-    protected void onRender(final float tpf,final int w,final int h,final FrameBuffer outFb) {
+    protected void onRender(Pipeline pipeline,final float tpf,final int w,final int h,final FrameBuffer outFb) {
         final RenderManager renderManager= getRenderManager();
 
         if(viewPort==null)return;
@@ -53,8 +54,8 @@ public class RenderViewPortPass extends RenderPass{
 
     }
     
-    public RenderViewPortPass outColors(List<Texture> out){
-        for(int i=0;i<out.size();i++)useOutput(RenderPass.RENDER_OUT_COLOR+i,out.get(i));
+    public RenderViewPortPass outColors(Texture... out){
+        for(int i=0;i<out.length;i++)useOutput(RenderPass.RENDER_OUT_COLOR+i,out[i]);
         return this;
     }
 
@@ -70,7 +71,7 @@ public class RenderViewPortPass extends RenderPass{
 	}
 
     @Override
-    protected void onInput(final Object key, final Object value) {
+    protected void onInput(Pipeline pipeline,final Object key, final Object value) {
         if(key==INPUT_VIEWPORT)viewPort=(ViewPort)value;
     }
 

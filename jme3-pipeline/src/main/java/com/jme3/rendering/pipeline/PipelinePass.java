@@ -4,55 +4,65 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.jme3.rendering.pipeline.params.texture.SmartObject;
+import com.jme3.rendering.pipeline.params.smartobj.SmartObject;
 
+/**
+ * A self contained pass of the pipeline. 
+ * 
+ * @author Riccardo Balbo
+ */
 public abstract class PipelinePass{
-    protected int id;
-    protected RenderPipeline pipeline;
+    private int id;
+    private Map<Object,Object> inputs=new HashMap<Object,Object>();
+    private Map<Object,Object> outputs=new HashMap<Object,Object>();
 
-    public void initialize(RenderPipeline pipeline) {
-    }
-
-    public RenderPipeline getPipeline(){
-        assert pipeline!=null;
-        return pipeline;
-    }
-
-    protected void setPipeline(RenderPipeline pipeline){
-        this.pipeline=pipeline;
-    }
-
-    protected void cleanup() {
-
-    }
-
-    protected void setId(int id) {
+    void setId(int id) {
         this.id=id;
     }
 
-    protected int getId() {
+    /**
+     * Get id of the current pass inside the pipeline
+     */
+    public int getId() {
         return this.id;
     }
 
-    protected void preAttach() {
+    /**
+     * Called before the pass is attached to the pipeline
+     */
+    protected void preAttach(Pipeline pipeline) {
 
     }
 
-    protected void postAttach() {
+    /**
+     * Called after the pass is attached to the pipeline
+     */
+    protected void postAttach(Pipeline pipeline) {
 
     }
 
-    protected void preDetach() {
+    /**
+     * Called before the pass is detached from the pipeline
+     */
+    protected void preDetach(Pipeline pipeline) {
 
     }
 
-    protected void postDetach() {
+    /**
+     * Called after the pass is detached from the pipeline
+     */
+    protected void postDetach(Pipeline pipeline) {
 
     }
 
-    Map<Object,Object> inputs=new HashMap<Object,Object>();
-    Map<Object,Object> outputs=new HashMap<Object,Object>();
 
+    /**
+     * Pass an input to the pass.
+     * Note: inputs should not be manipulated directly, since they could be actually transparent pointers. 
+     * All the inputs will be processed and passed to the onInput method on every frame. From there they can be used freely..
+     * @param key An object that defines the name of this input
+     * @param in the value
+     */
     protected void useInput(Object key, Object in) {
         if(in == null){
             inputs.remove(key);
@@ -61,6 +71,14 @@ public abstract class PipelinePass{
         }
     }
 
+
+     /**
+    * Define an output for the pass
+     * Note: outputs should not be manipulated directly, since they could be actually transparent pointers. 
+     * All the outputs will be processed and passed to the onOutput method on every frame. From there they can be used freely.
+     * @param key An object that defines the name of this output
+     * @param out the output object
+     */
     protected void useOutput(Object key, Object out) {
         if(out == null){
             outputs.remove(key);
@@ -69,43 +87,65 @@ public abstract class PipelinePass{
         }
     }
 
-    protected void setInOut() {
+    protected void setInOut(Pipeline pipeline) {
         for(Entry<Object,Object> e:inputs.entrySet()){
             Object key=e.getKey();
             Object value=e.getValue();
             SmartObject svalue=SmartObject.from(value);
-            value=svalue.get(this);
-            onInput(key,value);            
+            value=svalue.get(pipeline,this);
+            onInput(pipeline,key,value);            
         }
         for(Entry<Object,Object> e:outputs.entrySet()){
             Object key=e.getKey();
             Object value=e.getValue();
             SmartObject svalue=SmartObject.from(value);
-            value=svalue.get(this);
-            System.out.println(this+ " Use output "+value);
-
-            onOutput(key,value);            
+            value=svalue.get(pipeline,this);
+            onOutput(pipeline,key,value);            
         }
     }
 
- 
-    protected void beforeInOutSet(){
+    /**
+     * Called before inputs and ouputs are processed in every frame
+     */
+    protected void beforeInOutSet(Pipeline pipeline){
 
     }
-    protected void afterInOutSet(){
+
+
+    /**
+     * Called after inputs and ouputs  are processed in every frame
+     */
+    protected void afterInOutSet(Pipeline pipeline){
 
     }
 
-    protected abstract void onRun(float tpf);
-    protected abstract void onInput(Object key,Object value);
-    protected abstract void onOutput(Object key,Object value);
+    protected abstract void onRun(Pipeline pipeline,float tpf);
 
-    public final void run(float tpf){
-        assert pipeline!=null;
-        beforeInOutSet();
-        setInOut();
-        afterInOutSet();
-        onRun(tpf);
+
+    /**
+     * Called for each input, after the input is processed
+     * @param pipeline The pipeline
+     * @param key The name of the input
+     * @param value The value of the input
+     */
+    protected abstract void onInput(Pipeline pipeline,Object key,Object value);
+
+
+    
+
+    /**
+     * Called for each output, after the output is processed
+     * @param pipeline The pipeline
+     * @param key The name of the output
+     * @param value The value of the output
+     */
+    protected abstract void onOutput(Pipeline pipeline,Object key,Object value);
+
+    public final void run(Pipeline pipeline,float tpf){
+        beforeInOutSet(pipeline);
+        setInOut(pipeline);
+        afterInOutSet(pipeline);
+        onRun(pipeline,tpf);
     }
 
 }
