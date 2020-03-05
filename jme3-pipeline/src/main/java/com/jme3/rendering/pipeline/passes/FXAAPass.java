@@ -20,8 +20,13 @@ public class FXAAPass extends MaterialPass{
         useInput("ResolutionInverse", resInverse);
     }
     
-    public FXAAPass inColor(Texture inScene){
-        useInput("Scene",inScene);
+    public FXAAPass inColor(Texture... inScene){
+        for(int i=0;i<inScene.length;i++)useInput("Scene"+i,inScene[i]);
+        return this;
+    }
+
+    public FXAAPass outColor(Texture... outScene){
+        for(int i=0;i<outScene.length;i++)useOutput(RenderPass.RENDER_OUT_COLOR+i,outScene[i]);
         return this;
     }
 
@@ -40,10 +45,7 @@ public class FXAAPass extends MaterialPass{
         return this;
     }
 
-    public FXAAPass outColor(Texture outScene){
-        useOutput(RenderPass.RENDER_OUT_COLOR,outScene);
-        return this;
-    }
+
 
    
     @Override

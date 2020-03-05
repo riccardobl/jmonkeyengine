@@ -75,8 +75,10 @@ public class TestApp extends SimpleApplication{
         pipeline.add(
             new GradientFogPass(renderManager,assetManager, fbFactory)
             .sceneCamera(mainVp.getCamera())
-            .inColor(pointers.newPointer(Texture2D.class).rel().previous("scene"))
-            .inDepth(pointers.newPointer(Texture2D.class).rel().previous("depth"))
+            .inColorDepth(
+                new Texture[]{pointers.newPointer(Texture2D.class).rel().previous("scene")},
+                new Texture[]{pointers.newPointer(Texture2D.class).rel().previous("depth")}
+            )
             .outColor(pointers.newPointer(Texture2D.class).rel().next("scene"))
         );
 
