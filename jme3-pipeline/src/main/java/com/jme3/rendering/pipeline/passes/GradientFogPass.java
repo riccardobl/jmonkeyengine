@@ -30,27 +30,26 @@ public class GradientFogPass  extends MaterialPass{
         return this;
     }
     
-    public GradientFogPass inColor(Texture inScene){
-        useInput("Scene",inScene);
-        return this;
-    }
 
     public GradientFogPass gradient(Texture gradient){
         useInput("FogGradient",gradient);
         return this;
     }
 
-    public GradientFogPass inDepth(Texture inDepth){
-        useInput("Depth",inDepth);
+
+    public GradientFogPass inColorDepth(Texture[] inColor,Texture inDepth[]){
+        for(int i=0;i<inColor.length;i++)useInput("Scene"+i,inColor[i]);
+        for(int i=0;i<inDepth.length;i++)useInput("Depth"+i,inDepth[i]);
+        return this;
+    }
+
+    public GradientFogPass outColor(Texture... outScene){
+        for(int i=0;i<outScene.length;i++)useOutput(RenderPass.RENDER_OUT_COLOR+i,outScene[i]);
         return this;
     }
 
 
-    public GradientFogPass outColor(Texture outScene){
-        useOutput(RenderPass.RENDER_OUT_COLOR,outScene);
-        return this;
-    }
-    
+
     @Override
     protected void onInput(Pipeline pipeline,Object key,Object value){
         super.onInput(pipeline,key, value);

@@ -1,6 +1,8 @@
 MaterialDef FXAA {
     MaterialParameters {
-        Texture2D Scene 
+        #for i=0..10 ( $0 )
+            Texture2D Scene$i
+        #endfor 
 
         Float SubPixelShift : 0.25
         Float SpanMax : 8
@@ -13,10 +15,10 @@ MaterialDef FXAA {
         VertexShader GLSL150:  Pipeline/FXAA/fxaa.vert
         FragmentShader GLSL150: Pipeline/FXAA/fxaa.frag
 
-     
-
         Defines {
-     
+            #for i=0..10 ( $0 )
+                SCENE_$i:Scene$i
+            #endfor 
         }
     }
 }

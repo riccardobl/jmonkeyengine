@@ -34,6 +34,8 @@ package com.jme3.shader.plugins;
 import com.jme3.asset.*;
 import com.jme3.asset.cache.AssetCache;
 
+import jme3tools.shader.Preprocessor;
+
 import java.io.*;
 import java.util.*;
 
@@ -62,6 +64,7 @@ public class GLSLLoader implements AssetLoader {
         }
     }
 
+
     /**
      * Creates a {@link ShaderDependencyNode} from a stream representing shader code.
      *
@@ -85,8 +88,9 @@ public class GLSLLoader implements AssetLoader {
             }
 
             while ((ln = bufferedReader.readLine()) != null) {
-                if (ln.trim().startsWith("#import ")) {
-                    ln = ln.trim().substring(8).trim();
+                String tln= ln.trim();
+                if (tln.startsWith("#import ") || tln.startsWith("#include ")) {
+                    ln = tln.substring(8).trim();
                     if (ln.startsWith("\"") && ln.endsWith("\"") && ln.length() > 3) {
                         // import user code
                         // remove quotes to get filename
@@ -105,7 +109,7 @@ public class GLSLLoader implements AssetLoader {
 
                         node.addDependency(sb.length(), dependNode);
                     }
-                } else if (ln.trim().startsWith("#extension ")) {
+                } else if (tln.startsWith("#extension ")) {
                     sbExt.append(ln).append('\n');
                 } else {
                     sb.append(ln).append('\n');
@@ -118,6 +122,7 @@ public class GLSLLoader implements AssetLoader {
             throw new AssetLoadException("Failed to load shader node: " + nodeName, ex);
         }
 
+              
         node.setSource(sb.toString());
         node.setExtensions(sbExt.toString());
         dependCache.put(nodeName, node);
@@ -186,7 +191,11 @@ public class GLSLLoader implements AssetLoader {
         // The input stream provided is for the vertex shader,
         // to retrieve the fragment shader, use the content manager
         this.assetManager = info.getManager();
-        Reader reader = new InputStreamReader(info.openStream());
+
+        InputStream in=info.openStream();
+        in=Preprocessor.apply(in);
+
+        Reader reader = new InputStreamReader(in);
         boolean injectDependencies = true;
         if (info.getKey() instanceof ShaderAssetKey) {
             injectDependencies = ((ShaderAssetKey) info.getKey()).isInjectDependencies();
@@ -219,4 +228,5 @@ public class GLSLLoader implements AssetLoader {
             }
         }
     }
+
 }

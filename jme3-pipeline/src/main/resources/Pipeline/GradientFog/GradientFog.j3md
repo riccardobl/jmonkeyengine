@@ -1,7 +1,10 @@
 MaterialDef GradientFog {
     MaterialParameters {
-        Texture2D Scene 
-        Texture2D Depth 
+        #for i=0..10 ( $0 )
+            Texture2D Scene$i 
+            Texture2D Depth$i 
+        #endfor 
+
         Texture2D FogGradient 
 
         Vector2 FrustumNearFar
@@ -14,7 +17,10 @@ MaterialDef GradientFog {
      
 
         Defines {
-     
+            #for i=0..10 ( $0 )
+                SCENE_$i:Scene$i
+                DEPTH_$i:Depth$i
+            #endfor
         }
     }
 }
