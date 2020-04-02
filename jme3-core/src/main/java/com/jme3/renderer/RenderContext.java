@@ -36,6 +36,7 @@ import java.lang.ref.WeakReference;
 import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.shader.BufferObject;
 import com.jme3.shader.Shader;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Image;
@@ -223,6 +224,12 @@ public class RenderContext {
      */
     public final WeakReference<Image> boundTextures[]
             = new WeakReference[maxTextureUnits];
+
+
+
+    public final WeakReference<BufferObject>[] boundBO = new WeakReference[8];
+
+
 
     /**
      * IDList for texture units
