@@ -50,6 +50,7 @@ import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.control.Control;
 import com.jme3.util.SafeArrayList;
+import com.jme3.util.StatefulObject;
 import com.jme3.util.TempVars;
 import com.jme3.util.clone.Cloner;
 import com.jme3.util.clone.IdentityCloneFunction;
@@ -68,8 +69,8 @@ import java.util.logging.Logger;
  * @author Joshua Slack
  * @version $Revision: 4075 $, $Data$
  */
-public abstract class Spatial implements Savable, Cloneable, Collidable,
-        CloneableSmartAsset, JmeCloneable, HasLocalTransform {
+public abstract class Spatial extends StatefulObject implements Savable, Cloneable, Collidable, CloneableSmartAsset, JmeCloneable, HasLocalTransform {
+
     private static final Logger logger = Logger.getLogger(Spatial.class.getName());
 
     /**
@@ -921,6 +922,8 @@ public abstract class Spatial implements Savable, Cloneable, Collidable,
             updateMatParamOverrides();
         }
         assert refreshFlags == 0;
+
+        setStateUpdateNeeded();
     }
 
     /**

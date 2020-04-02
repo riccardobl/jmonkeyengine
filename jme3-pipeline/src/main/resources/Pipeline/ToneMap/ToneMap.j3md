@@ -1,0 +1,28 @@
+MaterialDef ToneMap {
+
+    MaterialParameters {
+        
+        #for i=0..6 ( $0 )
+            Texture2D Scene$i 
+            Texture2D ExposureTexture$i 
+            Float Exposure$i : 1.0
+        #endfor 
+
+        Int Mode : 1
+    }
+
+    Technique {
+        VertexShader GLSL150:  Pipeline/ToneMap/toneMap.vert
+        FragmentShader GLSL150: Pipeline/ToneMap/toneMap.frag    
+
+        Defines {
+            #for i=0..6 ( $0 )
+                SCENE_$i:Scene$i
+                EXPOSURE_TEXTURE_$i:ExposureTexture$i
+            #endfor
+            TONEMAP: Mode
+        }
+
+    }
+    
+}

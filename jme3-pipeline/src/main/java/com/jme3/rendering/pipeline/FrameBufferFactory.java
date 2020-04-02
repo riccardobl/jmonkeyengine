@@ -63,6 +63,24 @@ public class FrameBufferFactory {
         else return fb.getHeight();
     }
 
+
+    private int hashFb( 
+        int width, int height, 
+        Format colorFormat, 				
+        Format depthFormat,
+        Collection colorOut, 
+        Object depthOut ,
+        boolean srgb,
+        int samples
+    ){
+        return Objects.hash(width,height,
+        colorFormat==null?0:colorFormat.hashCode(),
+        depthFormat==null?0:depthFormat.hashCode(),
+        colorOut==null||colorOut.size()==0?0:colorOut.hashCode(),
+        depthOut==null?0:depthOut.hashCode(),srgb
+        );
+    }
+    
     /**
      * Get a framebuffer that has the required properties. If unavailable, a new framebuffer will be created.
      * @return The framebuffer or NULL if default framebuffer.
@@ -106,20 +124,5 @@ public class FrameBufferFactory {
 
 
 
-    protected int hashFb( 
-        int width, int height, 
-        Format colorFormat, 				
-        Format depthFormat,
-        Collection colorOut, 
-        Object depthOut ,
-        boolean srgb,
-        int samples
-    ){
-        return Objects.hash(width,height,
-        colorFormat==null?0:colorFormat.hashCode(),
-        depthFormat==null?0:depthFormat.hashCode(),
-        colorOut==null||colorOut.size()==0?0:colorOut.hashCode(),
-        depthOut==null?0:depthOut.hashCode(),srgb
-        );
-    }
+
 }

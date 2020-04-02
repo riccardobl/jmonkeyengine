@@ -9,7 +9,9 @@ sourceSets {
         }
     }
 }
-
+repositories{
+    			maven { url 'https://jitpack.io' }
+}
 dependencies {
     testCompile project(':jme3-testdata')
 
@@ -17,7 +19,7 @@ dependencies {
     compile project(':jme3-desktop')
     compile project(':jme3-lwjgl')
 
-
+    compileOnly 'com.github.polincdev:JesseModel:-SNAPSHOT'
     compile project(':jme3-effects')
 
     compile project(':jme3-jogg')

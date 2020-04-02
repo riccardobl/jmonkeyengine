@@ -3,6 +3,7 @@ package com.jme3.rendering.pipeline.params.smartobj;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -209,6 +210,8 @@ public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
     private WrapMode owrapAxisR;
     
     public T prepareValue(final T value) {
+        if(value.getImage()==null)rebuild=true;
+        
         if(rebuild){
             rebuild(value);
             rebuild=false;
@@ -269,6 +272,7 @@ public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
     
 
     public SmartTexture width(final int v){
+        if(this.width==v)return this;
         this.width=v;
         this.rebuild=true;
         return this;
@@ -276,6 +280,7 @@ public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
 
 
     public SmartTexture height(final int v){
+        if(this.height==v)return this;
         this.height=v;
         this.rebuild=true;
         return this;
@@ -283,18 +288,21 @@ public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
 
 
     public SmartTexture numSamples(final int v){
+        if(this.numSamples==v)return this;
         this.numSamples=v;
         this.rebuild=true;
         return this;
     }
 
     public SmartTexture format(final Format v){
+        if(this.format==v)return this;
         this.format=v;
         this.rebuild=true;
         return this;
     }
 
     public SmartTexture colorSpace(final ColorSpace v){
+        if(this.colorSpace==v)return this;
         this.colorSpace=v;
         this.rebuild=true;
         return this;
@@ -302,6 +310,7 @@ public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
 
 
     public SmartTexture name(String v){
+        if(this.name.equals(v))return this;
         this.name=v;
         this.rebuild=true;
         return this;
@@ -312,6 +321,7 @@ public abstract class SmartTexture<T extends Texture> extends SmartObject<T>{
 
     public SmartTexture allocMipMaps(int sizes[]){
         if(sizes.length==0)sizes=null;
+        if(Arrays.equals(this.mipMapSizes, sizes))return this;
         if(sizes!=null&&this.numSamples>1)throw new IllegalArgumentException("Multisample textures do not support mipmaps");
         this.mipMapSizes=sizes;
         this.rebuild=true;

@@ -84,6 +84,7 @@ public class NanoTimer extends Timer {
 
     @Override
     public void update() {
+        super.update();
         tpf = (getTime() - previousTime) * (1.0f / TIMER_RESOLUTION);
         fps = 1.0f / tpf;
         previousTime = getTime();

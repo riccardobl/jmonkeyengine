@@ -119,6 +119,8 @@ public class LwjglTimer extends Timer {
      */
     @Override
     public void update() {
+        super.update();
+
         long curTime = getTime();
         lastTPF = (curTime - oldTime) * (1.0f / LWJGL_TIMER_RES);
         lastFPS = 1.0f / lastTPF;

@@ -729,38 +729,31 @@ public class DDSLoader implements AssetLoader {
      */
     public ByteBuffer readDXT3D(boolean flip, int totalSize) throws IOException {
         logger.finest("Source image format: DXT");
-
         ByteBuffer bufferAll = BufferUtils.createByteBuffer(totalSize * depth);
-
-        for (int i = 0; i < depth; i++) {
-            ByteBuffer buffer = BufferUtils.createByteBuffer(totalSize);
-            int mipWidth = width;
-            int mipHeight = height;
-            for (int mip = 0; mip < mipMapCount; mip++) {
-                if (flip) {
-                    byte[] data = new byte[sizes[mip]];
+        int mipWidth=width;
+        int mipHeight=height;          
+        for(int mip=0;mip < mipMapCount;mip++){           
+            for(int i=0;i < depth;i++){             
+                if(flip){
+                    byte[] data=new byte[sizes[mip]];
                     in.readFully(data);
-                    ByteBuffer wrapped = ByteBuffer.wrap(data);
+                    ByteBuffer wrapped=ByteBuffer.wrap(data);
                     wrapped.rewind();
-                    ByteBuffer flipped = DXTFlipper.flipDXT(wrapped, mipWidth, mipHeight, pixelFormat);
+                    ByteBuffer flipped=DXTFlipper.flipDXT(wrapped,mipWidth,mipHeight,pixelFormat);
                     flipped.rewind();
-                    buffer.put(flipped);
-                } else {
-                    byte[] data = new byte[sizes[mip]];
+                    bufferAll.put(flipped);
+                }else{
+                    byte[] data=new byte[sizes[mip]];
                     in.readFully(data);
-                    buffer.put(data);
+                    bufferAll.put(data);
                 }
-
-                mipWidth = Math.max(mipWidth / 2, 1);
-                mipHeight = Math.max(mipHeight / 2, 1);
             }
-            buffer.rewind();
-            bufferAll.put(buffer);
+            mipWidth=Math.max(mipWidth / 2,1);
+            mipHeight=Math.max(mipHeight / 2,1);
         }
-
+        bufferAll.rewind();
         return bufferAll;
     }
-
     /**
      * Reads the image data from the InputStream in the required format.
      * If the file contains a cubemap image, it is loaded as 6 ByteBuffers

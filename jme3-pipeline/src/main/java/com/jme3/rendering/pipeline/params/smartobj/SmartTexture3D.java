@@ -15,6 +15,7 @@ public class SmartTexture3D   extends SmartTexture<Texture3D> {
         protected int depth3d=0;
 
         public SmartTexture3D depth(int v){
+            if(this.depth3d==v)return this;
             this.depth3d=v;
             this.rebuild=true;
             return this;

@@ -39,17 +39,28 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
+import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
+import com.jme3.texture.Texture.MagFilter;
+import com.jme3.texture.Texture.MinFilter;
 
 public class TestTexture3DLoading extends SimpleApplication {
 
     public static void main(String[] args) {
+        AppSettings settings=new AppSettings(true);
+        settings.setRenderer(AppSettings.LWJGL_OPENGL32);
+        settings.putBoolean("GraphicsDebug",false);
         TestTexture3DLoading app = new TestTexture3DLoading();
+        
+        app.setSettings(settings);
+        app.setPauseOnLostFocus(false);
         app.start();
     }
 
     @Override
     public void simpleInitApp() {
+
+
         viewPort.setBackgroundColor(ColorRGBA.DarkGray);
         flyCam.setEnabled(false);
 
@@ -58,18 +69,19 @@ public class TestTexture3DLoading extends SimpleApplication {
 
         Geometry geom = new Geometry("Quad", q);
         Material material = new Material(assetManager, "jme3test/texture/tex3DThumb.j3md");
-        TextureKey key = new TextureKey("Textures/3D/flame.dds");
-        key.setGenerateMips(true);
+        TextureKey key = new TextureKey("Textures/3D/CloudShapeGeneratedDXT5.dds");
+        key.setGenerateMips(false);
         key.setTextureTypeHint(Texture.Type.ThreeDimensional);
 
         Texture t = assetManager.loadTexture(key);
-
-        int rows = 4;//4 * 4
+        t.setMinFilter(MinFilter.NearestNoMipMaps);
+        t.setMagFilter(MagFilter.Nearest);
+        int rows = 8;//4 * 4
 
         q.scaleTextureCoordinates(new Vector2f(rows, rows));
 
         //The image only have 8 pictures and we have 16 thumbs, the data will be interpolated by the GPU
-        material.setFloat("InvDepth", 1f / 16f);
+        material.setFloat("InvDepth", 1f / 64f);
         material.setInt("Rows", rows);
         material.setTexture("Texture", t);
         geom.setMaterial(material);

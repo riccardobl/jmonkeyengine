@@ -42,7 +42,9 @@ import java.nio.Buffer;
  * collected by the garbage collector, and then invoke the proper destructor
  * on the OpenGL library to delete it from memory.
  */
-public abstract class NativeObject implements Cloneable {
+public abstract class NativeObject extends StatefulObject implements Cloneable {
+    private String name;
+
 
     public static final int INVALID_ID = -1;
     
@@ -130,6 +132,7 @@ public abstract class NativeObject implements Cloneable {
      * and its state needs to be updated.
      */
     public void setUpdateNeeded(){
+        super.setStateUpdateNeeded();
         updateNeeded = true;
     }
 
@@ -151,7 +154,8 @@ public abstract class NativeObject implements Cloneable {
 
     @Override
     public String toString(){
-        return "Native" + getClass().getSimpleName() + " " + id;
+        return "Native-"+getClass().getSimpleName()+"("+(this.name!=null?this.name:"")+") ["+getId()+","+getUniqueId()+","+hashCode()+"]";
+
     }
 
     /**
@@ -249,4 +253,16 @@ public abstract class NativeObject implements Cloneable {
         }
         return (WeakReference<T>) weakRef;
     }
+
+    public void setName(String name){
+        this.name=name;
+    }
+
+    public String getName(){
+        if( this.name==null){
+            return getClass().getSimpleName()+" ["+getId()+","+getUniqueId()+","+hashCode()+"]";
+        }
+        return this.name;
+    }
+
 }

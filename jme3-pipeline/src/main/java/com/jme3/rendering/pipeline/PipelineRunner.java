@@ -14,9 +14,8 @@ import com.jme3.renderer.RenderManager;
  * @author Riccardo Balbo
  */
 public class PipelineRunner {
-
+    private  static final java.util.logging.Logger logger =  java.util.logging.Logger.getLogger( PipelineRunner.class.getName());
     protected List<Pipeline> pipelines=new ArrayList<Pipeline>();
-    protected float speed;
     protected BiConsumer<Pipeline,Float> runnerAction;
     
 
@@ -31,22 +30,27 @@ public class PipelineRunner {
     }
 
     public void addPipeline(Pipeline p){
-        pipelines.add(p);
+        if(!pipelines.contains(p))pipelines.add(p);
     }
 
     public void removePipeline(Pipeline p){
         pipelines.remove(p);
     }
 
-    public void setSpeed(float speed){
-        this.speed=speed;
-    }
+   
 
     public void setRunner(BiConsumer<Pipeline,Float> action){
         if(action==null){
+
             action=(pipeline,tpf)->{
+                if(logger.isLoggable(java.util.logging.Level.  FINER  ))logger.log(java.util.logging.Level.FINER,
+                    "Run pipeline {0} with runner {1}",new Object[]{pipeline,this}
+                );
+
                 for(PipelinePass p:pipeline.getPasses()){
-                    
+                    if(logger.isLoggable(java.util.logging.Level.  FINER  ))logger.log(java.util.logging.Level.FINER,
+                        "Run {0}",p
+                    );
                     p.run(pipeline,tpf);
                 }
             };

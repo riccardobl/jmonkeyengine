@@ -7,7 +7,7 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.renderer.ViewPort;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
-import com.jme3.rendering.pipeline.params.literalpointers.PipelinePointers;
+import com.jme3.rendering.pipeline.PipelinePointerFactory;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture2D;
 
@@ -54,17 +54,17 @@ public class PipelineMigrationUtils {
         return vp;
     }
 
-	public static PipelinePointers getPointerFactory(Application app) {
+	public static PipelinePointerFactory getPointerFactory(Application app) {
 
         ViewPort defaultVp=app.getViewPort();
         int width=defaultVp.getCamera().getWidth();
         int height=defaultVp.getCamera().getHeight();
 
-        Format format=Format.RGB111110F;
+        Format format=Format.RGB16F;
         ColorSpace colorSpace=ColorSpace.Linear;
         int numSamples=1;
 
-        PipelinePointers pointers=new PipelinePointers();
+        PipelinePointerFactory pointers=new PipelinePointerFactory();
         pointers.setDefaultConstructor(Texture2D.class,
             (pipeline,pass,tx)->{
                 SmartTexture2D txb=SmartTexture.from(tx);

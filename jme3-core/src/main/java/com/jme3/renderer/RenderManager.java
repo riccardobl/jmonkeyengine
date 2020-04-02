@@ -78,6 +78,7 @@ public class RenderManager {
     private final ArrayList<ViewPort> viewPorts = new ArrayList<>();
     private final ArrayList<ViewPort> postViewPorts = new ArrayList<>();
     private Camera prevCam = null;
+    private boolean prevCamOrtho;
     private Material forcedMaterial = null;
     private String forcedTechnique = null;
     private RenderState forcedRenderState = null;
@@ -1014,8 +1015,13 @@ public class RenderManager {
         if (lightFilter != null) {
             lightFilter.setCamera(cam);
         }
+        this.prevCamOrtho=ortho;
         setViewPort(cam);
         setViewProjection(cam, ortho);
+    }
+
+    public boolean isCurrentCameraOrtho(){
+        return this.prevCamOrtho;
     }
 
     /**

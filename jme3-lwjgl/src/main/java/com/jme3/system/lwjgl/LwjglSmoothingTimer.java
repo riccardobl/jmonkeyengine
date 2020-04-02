@@ -144,6 +144,7 @@ public class LwjglSmoothingTimer extends Timer {
      */
     @Override
     public void update() {
+        super.update();
         long newTime = Sys.getTime();
         long oldTime = this.oldTime;
         this.oldTime = newTime;

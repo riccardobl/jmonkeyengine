@@ -1,0 +1,22 @@
+MaterialDef MSAASolver {
+    MaterialParameters {
+        #for i=0..6 ( $0 )
+            Texture2D Input$i 
+            Int ResolveMethod$i: 0
+        #endfor 
+        Int NumSamples
+    }
+
+    Technique {
+        VertexShader GLSL150:  Pipeline/MSAASolver/MSAASolver.vert
+        FragmentShader GLSL150: Pipeline/MSAASolver/MSAASolver.frag    
+
+        Defines {
+            #for i=0..6 ( $0 )
+                INPUT_$i:Input$i
+                RESOLVE_METHOD_$i: ResolveMethod$i
+            #endfor
+            NUM_SAMPLES:NumSamples
+        }
+    }
+}

@@ -16,6 +16,7 @@ public class SmartTextureArray extends SmartTexture<TextureArray> {
 
 
     public SmartTextureArray length(int v){
+        if(this.length==v)return this;
         this.length=v;
         this.rebuild=true;
         return this;

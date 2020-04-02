@@ -60,7 +60,7 @@ public final class DefineList {
     }
 
     private void rangeCheck(int id) {
-        assert 0 <= id && id < values.length;
+        assert 0 <= id && id < values.length : id+" Outside of range 0;"+values.length;
     }
 
     public boolean isSet(int id) {
@@ -179,7 +179,7 @@ public final class DefineList {
                             + "or Infinite float literals");
                 }
                 sb.append(val);
-            } else {
+            } else{
                 sb.append(values[i]);
             }
 

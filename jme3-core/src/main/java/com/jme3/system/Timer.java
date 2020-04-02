@@ -31,6 +31,8 @@
  */
 package com.jme3.system;
 
+import com.jme3.util.StatefulObject;
+
 /**
  * <code>Timer</code> is the base class for a high resolution timer. It is
  * created from getTimer("display system")
@@ -38,7 +40,7 @@ package com.jme3.system;
  * @author Mark Powell
  * @version $Id: Timer.java,v 1.18 2007/03/09 10:19:34 rherlitz Exp $
  */
-public abstract class Timer {
+public abstract class Timer extends StatefulObject{
 
     /**
      * Returns the current time in ticks. A tick is an arbitrary measure of time
@@ -85,7 +87,9 @@ public abstract class Timer {
      * <code>update</code> recalculates the frame rate based on the previous
      * call to update. It is assumed that update is called each frame.
      */
-    public abstract void update();
+    public  void update(){
+        setStateUpdateNeeded();
+    }
 
     /**
      * Reset the timer to 0. Clear any tpf history.

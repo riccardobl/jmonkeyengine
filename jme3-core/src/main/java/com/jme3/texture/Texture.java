@@ -37,6 +37,8 @@ import com.jme3.asset.CloneableSmartAsset;
 import com.jme3.asset.TextureKey;
 import com.jme3.export.*;
 import com.jme3.util.PlaceholderAssets;
+import com.jme3.util.StatefulObject;
+
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,7 +58,7 @@ import java.util.logging.Logger;
  * @author Joshua Slack
  * @version $Id: Texture.java 4131 2009-03-19 20:15:28Z blaine.dev $
  */
-public abstract class Texture implements CloneableSmartAsset, Savable, Cloneable {
+public abstract class Texture extends StatefulObject implements CloneableSmartAsset, Savable, Cloneable {
 
     public enum Type {
 

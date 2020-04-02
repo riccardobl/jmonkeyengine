@@ -88,6 +88,7 @@ public class EraseTimer extends Timer {
 
     @Override
     public void update() {
+        super.update();
         tpf = (getTime() - previousTime) * (1.0f / TIMER_RESOLUTION);
         if (tpf >= 0.2) {
             //the frame lasted more than 200ms we erase its time to 16ms.

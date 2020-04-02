@@ -30,11 +30,12 @@ public class Pipeline {
     /** 
      * Add a pass at the end of the pipeline
      */
-    public void add(PipelinePass pass){
+    public Pipeline add(PipelinePass pass){
         pass.preAttach(this);
         passes.add(pass);
         pass.postAttach(this);
         recomputeIds();
+        return this;
     }
 
 
@@ -45,11 +46,12 @@ public class Pipeline {
      * @param pass the pass to insert
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public void add(int at,PipelinePass pass){
+    public Pipeline add(int at,PipelinePass pass){
         pass.preAttach(this);
         passes.add(at, pass);
         pass.postAttach(this);
         recomputeIds();
+        return this;
     }
 
     /**
@@ -59,11 +61,12 @@ public class Pipeline {
      * @param pass the pass to insert
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public void set(int at,PipelinePass pass){
+    public Pipeline set(int at,PipelinePass pass){
         pass.preAttach(this);
         passes.set(at, pass);
         pass.postAttach(this);
         recomputeIds();
+        return this;
     }
 
 
@@ -71,11 +74,12 @@ public class Pipeline {
      * Remove a pass from the pipeline
      * @param pass Pass to remove
      */
-    public void remove(PipelinePass pass){
+    public Pipeline remove(PipelinePass pass){
         pass.preDetach(this);
         passes.remove(pass);
         pass.postDetach(this);
         recomputeIds();
+        return this;
     }   
 
         
@@ -83,20 +87,22 @@ public class Pipeline {
      * Remove a pass from the pipeline
      * @param at index of the pass that must be removed inside the pipeline
      */
-    public void remove(int at){
+    public Pipeline remove(int at){
         PipelinePass pass=passes.get(at);
         pass.preDetach(this);
         passes.remove(at);
         pass.postDetach(this);
         recomputeIds();
+        return this;
     }   
 
     /**
      * Remove all passes and clear the pipeline
      */
-    public void clear(){
+    public Pipeline clear(){
         for(PipelinePass p:passes) remove(p);     
         passes.clear();        
+        return this;
     }
 
     /** 

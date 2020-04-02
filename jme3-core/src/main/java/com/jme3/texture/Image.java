@@ -603,6 +603,7 @@ public class Image extends NativeObject implements Savable /*, Cloneable*/ {
      * 
      * @return The image parameter state.
      */
+    @Deprecated
     public LastTextureState getLastTextureState() {
         return lastTextureState;
     }
@@ -614,6 +615,7 @@ public class Image extends NativeObject implements Savable /*, Cloneable*/ {
      * 
      * @param generated If mipmaps were generated or not.
      */
+    @Deprecated
     public void setMipmapsGenerated(boolean generated) {
         this.mipsWereGenerated = generated;
     }
@@ -625,6 +627,7 @@ public class Image extends NativeObject implements Savable /*, Cloneable*/ {
      * 
      * @return If mipmaps were generated already.
      */
+    @Deprecated
     public boolean isMipmapsGenerated() {
         return mipsWereGenerated;
     }
@@ -634,6 +637,7 @@ public class Image extends NativeObject implements Savable /*, Cloneable*/ {
      * {@link #isMipmapsGenerated() } is false in order to generate
      * mipmaps for this image.
      */
+    @Deprecated
     void setNeedGeneratedMipmaps() {
         needGeneratedMips = true;
     }
@@ -643,6 +647,7 @@ public class Image extends NativeObject implements Savable /*, Cloneable*/ {
      * for it (as requested by the texture). This stays true even
      * after mipmaps have been generated.
      */
+    @Deprecated
     public boolean isGeneratedMipmapsRequired() {
         return needGeneratedMips;
     }

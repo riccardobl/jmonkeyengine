@@ -48,3 +48,5 @@ javadoc_deploy
 javadoc_deploy.pub
 !.vscode/settings.json
 !.vscode/JME_style.xml
+*.log
+classpath-data.json

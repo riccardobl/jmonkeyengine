@@ -1,0 +1,35 @@
+MaterialDef FastBloom {
+
+    MaterialParameters {
+        #for i=0..6 ( $0 )
+            Texture2D Scene$i
+        #endfor 
+        
+        Vector2 BlurDirection
+        Float BrightPoint : 1.0
+        Boolean Extract
+
+        Vector2 Resolution
+
+    }
+
+    Technique {
+        VertexShader GLSL150:  Pipeline/FastBloom/FastBloom.vert
+        FragmentShader GLSL150: Pipeline/FastBloom/FastBloom.frag
+
+        WorldParameters {
+        }
+
+        RenderState {
+            Blend Off
+        }
+
+        Defines {
+            #for i=0..6 ( $0 )
+                SCENE_$i:Scene$i
+            #endfor         
+            EXTRACT:Extract
+            BLUR: BlurDirection
+        }
+    }
+}

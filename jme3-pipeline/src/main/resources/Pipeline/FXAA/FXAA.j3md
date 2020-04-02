@@ -1,6 +1,6 @@
 MaterialDef FXAA {
     MaterialParameters {
-        #for i=0..10 ( $0 )
+        #for i=0..6 ( $0 )
             Texture2D Scene$i
         #endfor 
 
@@ -9,6 +9,8 @@ MaterialDef FXAA {
         Float ReduceMul : 0.123
 
         Vector2 ResolutionInverse
+
+        UniformBufferObject WorldCamera
     }
 
     Technique {
@@ -16,7 +18,7 @@ MaterialDef FXAA {
         FragmentShader GLSL150: Pipeline/FXAA/fxaa.frag
 
         Defines {
-            #for i=0..10 ( $0 )
+            #for i=0..6 ( $0 )
                 SCENE_$i:Scene$i
             #endfor 
         }

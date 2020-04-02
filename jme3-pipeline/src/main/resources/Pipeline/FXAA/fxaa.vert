@@ -4,8 +4,8 @@ uniform float m_SubPixelShift;
 in vec4 inPosition;
 in vec2 inTexCoord;
 
-out vec4 FxaaPos;
-out vec2 TexCoord;
+noperspective out vec4 FxaaPos;
+noperspective out vec2 TexCoord;
 
 void fxaa_vert(){
     vec2 pos = inPosition.xy * 2.0 - 1.0;

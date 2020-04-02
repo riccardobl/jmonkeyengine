@@ -1,0 +1,36 @@
+MaterialDef BloomMerger {
+
+    MaterialParameters {
+        #for i=0..6 ( $0 )
+            Texture2D Scene$i
+            #for j=0..8 ( $0 )
+                Texture2D BloomLayer$i_$j
+            #endfor
+        #endfor 
+        
+        #for j=0..8 ( $0 )
+            Float Intensity$j : 1.0
+        #endfor
+    }
+
+    Technique {
+        VertexShader GLSL150:  Pipeline/FastBloom/FastBloom.vert
+        FragmentShader GLSL150: Pipeline/FastBloom/BloomMerger.frag
+
+        WorldParameters {
+        }
+
+        RenderState {
+            Blend Off
+        }
+
+        Defines {
+            #for i=0..6 ( $0 )
+                SCENE_$i:Scene$i
+                #for j=0..8 ( $0 )
+                    BLOOM_LAYER_$i_$j: BloomLayer$i_$j
+                #endfor
+            #endfor         
+        }
+    }
+}
