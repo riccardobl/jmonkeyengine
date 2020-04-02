@@ -58,14 +58,8 @@ public enum VarType {
     TextureArray(false,true,"sampler2DArray|sampler2DArrayShadow"),
     TextureCubeMap(false,true,"samplerCube"),
     Int("int"),
-    UniformBufferObject(false, false, "custom"),    
-    Half("float"),
-    UnsignedInt("unsigned int"),
-    Short("int"),
-    UnsignedShort("unsigned int"),
-    Byte("int"),
-    UnsignedByte("unsigned int"),
-    ;
+    UniformBufferObject(false, false, "custom"),
+    ShaderStorageBufferObject(false, false, "custom")  ;
 
     private boolean usesMultiData = false;
     private boolean textureType = false;

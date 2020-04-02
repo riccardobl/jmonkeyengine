@@ -179,7 +179,6 @@ public class NullRenderer implements Renderer {
     public void updateBufferData(VertexBuffer vb) {
     }
 
-
     @Override
     public void deleteBuffer(VertexBuffer vb) {
     }

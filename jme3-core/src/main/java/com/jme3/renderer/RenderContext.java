@@ -231,6 +231,12 @@ public class RenderContext {
 
 
 
+
+
+    public final WeakReference<BufferObject>[] boundBO = new WeakReference[8];
+
+
+
     /**
      * IDList for texture units
      *

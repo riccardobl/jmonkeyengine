@@ -31,12 +31,10 @@
  */
 package com.jme3.util;
 
+import com.jme3.util.functional.NoArgFunction;
 import java.util.*;
 
-import com.jme3.util.Function.NoArgFunction;
-
 /**
- *  <p>Provides a list with similar modification semantics to java.util.concurrent's
  *  CopyOnWriteArrayList except that it is not concurrent and also provides
  *  direct access to the current array.  This List allows modification of the
  *  contents while iterating as any iterators will be looking at a snapshot of

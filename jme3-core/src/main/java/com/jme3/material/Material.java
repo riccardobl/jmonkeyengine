@@ -815,8 +815,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             Uniform uniform = shader.getUniform(override.getPrefixedName());
 
             if (override.getValue() != null) {
-                updateShaderMaterialParameter(renderer,type,shader,override,bindUnits);
-
+                updateShaderMaterialParameter(renderer,type,shader,override,bindUnits,true);
             } else {
                 uniform.clearValue();
             }
@@ -825,7 +824,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
 
 
 
-    private void updateShaderMaterialParameter(Renderer renderer,VarType type,Shader shader,MatParam param,BindUnits unit){
+    private void updateShaderMaterialParameter(Renderer renderer,VarType type,Shader shader,MatParam param,BindUnits unit,boolean override){
         if ( type == VarType.UniformBufferObject||type==VarType.ShaderStorageBufferObject) {
   
             ShaderBufferBlock bufferBlock = shader.getBufferBlock(param.getPrefixedName());
@@ -845,9 +844,8 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
       
         } else {
             Uniform uniform = shader.getUniform(param.getPrefixedName());
-            if (uniform.isSetByCurrentMaterial()) {
-                return;
-            }
+            if (!override&&uniform.isSetByCurrentMaterial())  return;
+            
             if (type.isTextureType()) {
                 renderer.setTexture(unit.textureUnit, (Texture) param.getValue());
                 uniform.setValue(VarType.Int, unit.textureUnit);
@@ -888,7 +886,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             MatParam param = paramValues.getValue(i);
             VarType type = param.getVarType();
 
-            updateShaderMaterialParameter(renderer,type,shader,param,bindUnits);
+            updateShaderMaterialParameter(renderer,type,shader,param,bindUnits,false);
         }
 
         //TODO HACKY HACK remove this when texture unit is handled by the uniform.
