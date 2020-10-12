@@ -157,6 +157,10 @@ public class InputManager implements RawInputListener {
         return keys.getKeyName(key);
     }
 
+    public String getKeyName(int key){
+        return keys.getKeyName(key);
+    }
+
     private void invokeActions(int hash, boolean pressed) {
         ArrayList<Mapping> maps = bindings.get(hash);
         if (maps == null) {

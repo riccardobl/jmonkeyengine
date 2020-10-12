@@ -109,21 +109,10 @@ public class GlfwKeyInput implements KeyInput {
         charCallback.close();
     }
 
-    /**
-     * Determine the name of the specified key in the current system language.
-     *
-     * @param jmeKey the keycode from {@link com.jme3.input.KeyInput}
-     * @return the name of the key, or null if unknown
-     */
     @Override
-    public String getKeyName(int jmeKey) {
-        int glfwKey = GlfwKeyMap.fromJmeKeyCode(jmeKey);
-        if (glfwKey == GLFW_KEY_UNKNOWN) {
-            return null;
-        }
-
-        String result = glfwGetKeyName(glfwKey, 0);
-        return result;
+    public String getKeyName(int jmeKey){
+        int glfwkey=GlfwKeyMap.fromJmeKeyCode(jmeKey);
+        return glfwGetKeyName(glfwkey,0);
     }
 
     private void initCallbacks() {

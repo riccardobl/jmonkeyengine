@@ -559,11 +559,8 @@ public interface KeyInput extends Input {
      */
     public static final int KEY_LAST = 0xE0;
 
-    /**
-     * Determine the name of the specified key in the current system language.
-     *
-     * @param key The keycode from {@link com.jme3.input.KeyInput}
-     * @return the name of the key
-     */
-    public String getKeyName(int key);
+    public default String getKeyName(int key){
+        return null;
+    }
+
 }

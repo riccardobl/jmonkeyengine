@@ -179,16 +179,11 @@ public class GlfwKeyMap {
         return GLFW_TO_JME_KEY_MAP[glfwKey];
     }
 
-
-    /**
-     * Returns the glfw keycode that matches the specified jme keycode or
-     * GLFW_KEY_UNKNOWN if there isn't any match.
-     * 
-     * @param jmeKey the jme keycode
-     */
     public static int fromJmeKeyCode(final int jmeKey) {
-        for (int i = 0; i < GLFW_TO_JME_KEY_MAP.length; i++) {
-            if (GLFW_TO_JME_KEY_MAP[i] == jmeKey) return i;
+        for(int i=0;i<GLFW_TO_JME_KEY_MAP.length;i++){
+            if(GLFW_TO_JME_KEY_MAP[i]==jmeKey){
+                return i;
+            }
         }
         return GLFW_KEY_UNKNOWN;
     }
