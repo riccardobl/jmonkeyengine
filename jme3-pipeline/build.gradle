@@ -1,0 +1,29 @@
+if (!hasProperty('mainClass')) {
+    ext.mainClass = ''
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+}
+
+dependencies {
+    testCompile project(':jme3-testdata')
+
+    compile project(':jme3-core')
+    compile project(':jme3-desktop')
+    compile project(':jme3-lwjgl')
+
+
+    compile project(':jme3-effects')
+
+    compile project(':jme3-jogg')
+    compile project(':jme3-jogl')
+    compile project(':jme3-lwjgl')
+    compile project(':jme3-networking')
+    compile project(':jme3-plugins')
+    compile project(':jme3-testdata')
+}

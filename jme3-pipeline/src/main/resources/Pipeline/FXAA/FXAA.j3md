@@ -1,0 +1,22 @@
+MaterialDef FXAA {
+    MaterialParameters {
+        Texture2D Scene 
+
+        Float SubPixelShift : 0.25
+        Float SpanMax : 8
+        Float ReduceMul : 0.123
+
+        Vector2 ResolutionInverse
+    }
+
+    Technique {
+        VertexShader GLSL150:  Pipeline/FXAA/fxaa.vert
+        FragmentShader GLSL150: Pipeline/FXAA/fxaa.frag
+
+     
+
+        Defines {
+     
+        }
+    }
+}
