@@ -233,7 +233,6 @@ public class RenderContext {
 
 
 
-    public final WeakReference<BufferObject>[] boundBO = new WeakReference[8];
 
 
 
