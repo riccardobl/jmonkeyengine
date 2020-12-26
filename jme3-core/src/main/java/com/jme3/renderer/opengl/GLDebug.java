@@ -53,6 +53,10 @@ public class GLDebug implements InvocationHandler {
     protected GL gl;
     protected Method methodGlGetError;
 
+    GLDebug(){
+        
+    }
+
     private GLDebug(GL gl, Object obj) throws NoSuchMethodException {
         this.gl = gl;
         this.obj = obj;

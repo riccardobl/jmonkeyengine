@@ -102,7 +102,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     }
 
     public Material(AssetManager contentMan, String defName) {
-        this(contentMan.loadAsset(new AssetKey<MaterialDef>(defName)));
+        this((MaterialDef) contentMan.loadAsset(new AssetKey(defName)));
     }
 
     /**
@@ -420,7 +420,6 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      * @param name the parameter name to look up.
      * @return current value or null if the parameter wasn't set.
      */
-    @SuppressWarnings("unchecked")
     public <T> T getParamValue(final String name) {
         final MatParam param = paramValues.get(name);
         return param == null ? null : (T) param.getValue();
