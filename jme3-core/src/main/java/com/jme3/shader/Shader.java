@@ -291,7 +291,7 @@ public final class Shader extends NativeObject {
     }
     
     public Uniform getUniform(String name){
-        assert name.startsWith("m_") || name.startsWith("g_");
+        // assert name.startsWith("m_") || name.startsWith("g_");
         Uniform uniform = uniforms.get(name);
         if (uniform == null){
             uniform = new Uniform();
@@ -308,8 +308,7 @@ public final class Shader extends NativeObject {
      * @return the buffer block.
      */
     public ShaderBufferBlock getBufferBlock(final String name) {
-
-        assert name.startsWith("m_");
+        // assert name.startsWith("bo_");
 
         ShaderBufferBlock block = bufferBlocks.get(name);
 

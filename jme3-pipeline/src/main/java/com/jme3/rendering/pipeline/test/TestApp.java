@@ -178,7 +178,7 @@ public class TestApp extends SimpleApplication{
         
         setPauseOnLostFocus(false) ;
 
-        stateManager.attach(new GLDebuggerAppState());
+        stateManager.attach(new Jme3DebuggerAppState());
 
         Jesse.setupDefaultCamera(cam, flyCam);
         Jesse.buildAndAttachScene(assetManager, rootNode);

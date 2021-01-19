@@ -1,0 +1,215 @@
+/**
+A glsllib that perform morph animation.
+Note that it only handles morphing position, normals and tangents.
+*/
+#ifdef NUM_MORPH_TARGETS
+    #define NUM_BUFFERS NUM_MORPH_TARGETS * NUM_TARGETS_BUFFERS
+    #if (NUM_BUFFERS > 0)
+        uniform float MorphWeights[NUM_MORPH_TARGETS];
+        in vec3 inMorphTarget0;
+    #endif
+    #if (NUM_BUFFERS > 1)
+        in vec3 inMorphTarget1;
+    #endif
+    #if (NUM_BUFFERS > 2)
+        in vec3 inMorphTarget2;
+    #endif
+    #if (NUM_BUFFERS > 3)
+        in vec3 inMorphTarget3;
+    #endif
+    #if (NUM_BUFFERS > 4)
+        in vec3 inMorphTarget4;
+    #endif
+    #if (NUM_BUFFERS > 5)
+        in vec3 inMorphTarget5;
+    #endif
+    #if (NUM_BUFFERS > 6)
+        in vec3 inMorphTarget6;
+    #endif
+    #if (NUM_BUFFERS > 7)
+        in vec3 inMorphTarget7;
+    #endif
+    #if (NUM_BUFFERS > 8)
+        in vec3 inMorphTarget8;
+    #endif
+    #if (NUM_BUFFERS > 9)
+        in vec3 inMorphTarget9;
+    #endif
+    #if (NUM_BUFFERS > 10)
+        in vec3 inMorphTarget10;
+    #endif
+    #if (NUM_BUFFERS > 11)
+        in vec3 inMorphTarget11;
+    #endif
+    #if (NUM_BUFFERS > 12)
+        in vec3 inMorphTarget12;
+    #endif
+    #if (NUM_BUFFERS > 13)
+        in vec3 inMorphTarget13;
+    #endif
+
+    void Morph_Compute_Pos(inout vec4 pos){
+        #if (NUM_TARGETS_BUFFERS == 1)
+            #if (NUM_MORPH_TARGETS > 0)
+                pos.xyz += MorphWeights[0] * inMorphTarget0;
+            #endif
+            #if (NUM_MORPH_TARGETS > 1)
+                pos.xyz += MorphWeights[1] * inMorphTarget1;
+            #endif
+            #if (NUM_MORPH_TARGETS > 2)
+                pos.xyz += MorphWeights[2] * inMorphTarget2;
+            #endif
+            #if (NUM_MORPH_TARGETS > 3)
+                pos.xyz += MorphWeights[3] * inMorphTarget3;
+            #endif
+            #if (NUM_MORPH_TARGETS > 4)
+                pos.xyz += MorphWeights[4] * inMorphTarget4;
+            #endif
+            #if (NUM_MORPH_TARGETS > 5)
+                pos.xyz += MorphWeights[5] * inMorphTarget5;
+            #endif
+            #if (NUM_MORPH_TARGETS > 6)
+                pos.xyz += MorphWeights[6] * inMorphTarget6;
+            #endif
+            #if (NUM_MORPH_TARGETS > 7)
+                pos.xyz += MorphWeights[7] * inMorphTarget7;
+            #endif
+            #if (NUM_MORPH_TARGETS > 8)
+                pos.xyz += MorphWeights[8] * inMorphTarget8;
+            #endif
+            #if (NUM_MORPH_TARGETS > 9)
+                pos.xyz += MorphWeights[9] * inMorphTarget9;
+            #endif
+            #if (NUM_MORPH_TARGETS > 10)
+                pos.xyz += MorphWeights[10] * inMorphTarget10;
+            #endif
+            #if (NUM_MORPH_TARGETS > 11)
+                pos.xyz += MorphWeights[11] * inMorphTarget11;
+            #endif
+            #if (NUM_MORPH_TARGETS > 12)
+                pos.xyz += MorphWeights[12] * inMorphTarget12;
+            #endif
+            #if (NUM_MORPH_TARGETS > 13)
+                pos.xyz += MorphWeights[13] * inMorphTarget13;
+            #endif
+        #endif
+    }
+
+    float Get_Inverse_Weights_Sum(){
+        float sum = 0.0;
+        for( int i = 0;i < NUM_MORPH_TARGETS; i++){
+            sum += MorphWeights[i];
+        }
+        return 1.0 / max(1.0, sum);
+    }
+
+    void Morph_Compute_Pos_Norm(inout vec4 pos, inout vec3 norm){
+        #if (NUM_TARGETS_BUFFERS == 2)
+            // weight sum may be over 1.0. It's totallyvalid for position
+            // but for normals. the weights needs to be normalized.
+            float invWeightsSum = Get_Inverse_Weights_Sum();
+            #if (NUM_BUFFERS > 1)
+                pos.xyz += MorphWeights[0] * inMorphTarget0;
+                norm += MorphWeights[0] * invWeightsSum * inMorphTarget1;
+            #endif
+            #if (NUM_BUFFERS > 3)
+                pos.xyz += MorphWeights[1] * inMorphTarget2;
+                norm.xyz += MorphWeights[1] * invWeightsSum * inMorphTarget3;
+            #endif
+            #if (NUM_BUFFERS > 5)
+                pos.xyz += MorphWeights[2] * inMorphTarget4;
+                norm += MorphWeights[2] * invWeightsSum * inMorphTarget5;
+            #endif
+            #if (NUM_BUFFERS > 7)
+                pos.xyz += MorphWeights[3] * inMorphTarget6;
+                norm += MorphWeights[3] * invWeightsSum * inMorphTarget7;
+            #endif
+            #if (NUM_BUFFERS > 9)
+                pos.xyz += MorphWeights[4] * inMorphTarget8;
+                norm += MorphWeights[4] * invWeightsSum * inMorphTarget9;
+            #endif
+            #if (NUM_BUFFERS > 11)
+                pos.xyz += MorphWeights[5] * inMorphTarget10;
+                norm += MorphWeights[5] * invWeightsSum * inMorphTarget11;
+            #endif
+            #if (NUM_BUFFERS > 13)
+                pos.xyz += MorphWeights[6] * inMorphTarget12;
+                norm += MorphWeights[6] * invWeightsSum * inMorphTarget13;
+            #endif
+        #endif
+    }
+
+    void Morph_Compute_Pos_Norm_Tan(inout vec4 pos, inout vec3 norm, inout vec3 tan){
+        #if (NUM_TARGETS_BUFFERS == 3)
+            // weight sum may be over 1.0. It's totallyvalid for position
+            // but for normals. the weights needs to be normalized.
+            float invWeightsSum = Get_Inverse_Weights_Sum();
+            #if (NUM_BUFFERS > 2)
+                float normWeight =  MorphWeights[0] * invWeightsSum;
+                pos.xyz += MorphWeights[0] * inMorphTarget0;
+                norm += normWeight * inMorphTarget1;
+                tan += normWeight * inMorphTarget2;
+            #endif
+            #if (NUM_BUFFERS > 5)
+                float normWeight =  MorphWeights[1] * invWeightsSum;
+                pos.xyz += MorphWeights[1] * inMorphTarget3;
+                norm += normWeight * inMorphTarget4;
+                tan += normWeight * inMorphTarget5;
+            #endif
+            #if (NUM_BUFFERS > 8)
+                float normWeight =  MorphWeights[2] * invWeightsSum;
+                pos.xyz += MorphWeights[2] * inMorphTarget6;
+                norm += normWeight * inMorphTarget7;
+                tan += normWeight * inMorphTarget8;
+            #endif
+            #if (NUM_BUFFERS > 11)
+                float normWeight =  MorphWeights[3] * invWeightsSum;
+                pos.xyz += MorphWeights[3] * inMorphTarget9;
+                norm += normWeight * inMorphTarget10;
+                tan += normWeight * inMorphTarget11;
+            #endif
+        #endif
+    }
+
+    void Morph_Compute(inout vec4 pos){
+        #if (NUM_TARGETS_BUFFERS == 2)
+            vec3 dummy_norm = vec3(0.0);
+            Morph_Compute_Pos_Norm(pos, dummy_norm);
+            return;
+        #elif (NUM_TARGETS_BUFFERS == 3)
+            vec3 dummy_norm = vec3(0.0);
+            vec3 dummy_tan = vec3(0.0);
+            Morph_Compute_Pos_Norm_Tan(pos, dummy_norm, dummy_tan);
+            return;
+        #endif
+        Morph_Compute_Pos(pos);
+    }
+
+    void Morph_Compute(inout vec4 pos, inout vec3 norm){
+        #if (NUM_TARGETS_BUFFERS == 1)
+            Morph_Compute_Pos(pos);
+            return;
+        #elif (NUM_TARGETS_BUFFERS == 3)
+            vec3 dummy_norm = vec3(0.0);
+            vec3 dummy_tan = vec3(0.0);
+            Morph_Compute_Pos_Norm_Tan(pos, dummy_norm, dummy_tan);
+            return;
+        #elif  (NUM_TARGETS_BUFFERS == 2)
+            Morph_Compute_Pos_Norm(pos, norm);
+        #endif
+    }
+
+    void Morph_Compute(inout vec4 pos, inout vec3 norm, inout vec3 tan){
+        #if (NUM_TARGETS_BUFFERS == 1)
+            Morph_Compute_Pos(pos);
+            return;
+        #elif (NUM_TARGETS_BUFFERS == 2)
+            Morph_Compute_Pos_Norm(pos, norm);
+            tan = normalize(tan - dot(tan, norm) * norm);
+            return;
+        #elif (NUM_TARGETS_BUFFERS == 3)
+            Morph_Compute_Pos_Norm_Tan(pos, norm, tan);
+        #endif
+    }
+
+#endif

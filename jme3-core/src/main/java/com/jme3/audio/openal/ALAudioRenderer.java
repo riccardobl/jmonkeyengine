@@ -1030,6 +1030,11 @@ public class ALAudioRenderer implements AudioRenderer, Runnable {
             setListenerParams(listener);
         }
     }
+
+    @Override
+    public Listener getListener(){
+        return this.listener;
+    }
     
     @Override
     public void pauseAll() {

@@ -15,6 +15,7 @@ public class UpdateGeometryPass extends PipelinePass {
         this.rootSpatial=rootSpatial;
     }
 
+    
     @Override
     protected void onRun(Pipeline pipeline, float tpf) {
         rootSpatial.updateGeometricState();

@@ -1,0 +1,42 @@
+MaterialDef BaseMat {
+
+    MaterialParameters {
+        UniformBufferObject WorldCamera
+        UniformBufferObject WorldTimer
+        UniformBufferObject CurrentGeometry
+
+
+        // Internals
+        Boolean MRT
+    
+        // For hardware skinning
+        Int NumberOfBones
+        Matrix4Array BoneMatrices
+
+        // For Morph animation
+        FloatArray MorphWeights
+        Int NumberOfMorphTargets
+        Int NumberOfTargetsBuffers
+                
+        // For instancing
+        Boolean UseInstancing
+
+    }
+
+    Technique {
+        
+        VertexShader  GLSL150:   Pipeline/Materials/BaseMat.vert
+        FragmentShader GLSL150: Pipeline/Materials/BaseMat.frag
+
+
+        Defines {         
+            MRT:MRT
+            NUM_BONES : NumberOfBones                        
+            INSTANCING : UseInstancing
+         
+            VERTEX_COLOR : UseVertexColor
+       
+        }
+    }
+}
+

@@ -477,12 +477,15 @@ public abstract class LwjglWindow extends LwjglContext implements Runnable {
         run();
     }
 
+
+
     /**
      * Does LWJGL display initialization in the OpenGL thread
      *
      * @return returns {@code true} if the context initialization was successful
      */
-    protected boolean initInThread() {
+    @Override
+    public boolean initInThread() {
         try {
             if (!JmeSystem.isLowPermissions()) {
                 // Enable uncaught exception handler only for current thread
@@ -618,7 +621,7 @@ public abstract class LwjglWindow extends LwjglContext implements Runnable {
     /**
      * De-initialize in the OpenGL thread.
      */
-    protected void deinitInThread() {
+    public void deinitInThread() {
         listener.destroy();
 
         destroyContext();
@@ -656,6 +659,19 @@ public abstract class LwjglWindow extends LwjglContext implements Runnable {
         }
 
         deinitInThread();
+    }
+
+    public boolean runOnce(){   
+        boolean continueLoop=true;
+        runLoop();
+        if (needClose.get()) {
+            continueLoop=false;
+        }else{
+            if (glfwWindowShouldClose(window)) {
+                listener.requestClose(false);
+            }
+        }
+        return continueLoop;
     }
 
     @Override

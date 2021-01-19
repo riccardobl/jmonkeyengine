@@ -99,6 +99,7 @@ public class FrameBufferFactory {
         
         Integer hash=hashFb(width,height,colorFormat,depthFormat,colorOut,depthOut,srgb,samples);
         FrameBuffer fb=framebufferCache.get(hash);
+        
         if(fb==null){
             fb = new FrameBuffer(width, height, samples);
             fb.setSrgb(srgb);

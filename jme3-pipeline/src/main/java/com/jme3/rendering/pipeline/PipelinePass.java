@@ -28,6 +28,7 @@ public abstract class PipelinePass<T extends PipelinePass> {
     private Map<Object,Object> inputs=new HashMap<Object,Object>();
     private Map<Object,Object> outputs=new HashMap<Object,Object>();
 
+
     private Map<Object,Object> defInputs=new HashMap<Object,Object>();
     private Map<Object,Object> defOutputs=new HashMap<Object,Object>();
 
@@ -73,7 +74,7 @@ public abstract class PipelinePass<T extends PipelinePass> {
      * @param key An object that defines the name of this input
      * @param in the value
      */
-    public Object useInput(final Object key, final Object in) {
+    protected Object useInput(final Object key, final Object in) {
      
         if (logger.isLoggable(java.util.logging.Level.FINEST))
             logger.log(java.util.logging.Level.FINEST, " Use input  {0}={1} for {2}", new Object[] { key, in, this });
@@ -82,48 +83,56 @@ public abstract class PipelinePass<T extends PipelinePass> {
         if(in == null){
             ret=inputs.remove(key);
         }else{
-            ret= inputs.put(key,in);
-        }
-
-        if(settingIOFor!=null){
-            setIO(settingIOFor, key, in, false,false);
-        }
+            ret= inputs.put(key,in);    
+            if(settingIOFor!=null){
+                setIO(settingIOFor, key, in, false,false);
+            }
+        }      
         return ret;
       
     }
 
-    public Object useDefaultInput(String key, Object in) {
+    protected Object useDefaultInput(Object key, Object in) {
         if (logger.isLoggable(java.util.logging.Level.FINEST))
             logger.log(java.util.logging.Level.FINEST, " Use  default input  {0}={1} for {2}",
                     new Object[] { key, in, this });
-                    
+                    Object ret;
+
         if (in == null) {
-            return defInputs.remove(key);
+            ret= defInputs.remove(key);
         } else {
-            return defInputs.put(key, in);
+            ret= defInputs.put(key, in);
+            if(settingIOFor!=null){
+                setIO(settingIOFor, key, in, false,true);
+            }
         }
+        return ret;
     }
 
-    public Object useDefaultOutput(String key, Object out) {
-        if (logger.isLoggable(java.util.logging.Level.FINEST))
-            logger.log(java.util.logging.Level.FINEST, " Use  default output  {0}={1} for {2}",
-                    new Object[] { key, out, this });
+    protected Object useDefaultOutput(Object key, Object out) {
+        if (logger.isLoggable(java.util.logging.Level.FINEST)) logger.log(java.util.logging.Level.FINEST, " Use  default output  {0}={1} for {2}", new Object[] { key, out, this });
+        Object ret;
+
         if (out == null) {
-            return defOutputs.remove(key);
+            ret = defOutputs.remove(key);
         } else {
-            return defOutputs.put(key, out);
+            ret = defOutputs.put(key, out);
+            if (settingIOFor != null) {
+                setIO(settingIOFor, key, out, true, true);
+            }
         }
+        return ret;
     }
 
-    public Object getInput(Object key) {
+    protected Object getInput(Object key) {
         return inputs.get(key);
     }
 
-    public Object getDefaultInput(Object key) {
+    protected Object getDefaultInput(Object key) {
         return defInputs.get(key);
     }
 
-    public Object getDefaultOutput(Object key) {
+    protected Object getDefaultOutput(Object key) {
         return defOutputs.get(key);
     }
 
@@ -134,7 +143,7 @@ public abstract class PipelinePass<T extends PipelinePass> {
      * @param key An object that defines the name of this output
      * @param out the output object
      */
-    public Object useOutput(final Object key, final Object out) {
+    protected Object useOutput(final Object key, final Object out) {
 
         if (logger.isLoggable(java.util.logging.Level.FINEST))
             logger.log(java.util.logging.Level.FINEST, " Use output  {0}={1} for {2}", new Object[] { key, out, this });
@@ -144,10 +153,11 @@ public abstract class PipelinePass<T extends PipelinePass> {
             ret= outputs.remove(key);
         }else{
             ret= outputs.put(key,out);
+            if(settingIOFor!=null){
+                setIO(settingIOFor, key, out, true,false);
+            }
         }
-        if(settingIOFor!=null){
-            setIO(settingIOFor, key, out, true,false);
-        }
+     
         return ret;
     }
 
@@ -166,53 +176,11 @@ public abstract class PipelinePass<T extends PipelinePass> {
     Pipeline         settingIOFor=null;
     
     protected void setIO(final Pipeline pipeline) {
-        // final Map<Object,Object>  oinputs=inputs;
-        // final Map<Object,Object>  ooutputs=outputs;
+
 
         beforeIO(pipeline);
         settingIOFor=pipeline;
-        // long iterations=0;
-        // while(true){
-          
-
-        //     updatedInputKeys=inputs.keySet().toArray(updatedInputKeys);
-        //     updatedInputKeysSize=inputs.size();
-            
-        //     updatedOutputKeys=outputs.keySet().toArray(updatedOutputKeys);
-        //     updatedOutputKeysSize=outputs.size();
-   
-
-
-        //     if(updatedInputKeysSize==0&&updatedOutputKeysSize==0)break;
-
-        //     iterations++;
-        //     assert iterations<100:getClass()+" Too many iterations "+Arrays.deepToString(updatedInputKeys)+" "+Arrays.deepToString(updatedOutputKeys);
-
-        //     if(inputs==tmpInputs)  oinputs.putAll(tmpInputs);           
-        //     if(outputs==tmpOutputs)  ooutputs.putAll(tmpOutputs);
-            
-        //     tmpInputs.clear();
-        //     tmpOutputs.clear();
-
-        //     inputs=tmpInputs;
-        //     outputs=tmpOutputs;        
-
-        //     for(int i=0;i<updatedInputKeysSize;i++){
-        //         final Object key=updatedInputKeys[i];
-        //         Object value=oinputs.get(key);
-        //         final SmartObject svalue=SmartObject.from(value);
-        //         value=svalue.get(pipeline,this);
-        //         onInput(pipeline,key,value);            
-        //     }
-        //     for(int i=0;i<updatedOutputKeysSize;i++){
-        //         final Object key=updatedOutputKeys[i];
-        //         Object value=ooutputs.get(key);
-        //         final SmartObject svalue=SmartObject.from(value);
-        //         value=svalue.get(pipeline,this);
-        //         onOutput(pipeline,key,value);            
-        //     }
-
-        // }
+       
         updatedInputKeys=inputs.keySet().toArray(updatedInputKeys);
         updatedInputKeysSize=inputs.size();
         
@@ -252,7 +220,6 @@ public abstract class PipelinePass<T extends PipelinePass> {
         }
 
         afterIO(pipeline);
-        settingIOFor=null;
 
 
  
@@ -265,6 +232,10 @@ public abstract class PipelinePass<T extends PipelinePass> {
 
     }
 
+    protected void resetIO(){
+        settingIOFor=null;
+
+    }
     /**
      * Called before inputs and ouputs are processed in every frame
      */
@@ -352,7 +323,10 @@ public abstract class PipelinePass<T extends PipelinePass> {
 
     protected void setIO(Pipeline pipeline,Object key,Object value,boolean out,boolean def){
         assert value!=null:key+" is  null";
-        if(def&&inputs.containsKey(key))return;
+        if(def){
+            if(!out&&inputs.containsKey(key))            return;
+            else if(out&&outputs.containsKey(key))            return;
+        }
         final SmartObject svalue=SmartObject.from(value);
         value=svalue.get(pipeline,this);
         if(out)     onOutput(pipeline,key,value);            
@@ -378,9 +352,10 @@ public abstract class PipelinePass<T extends PipelinePass> {
 
         beforeRun(pipeline,tpf);
         onRun(pipeline,tpf);
+        resetIO();
         proxyInputOutputs();
         afterRun(pipeline,tpf);
-
+        
     
     }
 

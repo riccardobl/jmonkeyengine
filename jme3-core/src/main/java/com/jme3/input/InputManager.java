@@ -86,10 +86,10 @@ import java.util.logging.Logger;
 public class InputManager implements RawInputListener {
 
     private static final Logger logger = Logger.getLogger(InputManager.class.getName());
-    private final KeyInput keys;
-    private final MouseInput mouse;
-    private final JoyInput joystick;
-    private final TouchInput touch;
+    private KeyInput keys;
+    private MouseInput mouse;
+    private JoyInput joystick;
+    private TouchInput touch;
     private float frameTPF;
     private long lastLastUpdateTime = 0;
     private long lastUpdateTime = 0;
@@ -107,7 +107,7 @@ public class InputManager implements RawInputListener {
     private final SafeArrayList<RawInputListener> rawListeners = new SafeArrayList<>(RawInputListener.class);
     private final ArrayList<InputEvent> inputQueue = new ArrayList<>();
     private final List<JoystickConnectionListener> joystickConnectionListeners = new ArrayList<>();
-
+    private boolean initialized=false;
     private static class Mapping {
 
         private final String name;
@@ -117,6 +117,8 @@ public class InputManager implements RawInputListener {
         public Mapping(String name) {
             this.name = name;
         }
+    }
+    public InputManager() {
     }
 
     /**
@@ -131,6 +133,11 @@ public class InputManager implements RawInputListener {
      * @throws IllegalArgumentException If either mouseInput or keyInput are null.
      */
     public InputManager(MouseInput mouse, KeyInput keys, JoyInput joystick, TouchInput touch) {
+        initialize(mouse,keys,joystick,touch);
+    }
+
+
+    public void initialize(MouseInput mouse, KeyInput keys, JoyInput joystick, TouchInput touch){
         if (keys == null || mouse == null) {
             throw new IllegalArgumentException("Mouse or keyboard cannot be null");
         }
@@ -157,9 +164,14 @@ public class InputManager implements RawInputListener {
         return keys.getKeyName(key);
     }
 
-    public String getKeyName(int key){
-        return keys.getKeyName(key);
+    public boolean isInitialized(){
+        return initialized;
     }
+
+    public ArrayList<InputEvent> getInputQueue() {
+        return this.inputQueue;
+    }
+  
 
     private void invokeActions(int hash, boolean pressed) {
         ArrayList<Mapping> maps = bindings.get(hash);
@@ -830,7 +842,10 @@ public class InputManager implements RawInputListener {
         }
     }
 
-    private void processQueue() {
+
+
+
+    private void processQueue(boolean clear) {
         int queueSize = inputQueue.size();
         RawInputListener[] array = rawListeners.getArray(); 
 
@@ -891,6 +906,10 @@ public class InputManager implements RawInputListener {
             event.setConsumed();
         }
 
+        if(clear)clearQueue();
+    }
+
+    public void clearQueue(){
         inputQueue.clear();
     }
 
@@ -902,6 +921,10 @@ public class InputManager implements RawInputListener {
      * @param tpf Time per frame value.
      */
     public void update(float tpf) {
+        update(tpf,true);
+    }
+  
+    public void update(float tpf,boolean clearQueue) {
         frameTPF = tpf;
 
         // Activate safemode if the TPF value is so small
@@ -924,7 +947,7 @@ public class InputManager implements RawInputListener {
 
         eventsPermitted = false;
 
-        processQueue();
+        processQueue(clearQueue);
         invokeUpdateActions();
 
         lastLastUpdateTime = lastUpdateTime;

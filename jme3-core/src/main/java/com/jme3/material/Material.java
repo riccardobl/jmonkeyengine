@@ -737,6 +737,11 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         setParam(name, VarType.Vector4, value);
     }
 
+
+    public Map<String, Technique> getTechniques() {
+        return techniques;
+    }
+
     /**
      * Select the technique to use for rendering this material.
      * <p>
@@ -755,6 +760,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      * @throws UnsupportedOperationException If no candidate technique supports
      * the system capabilities.
      */
+    @Deprecated
     public void selectTechnique(String name, final RenderManager renderManager) {
         // check if already created
         Technique tech = techniques.get(name);
@@ -773,6 +779,69 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             for (TechniqueDef techDef : techDefs) {
                 if (rendererCaps.containsAll(techDef.getRequiredCaps())) {
                     float techWeight = techDef.getWeight() + (techDef.getLightMode() == renderManager.getPreferredLightMode() ? 10f : 0);
+                    if (techWeight > weight) {
+                        tech = new Technique(this, techDef);
+                        techniques.put(name, tech);
+                        weight = techWeight;
+                    }
+                }
+                lastTech = techDef;
+            }
+            if (tech == null) {
+                throw new UnsupportedOperationException(
+                        String.format("No technique '%s' on material "
+                                + "'%s' is supported by the video hardware. "
+                                + "The capabilities %s are required.",
+                                name, def.getName(), lastTech.getRequiredCaps()));
+            }
+            logger.log(Level.FINE, this.getMaterialDef().getName() + " selected technique def " + tech.getDef());
+        } else if (technique == tech) {
+            // attempting to switch to an already
+            // active technique.
+            return;
+        }
+
+        technique = tech;
+        tech.notifyTechniqueSwitched();
+
+        // shader was changed
+        sortingId = -1;
+    }
+
+   /**
+     * Select the technique to use for rendering this material.
+     * <p>
+     * Any candidate technique for selection (either default or named)
+     * must be verified to be compatible with the system, for that, the
+     * <code>renderManager</code> is queried for capabilities.
+     *
+     * @param name The name of the technique to select, pass
+     * {@link TechniqueDef#DEFAULT_TECHNIQUE_NAME} to select one of the default
+     * techniques.
+     * @param rendererCaps The render capabilities.
+     *
+     * @throws IllegalArgumentException If no technique exists with the given
+     * name.
+     * @throws UnsupportedOperationException If no candidate technique supports
+     * the system capabilities.
+     */
+    public void selectTechnique(String name,EnumSet<Caps> rendererCaps ) {
+        // check if already created
+        Technique tech = techniques.get(name);
+        // When choosing technique, we choose one that
+        // supports all the caps.
+        if (tech == null) {
+            List<TechniqueDef> techDefs = def.getTechniqueDefs(name);
+            if (techDefs == null || techDefs.isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("The requested technique %s is not available on material %s", name, def.getName()));
+            }
+
+            TechniqueDef lastTech = null;
+            float weight = 0;
+            for (TechniqueDef techDef : techDefs) {
+                if (rendererCaps.containsAll(techDef.getRequiredCaps())) {
+                    float techWeight = techDef.getWeight() ;
                     if (techWeight > weight) {
                         tech = new Technique(this, techDef);
                         techniques.put(name, tech);
@@ -1155,10 +1224,10 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
                 checkTextureParamColorSpace(texVal.getName(), texVal.getTextureValue());
             }
 
-            if (im.getFormatVersion() == 0 && param.getName().startsWith("m_")) {
-                // Ancient version of jME3 ...
-                param.setName(param.getName().substring(2));
-            }
+            // if (im.getFormatVersion() == 0 && param.getName().startsWith("m_")) {
+            //     // Ancient version of jME3 ...
+            //     param.setName(param.getName().substring(2));
+            // }
 
             if (def.getMaterialParam(param.getName()) == null) {
                 logger.log(Level.WARNING, "The material parameter is not defined: {0}. Ignoring..",

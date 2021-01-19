@@ -2,12 +2,12 @@
 
 #extension GL_ARB_explicit_attrib_location : enable
 
-#define bindUBO(type,name)  layout (std140) uniform m_##name { \
-    type u_##name;\
+#define bindUBO(type,name)  layout (std140) uniform bo_##name { \
+    type name;\
 } 
 
-#define bindSSBO(type,name)  layout (std140) buffer  m_##name { \
-    type u_##name;\
+#define bindSSBO(type,name)  layout (std140) buffer  bo_##name { \
+    type name;\
 } 
 
 
@@ -45,6 +45,25 @@ struct Geometry{
     mat4 worldViewProjMatrixInv;
     mat3 normalMatrixInv;
 };
+#if defined INSTANCING
+    in mat4 inInstanceData;
+#endif
+
+mat4 Geometry_getWorldMatrix(in Geometry geo){
+    #if defined INSTANCING
+        mat4 worldMatrix = mat4(vec4(inInstanceData[0].xyz, 0.0),
+        vec4(inInstanceData[1].xyz, 0.0),
+        vec4(inInstanceData[2].xyz, 0.0),
+        vec4(inInstanceData[3].xyz, 1.0));
+        return worldMatrix;
+    #else
+        return geo.worldMatrix;
+    #endif
+}
+
+
+
+
 
 
 

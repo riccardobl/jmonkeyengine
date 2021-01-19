@@ -105,7 +105,6 @@ public abstract class StructuredBuffer extends NativeObject implements Cloneable
 
 
     protected void invalidateLayout(){
-        new Exception().printStackTrace();
         if(logger.isLoggable(java.util.logging.Level.  FINE  )){
             logger.log(java.util.logging.Level.FINE,
             "Invalidate layout"

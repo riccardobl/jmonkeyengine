@@ -755,6 +755,7 @@ public abstract class Spatial extends StatefulObject implements Savable, Cloneab
      * @see Spatial#addControl(com.jme3.scene.control.Control)
      * @see Spatial#getControl(java.lang.Class)
      */
+    @Deprecated
     public void runControlRender(RenderManager rm, ViewPort vp) {
         if (controls.isEmpty()) {
             return;
@@ -764,6 +765,8 @@ public abstract class Spatial extends StatefulObject implements Savable, Cloneab
             c.render(rm, vp);
         }
     }
+
+ 
 
     /**
      * Add a control to the list of controls.

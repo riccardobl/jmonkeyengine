@@ -326,6 +326,10 @@ public class SafeArrayList<E> implements List<E>, Cloneable {
         while(size()<=index)   add(constructor!=null?constructor.eval():null);
     }
 
+    public void reduceToSize(int size){
+        while(size()>size) this.remove(size()-1);
+    }
+
     public E expandAndSet(int index, E element,NoArgFunction<E> constructor){
         expand(index,constructor);
         return getBuffer().set(index, element);

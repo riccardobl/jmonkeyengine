@@ -44,6 +44,8 @@ import com.jme3.shader.Shader;
 import com.jme3.shader.VarType;
 import com.jme3.util.ListMap;
 import com.jme3.util.SafeArrayList;
+
+import java.util.Collection;
 import java.util.EnumSet;
 
 /**
@@ -123,6 +125,8 @@ public final class Technique {
             }
         }
     }
+    
+ 
 
     /**
      * Called by the material to determine which shader to use for rendering.
@@ -134,6 +138,7 @@ public final class Technique {
      * @param rendererCaps The renderer capabilities which the shader should support.
      * @return A compatible shader.
      */
+    @Deprecated
     Shader makeCurrent(RenderManager renderManager, SafeArrayList<MatParamOverride> worldOverrides,
             SafeArrayList<MatParamOverride> forcedOverrides,
             LightList lights, EnumSet<Caps> rendererCaps) {
@@ -151,6 +156,25 @@ public final class Technique {
         }
 
         return logic.makeCurrent(assetManager, renderManager, rendererCaps, lights, dynamicDefines);
+    }
+
+
+    public Shader getShader(SafeArrayList<MatParamOverride> worldOverrides,SafeArrayList<MatParamOverride> overrides, EnumSet<Caps> rendererCaps) {
+        AssetManager assetManager = owner.getMaterialDef().getAssetManager();
+
+        dynamicDefines.clear();
+        dynamicDefines.setAll(paramDefines);
+
+        if (worldOverrides != null) {
+            applyOverrides(dynamicDefines, worldOverrides);
+        }
+
+        if (overrides != null) {
+            applyOverrides(dynamicDefines, overrides);
+        }
+   
+        return def.getShader(assetManager, rendererCaps, dynamicDefines);
+
     }
     
     /**

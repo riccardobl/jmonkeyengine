@@ -43,6 +43,7 @@ public interface AudioRenderer {
      * oriented around the listener.
      */
     public void setListener(Listener listener);
+    public Listener getListener();
 
     /**
      * Sets the environment, used for reverb effects.

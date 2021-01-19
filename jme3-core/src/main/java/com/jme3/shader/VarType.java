@@ -30,50 +30,64 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package com.jme3.shader;
-
+import com.jme3.math.*;
+import com.jme3.texture.*;
 public enum VarType {
 
-    Float("float"),
-    Vector2("vec2"),
-    Vector3("vec3"),
-    Vector4("vec4"),
+    Float("float",float.class,Float.class),
+    Vector2("vec2",Vector2f.class),
+    Vector3("vec3",Vector3f.class),
+    Vector4("vec4",Vector4f.class),
 
-    IntArray(true,false,"int"),
-    FloatArray(true,false,"float"),
-    Vector2Array(true,false,"vec2"),
-    Vector3Array(true,false,"vec3"),
-    Vector4Array(true,false,"vec4"),
+    IntArray(true,false,"int",int[].class,Integer[].class),
+    FloatArray(true,false,"float",float[].class,Float[].class),
+    Vector2Array(true,false,"vec2",Vector2f[].class),
+    Vector3Array(true,false,"vec3",Vector3f[].class),
+    Vector4Array(true,false,"vec4",Vector4f[].class),
 
-    Boolean("bool"),
+    Boolean("bool",Boolean.class,boolean.class),
 
-    Matrix3(true,false,"mat3"),
-    Matrix4(true,false,"mat4"),
+    Matrix3(true,false,"mat3",Matrix3f.class),
+    Matrix4(true,false,"mat4",Matrix4f.class),
 
-    Matrix3Array(true,false,"mat3"),
-    Matrix4Array(true,false,"mat4"),
+    Matrix3Array(true,false,"mat3",Matrix3f[].class),
+    Matrix4Array(true,false,"mat4",Matrix4f[].class),
     
-    TextureBuffer(false,true,"sampler1D|sampler1DShadow"),
-    Texture2D(false,true,"sampler2D|sampler2DShadow"),
-    Texture3D(false,true,"sampler3D"),
-    TextureArray(false,true,"sampler2DArray|sampler2DArrayShadow"),
-    TextureCubeMap(false,true,"samplerCube"),
-    Int("int"),
-    UniformBufferObject(false, false, "custom"),
-    ShaderStorageBufferObject(false, false, "custom")  ;
+    TextureBuffer(false,true,"sampler1D|sampler1DShadow",Void.class), // wtf?
+    Texture2D(false,true,"sampler2D|sampler2DShadow",Texture2D.class),
+    Texture3D(false,true,"sampler3D",Texture3D.class),
+    TextureArray(false,true,"sampler2DArray|sampler2DArrayShadow",TextureArray.class),
+    TextureCubeMap(false,true,"samplerCube",TextureCubeMap.class),
+    Int("int",int.class),
+    UniformBufferObject(false, false, "custom",BufferObject.class),
+    ShaderStorageBufferObject(false, false, "custom",BufferObject.class)  ;
 
     private boolean usesMultiData = false;
     private boolean textureType = false;
     final private String glslType;
-
+    private Class javaTypes[];
     
-    VarType(String glslType){
+    VarType(String glslType,Class ...javaTypes){
         this.glslType = glslType;
+        this.javaTypes=javaTypes;
     }
 
-    VarType(boolean multiData, boolean textureType,String glslType){
+
+    VarType(boolean multiData, boolean textureType,String glslType,Class ...javaTypes){
         usesMultiData = multiData;
         this.textureType = textureType;
         this.glslType = glslType;
+    }
+
+    public boolean isOfType(Object o){
+        for(Class c : javaTypes){
+            if(c.isAssignableFrom(o.getClass()))return true;
+        }
+        return false;
+    }
+    
+    public Class[] getJavaType(){
+        return javaTypes;
     }
 
     public boolean isTextureType() {

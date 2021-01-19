@@ -69,7 +69,8 @@ public class NullContext implements JmeContext, Runnable {
         this.listener = listener;
     }
 
-    protected void initInThread(){
+    @Override
+    public boolean initInThread(){
         logger.fine("NullContext created.");
         logger.log(Level.FINE, "Running on thread: {0}", Thread.currentThread().getName());
 
@@ -88,9 +89,11 @@ public class NullContext implements JmeContext, Runnable {
         }
 
         listener.initialize();
+        return true;
     }
 
-    protected void deinitInThread(){
+    @Override
+    public void deinitInThread(){
         listener.destroy();
         timer = null;
         synchronized (createdLock){

@@ -50,7 +50,7 @@ public class MatParam implements Savable, Cloneable {
 
     protected VarType type;
     protected String name;
-    protected String prefixedName;
+    protected String prefixedAsBufferName;
     protected Object value;
 
     /**
@@ -63,7 +63,7 @@ public class MatParam implements Savable, Cloneable {
     public MatParam(VarType type, String name, Object value) {
         this.type = type;
         this.name = name;
-        this.prefixedName = "m_" + name;
+        this.prefixedAsBufferName = "bo_" + name;
         this.value = value;
     }
 
@@ -90,13 +90,17 @@ public class MatParam implements Savable, Cloneable {
         return name;
     }
 
+
     /**
      * Returns the name with "m_" prefixed to it.
      *
      * @return the name with "m_" prefixed to it
      */
     public String getPrefixedName() {
-        return prefixedName;
+        if(type==VarType.UniformBufferObject||type==VarType.ShaderStorageBufferObject){
+            return prefixedAsBufferName;
+        }
+        return name;
     }
 
     /**
@@ -105,7 +109,7 @@ public class MatParam implements Savable, Cloneable {
      */
     void setName(String name) {
         this.name = name;
-        this.prefixedName = "m_" + name;
+        this.prefixedAsBufferName = "bo_" + name;
     }
 
     /**
@@ -330,7 +334,7 @@ When arrays can be inserted in J3M files
         InputCapsule ic = im.getCapsule(this);
         type = ic.readEnum("varType", VarType.class, null);
         name = ic.readString("name", null);
-        prefixedName = "m_" + name;
+        prefixedAsBufferName = "bo_" + name;
         switch (getVarType()) {
             case Boolean:
                 value = ic.readBoolean("value_bool", false);
