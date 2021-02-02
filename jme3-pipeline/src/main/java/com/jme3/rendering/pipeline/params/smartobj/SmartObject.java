@@ -18,6 +18,7 @@ import java.util.function.Function;
 import com.jme3.rendering.pipeline.PipelinePass;
 import com.jme3.rendering.pipeline.PipelinePointerConstructor;
 import com.jme3.rendering.pipeline.PipelinePointerResolver;
+import com.jme3.material.MatParam;
 import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.Texture3D;
@@ -53,19 +54,24 @@ public class SmartObject<T> {
           
             sobj = (R) objCache.get(p);
             if (sobj == null) {
-                boolean hasDefaultConstr = false;
-                for (Constructor<?> constructor : p.getClass().getDeclaredConstructors()) {
-                    if (constructor.getParameterCount() == 0) {
-                        hasDefaultConstr = true;
-                        break;
-                    }
+                // boolean hasDefaultConstr = false;
+                // for (Constructor<?> constructor : p.getClass().getDeclaredConstructors()) {
+                //     if (constructor.getParameterCount() == 0) {
+                //         hasDefaultConstr = true;
+                //         break;
+                //     }
+                // }
+                if(p instanceof MatParam){
+                    objCache.put(p, sobj = (R) new SmartMatParam((MatParam)p));
+                }else{
+                    objCache.put(p, sobj = (R) new SmartObject<T>(p)); 
                 }
-                if (hasDefaultConstr) {
-                    objCache.put(p, sobj = (R) new SmartObject<T>(p));
-                } else {
-                    objCache.put(p, sobj = (R) new SmartObject<T>(p));
+                // if (hasDefaultConstr) {
+                //     objCache.put(p, sobj = (R) new SmartObject<T>(p));
+                // } else {
+                //     objCache.put(p, sobj = (R) new SmartObject<T>(p));
 
-                }
+                // }
             }
         }
         return (R)sobj;

@@ -11,6 +11,10 @@ import java.util.Collection;
  */
 public class Pipeline {
     private ArrayList<PipelinePass> passes=new ArrayList<PipelinePass>();
+    private PipelinePointerResolver resolver;
+    public Pipeline(PipelinePointerResolver resolver){
+        this.resolver=resolver;
+    }
 
     /**
      *  Get the number of attached passes
@@ -33,6 +37,7 @@ public class Pipeline {
     public Pipeline add(PipelinePass pass){
         pass.preAttach(this);
         passes.add(pass);
+        pass.setPointerResolver(resolver);
         pass.postAttach(this);
         recomputeIds();
         return this;

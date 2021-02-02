@@ -99,10 +99,10 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
                 setParam(param.getName(), param.getVarType(), param.getValue());
             }
         }
-    }
+    } 
 
     public Material(AssetManager contentMan, String defName) {
-        this((MaterialDef) contentMan.loadAsset(new AssetKey(defName)));
+        this((MaterialDef) contentMan.loadAsset(new AssetKey<MaterialDef>(defName)));
     }
 
     /**

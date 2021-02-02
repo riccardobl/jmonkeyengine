@@ -1,14 +1,15 @@
 MaterialDef FXAA {
     MaterialParameters {
         #for i=0..6 ( $0 )
-            Texture2D Scene$i
+            Texture2D Input$i
         #endfor 
+
+        Texture2D InputDepth
 
         Float SubPixelShift : 0.25
         Float SpanMax : 8
         Float ReduceMul : 0.123
 
-        Vector2 ResolutionInverse
 
         UniformBufferObject WorldCamera
     }
@@ -19,8 +20,9 @@ MaterialDef FXAA {
 
         Defines {
             #for i=0..6 ( $0 )
-                SCENE_$i:Scene$i
+                SCENE_$i:Input$i
             #endfor 
+            DEPTH:InputDepth
         }
     }
 }

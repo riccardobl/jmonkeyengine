@@ -46,6 +46,10 @@ import com.jme3.scene.Spatial;
  */
 public interface Control extends Savable {
 
+    public Spatial getSpatial();
+    public boolean isEnabled();
+    public void setEnabled(boolean v);
+
     /**
      * Creates a clone of the Control, the given Spatial is the cloned version
      * of the spatial to which this control is attached to.
@@ -56,7 +60,9 @@ public interface Control extends Savable {
      * {@link com.jme3.util.clone.JmeCloneable#cloneFields(com.jme3.util.clone.Cloner, java.lang.Object)}
      */
     @Deprecated
-    public Control cloneForSpatial(Spatial spatial);
+    public default Control cloneForSpatial(Spatial spatial){
+        return null;
+    }
 
     /**
      * @param spatial the spatial to be controlled. This should not be called
@@ -67,17 +73,25 @@ public interface Control extends Savable {
     /**
      * Updates the control. This should not be called from user code.
      * @param tpf Time per frame.
+     * @deprecated Implement LogicControl
      */
-    public void update(float tpf);
+    @Deprecated
+    public default void update(float tpf){
+       
+    }  
 
     /**
      * Should be called prior to queuing the spatial by the RenderManager. This
      * should not be called from user code.
      *
-     * @param rm the caller (not null)
-     * @param vp the relevant ViewPort (not null)
+     * @param rm
+     * @param vp
+     * @deprecated Implement RenderControl
      */
-    public void render(RenderManager rm, ViewPort vp);
+    @Deprecated
+    public default void render(RenderManager rm, ViewPort vp){
+       
+    }
 
 
  

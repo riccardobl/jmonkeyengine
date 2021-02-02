@@ -168,69 +168,72 @@ public class WorldParams {
 
     private static GeometryState updateAndGet(GeometryState geoState,Camera cam,Geometry geometry){
         GeometryStruct geoStruct=geoState.geometry.getValueForUpdate();
-        CameraState camState=updateAndGet(cam);
-        CameraStruct camStruct=camState.camera.getValueForUpdate();
+        CameraState camState=cam==null?null:updateAndGet(cam);
+        CameraStruct camStruct=cam==null?null:camState.camera.getValueForUpdate();
 
-        if(geoState.currentCamera!=camState.getStateId())geoState.setStateUpdateNeeded();
+        if(geoState.currentCamera!=(cam==null?0:camState.getStateId()))geoState.setStateUpdateNeeded();
         if(geoState.isStateUpdateNeeded()){
             TempVars vars=TempVars.get();
 
-
-            geoState.currentCamera=camState.getStateId();
+            geoState.currentCamera=camState!=null?camState.getStateId():0;
             
             //WorldMatrix
             geoStruct.worldMatrix.getValueForUpdate().set(geometry.getWorldMatrix());
             
             //WorldViewMatrix
-            geoStruct.worldViewMatrix.getValueForUpdate().set(camStruct.viewMatrix.getValue());
-            geoStruct.worldViewMatrix.getValueForUpdate().multLocal( geoStruct.worldMatrix.getValue());
+            if(cam!=null){
+                geoStruct.worldViewMatrix.getValueForUpdate().set(camStruct.viewMatrix.getValue());
+                geoStruct.worldViewMatrix.getValueForUpdate().multLocal( geoStruct.worldMatrix.getValue());
+          
+                //NormalMatrix
+                Matrix4f tempMatrix=vars.tempMat4;
+                tempMatrix.set(camStruct.viewMatrix.getValue());
+                tempMatrix.multLocal(geoStruct.worldMatrix.getValue());
+                tempMatrix.toRotationMatrix(geoStruct.normalMatrix.getValueForUpdate());
+                geoStruct.normalMatrix.getValueForUpdate().invertLocal();
+                geoStruct.normalMatrix.getValueForUpdate().transposeLocal();
+           
+                //WorldNormalMatrix
+                tempMatrix.set(geoStruct.worldMatrix.getValue());
+                tempMatrix.toRotationMatrix(geoStruct.worldNormalMatrix.getValueForUpdate());
+                geoStruct.worldNormalMatrix.getValueForUpdate().invertLocal();
+                geoStruct.worldNormalMatrix.getValueForUpdate().transposeLocal();
 
-            //NormalMatrix
-            Matrix4f tempMatrix=vars.tempMat4;
-            tempMatrix.set(camStruct.viewMatrix.getValue());
-            tempMatrix.multLocal(geoStruct.worldMatrix.getValue());
-            tempMatrix.toRotationMatrix(geoStruct.normalMatrix.getValueForUpdate());
-            geoStruct.normalMatrix.getValueForUpdate().invertLocal();
-            geoStruct.normalMatrix.getValueForUpdate().transposeLocal();
-            
-            //WorldNormalMatrix
-            tempMatrix.set(geoStruct.worldMatrix.getValue());
-            tempMatrix.toRotationMatrix(geoStruct.worldNormalMatrix.getValueForUpdate());
-            geoStruct.worldNormalMatrix.getValueForUpdate().invertLocal();
-            geoStruct.worldNormalMatrix.getValueForUpdate().transposeLocal();
+                //WorldViewProjectionMatrix
+                geoStruct.worldViewProjMatrix.getValueForUpdate().set(camStruct.viewProjectionMatrix.getValue());
+                geoStruct.worldViewProjMatrix.getValueForUpdate().multLocal(geoStruct.worldMatrix.getValue());
+                
+                //WorldMatrixInverse
+                geoStruct.worldMatrixInv.getValueForUpdate().set(geoStruct.worldMatrix.getValue());
+                geoStruct.worldMatrixInv.getValueForUpdate().invertLocal();
 
-            //WorldViewProjectionMatrix
-            geoStruct.worldViewProjMatrix.getValueForUpdate().set(camStruct.viewProjectionMatrix.getValue());
-            geoStruct.worldViewProjMatrix.getValueForUpdate().multLocal(geoStruct.worldMatrix.getValue());
-            
-            //WorldMatrixInverse
-            geoStruct.worldMatrixInv.getValueForUpdate().set(geoStruct.worldMatrix.getValue());
-            geoStruct.worldMatrixInv.getValueForUpdate().invertLocal();
+                //WorldMatrixInverseTranspose
+                geoStruct.worldMatrix.getValue().toRotationMatrix(geoStruct.worldMatrixInvTrsp.getValueForUpdate());
+                geoStruct.worldMatrixInvTrsp.getValueForUpdate().invertLocal().transposeLocal();
 
-            //WorldMatrixInverseTranspose
-            geoStruct.worldMatrix.getValue().toRotationMatrix(geoStruct.worldMatrixInvTrsp.getValueForUpdate());
-            geoStruct.worldMatrixInvTrsp.getValueForUpdate().invertLocal().transposeLocal();
+                //WorldViewMatrixInverse
+                geoStruct.worldViewMatrixInv.getValueForUpdate().set(camStruct.viewMatrix.getValue());
+                geoStruct.worldViewMatrixInv.getValueForUpdate().multLocal(geoStruct.worldMatrix.getValue());
+                geoStruct.worldViewMatrixInv.getValueForUpdate().invertLocal();
+                
 
-            //WorldViewMatrixInverse
-            geoStruct.worldViewMatrixInv.getValueForUpdate().set(camStruct.viewMatrix.getValue());
-            geoStruct.worldViewMatrixInv.getValueForUpdate().multLocal(geoStruct.worldMatrix.getValue());
-            geoStruct.worldViewMatrixInv.getValueForUpdate().invertLocal();
-            
+                //NormalMatrixInverse:
+                tempMatrix.set(camStruct.viewMatrix.getValue());
+                tempMatrix.multLocal(geoStruct.worldMatrix.getValue());
+                tempMatrix.toRotationMatrix(geoStruct.normalMatrixInv.getValueForUpdate());
+                geoStruct.normalMatrixInv.getValueForUpdate().invertLocal();
+                geoStruct.normalMatrixInv.getValueForUpdate().transposeLocal();
+                geoStruct.normalMatrixInv.getValueForUpdate().invertLocal();
 
-            //NormalMatrixInverse:
-            tempMatrix.set(camStruct.viewMatrix.getValue());
-            tempMatrix.multLocal(geoStruct.worldMatrix.getValue());
-            tempMatrix.toRotationMatrix(geoStruct.normalMatrixInv.getValueForUpdate());
-            geoStruct.normalMatrixInv.getValueForUpdate().invertLocal();
-            geoStruct.normalMatrixInv.getValueForUpdate().transposeLocal();
-            geoStruct.normalMatrixInv.getValueForUpdate().invertLocal();
-
-            //WorldViewProjectionMatrixInverse:
-            geoStruct.worldViewProjMatrixInv.getValueForUpdate().set(camStruct.viewProjectionMatrix.getValue());
-            geoStruct.worldViewProjMatrixInv.getValueForUpdate().multLocal(geoStruct.worldMatrix.getValue());
-            geoStruct.worldViewProjMatrixInv.getValueForUpdate().invertLocal();
+                //WorldViewProjectionMatrixInverse:
+                geoStruct.worldViewProjMatrixInv.getValueForUpdate().set(camStruct.viewProjectionMatrix.getValue());
+                geoStruct.worldViewProjMatrixInv.getValueForUpdate().multLocal(geoStruct.worldMatrix.getValue());
+                geoStruct.worldViewProjMatrixInv.getValueForUpdate().invertLocal();
+            }
+                
 
             geoState.clearStateUpdateNeeded();
+            vars.release();
         }
         return geoState;
     }

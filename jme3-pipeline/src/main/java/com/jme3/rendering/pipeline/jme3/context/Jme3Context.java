@@ -24,9 +24,7 @@ public class Jme3Context {
     }
     public void addListener(SystemListener l){
         listeners.add(l);
-        if(context!=null){
-            l.initialize();
-        }
+        
     }
     public void removeListener(SystemListener l){
         listeners.remove(l);

@@ -35,11 +35,14 @@ import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.material.MatParam;
 import com.jme3.material.Material;
+import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.*;
 import com.jme3.scene.control.Control;
+import com.jme3.scene.control.RenderControl;
+import com.jme3.texture.FrameBuffer;
 import com.jme3.util.clone.Cloner;
 import com.jme3.util.clone.JmeCloneable;
 import java.io.IOException;
@@ -120,7 +123,7 @@ public class InstancedNode extends GeometryGroupNode {
         }
     }
 
-    private static class InstancedNodeControl implements Control, JmeCloneable {
+    private static class InstancedNodeControl implements RenderControl, JmeCloneable {
 
         private InstancedNode node;
 
@@ -131,12 +134,7 @@ public class InstancedNode extends GeometryGroupNode {
             this.node = node;
         }
 
-        @Deprecated
-        @Override
-        public Control cloneForSpatial(Spatial spatial) {
-            throw new UnsupportedOperationException();
-        }
-
+    
         @Override
         public Object jmeClone() {
             try {
@@ -155,12 +153,9 @@ public class InstancedNode extends GeometryGroupNode {
         public void setSpatial(Spatial spatial){
         }
 
+      
         @Override
-        public void update(float tpf){
-        }
-
-        @Override
-        public void render(RenderManager rm, ViewPort vp) {
+        public void onRender(Spatial spatial,Camera cam,FrameBuffer outFb){
             node.renderFromControl();
         }
 
@@ -170,6 +165,24 @@ public class InstancedNode extends GeometryGroupNode {
 
         @Override
         public void read(JmeImporter im) throws IOException {
+        }
+
+        @Override
+        public Spatial getSpatial() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            // TODO Auto-generated method stub
+            return true;
+        }
+
+        @Override
+        public void setEnabled(boolean v) {
+            // TODO Auto-generated method stub
+
         }
     }
 

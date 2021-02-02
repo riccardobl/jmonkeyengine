@@ -13,7 +13,8 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.util.functional.VoidBiFunction;
 
-public class GeometriesExtractorPass extends PipelinePass<GeometriesExtractorPass> {
+public class GeometriesExtractorPass extends PipelinePass {
+
     public static class Params {
         public static int OutLists = 0;
         public static int Spatial = 1;

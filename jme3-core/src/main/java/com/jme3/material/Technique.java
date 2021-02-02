@@ -126,6 +126,20 @@ public final class Technique {
         }
     }
     
+    private void defineParams(DefineList defineList, Collection<? extends MatParam> params) {
+        for (MatParam param : params) {
+            if (param instanceof MatParamOverride&&!((MatParamOverride)param).isEnabled()) {
+                continue;
+            }
+            Integer defineId = def.getShaderParamDefineId(param.name);
+            if (defineId != null) {
+                if (def.getDefineIdType(defineId) == param.type) {
+                    defineList.set(defineId, param.type, param.value);
+                }
+            }
+        }
+    }
+    
  
 
     /**
@@ -159,19 +173,27 @@ public final class Technique {
     }
 
 
-    public Shader getShader(SafeArrayList<MatParamOverride> worldOverrides,SafeArrayList<MatParamOverride> overrides, EnumSet<Caps> rendererCaps) {
+    public Shader getShader(Collection<? extends MatParam> defaultParams, Collection<? extends MatParam> matParams,Collection<? extends MatParam> geoParams, Collection<? extends MatParam> worldParams,EnumSet<Caps> rendererCaps) {
         AssetManager assetManager = owner.getMaterialDef().getAssetManager();
 
         dynamicDefines.clear();
-        dynamicDefines.setAll(paramDefines);
 
-        if (worldOverrides != null) {
-            applyOverrides(dynamicDefines, worldOverrides);
+        if (defaultParams != null) {
+            defineParams(dynamicDefines, defaultParams);
+        }
+        
+        if (matParams != null) {
+            defineParams(dynamicDefines, matParams);
         }
 
-        if (overrides != null) {
-            applyOverrides(dynamicDefines, overrides);
+        if (geoParams != null) {
+            defineParams(dynamicDefines, geoParams);
         }
+
+        if (worldParams != null) {
+            defineParams(dynamicDefines, worldParams);
+        }
+ 
    
         return def.getShader(assetManager, rendererCaps, dynamicDefines);
 

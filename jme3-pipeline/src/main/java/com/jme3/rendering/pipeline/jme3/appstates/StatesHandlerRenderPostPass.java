@@ -4,7 +4,7 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.rendering.pipeline.PipelinePass;
 
-public class StatesHandlerRenderPostPass extends PipelinePass<StatesHandlerPass> {
+public class StatesHandlerRenderPostPass extends PipelinePass {
     private final AppStateManager stateManager;
 
     public StatesHandlerRenderPostPass(AppStateManager stateManager) {

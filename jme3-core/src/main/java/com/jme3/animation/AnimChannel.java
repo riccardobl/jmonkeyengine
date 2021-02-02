@@ -314,7 +314,7 @@ public final class AnimChannel {
         }
     }
 
-    BitSet getAffectedBones(){
+    public BitSet getAffectedBones(){
         return affectedBones;
     }
     

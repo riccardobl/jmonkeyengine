@@ -1,5 +1,7 @@
-uniform vec2 m_ResolutionInverse;
-uniform float m_SubPixelShift;
+#import "Pipeline/utils/WorldParams.glsl"
+bindUBO(Camera,WorldCamera);
+
+uniform float SubPixelShift;
 
 in vec4 inPosition;
 in vec2 inTexCoord;
@@ -12,7 +14,7 @@ void fxaa_vert(){
     gl_Position = vec4(pos, 0.0, 1.0);    
     TexCoord=inTexCoord;
     FxaaPos.xy = inTexCoord.xy;
-    FxaaPos.zw = inTexCoord.xy - (m_ResolutionInverse * vec2(0.5 + m_SubPixelShift));
+    FxaaPos.zw = inTexCoord.xy - (WorldCamera.resolutionInverse * vec2(0.5 + SubPixelShift));
 }
 
 void main() {

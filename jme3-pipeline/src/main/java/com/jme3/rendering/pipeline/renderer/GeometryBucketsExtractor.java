@@ -8,6 +8,7 @@ import com.jme3.renderer.queue.GeometryList;
 import com.jme3.renderer.queue.OpaqueComparator;
 import com.jme3.renderer.queue.TransparentComparator;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
+import com.jme3.rendering.pipeline.logic.CullState;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -70,21 +71,19 @@ public class GeometryBucketsExtractor implements GeometriesExtractor {
 
     @Override
     public void extract(Spatial root, GeometryLists out) {
-        // check culling first.
-        if (!root.checkCulling(cam)) {
-            return;
-        }
-
+        CullState cullState=root.getState(CullState.class, CullState::new);
+        if(cullState.culled)  return;
+     
         // scene.runControlRender(this, vp);
         if (root instanceof Node) {
             // Recurse for all children
             Node n = (Node) root;
             List<Spatial> children = n.getChildren();
             // Saving cam state for culling
-            int camState = cam.getPlaneState();
+            // int camState = cam.getPlaneState();
             for (int i = 0; i < children.size(); i++) {
                 // Restoring cam state before proceeding children recursively
-                cam.setPlaneState(camState);
+                // cam.setPlaneState(camState);
                 extract(children.get(i), out);
             }
         } else if (root instanceof Geometry) {

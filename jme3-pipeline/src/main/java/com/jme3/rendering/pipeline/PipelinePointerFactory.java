@@ -27,10 +27,16 @@ public class PipelinePointerFactory implements PipelinePointerResolver {
 
     private static final class PassStorage {
         Map<Object, Object> outputStorage = new HashMap<Object, Object>();
+        void reset(){
+            outputStorage.clear();
+        }
     }
 
     public <T> void setDefaultConstructor(Class<T> cl, PipelinePointerConstructor<T> f) {
         constructors.put(cl, f);
+    }
+    public <T> PipelinePointerConstructor<T> getDefaultConstructor(Class<T> cl) {
+        return constructors.get(cl);
     }
 
 
@@ -137,6 +143,13 @@ public class PipelinePointerFactory implements PipelinePointerResolver {
         return st;
     }
 
+    @Override
+    public void reset(Pipeline pipeline, PipelinePass pass) {
+        PassStorage st = getPassStorage(pass);
+        st.reset();
+    }
+
+    @Override
     public <T> T resolve(Class type, Pipeline pipeline, PipelinePass pass, T ref, PipelinePointerConstructor<T> init) {
         SmartObject<T> sref = SmartObject.from(ref);
         if (!sref.isPointer())
@@ -241,5 +254,8 @@ public class PipelinePointerFactory implements PipelinePointerResolver {
         }
         return (T) constr.newInstance(params.toArray());
     }
+
+   
+    
 
 }

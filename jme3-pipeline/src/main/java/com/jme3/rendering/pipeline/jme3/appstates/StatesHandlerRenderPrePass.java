@@ -5,7 +5,7 @@ import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.rendering.pipeline.PipelinePass;
 import com.jme3.rendering.pipeline.jme3.context.Jme3ContextCreator;
 
-public class StatesHandlerRenderPrePass extends PipelinePass<StatesHandlerPass> {
+public class StatesHandlerRenderPrePass extends PipelinePass {
     private final AppStateManager stateManager;
     private final Jme3ContextCreator contextFactory;
 

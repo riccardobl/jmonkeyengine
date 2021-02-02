@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JmeAudioRenderPass extends PipelinePass<JmeAudioRenderPass>  {
+public class JmeAudioRenderPass extends PipelinePass  {
     private final Jme3ContextCreator contextFactory;
     
 

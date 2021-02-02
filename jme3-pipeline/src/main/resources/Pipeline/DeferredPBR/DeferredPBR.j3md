@@ -1,0 +1,28 @@
+MaterialDef DeferredPBR {
+
+    MaterialParameters {
+        Texture2D Data1
+        Texture2D Data2
+        Texture2D Depth
+
+        // Scene
+        UniformBufferObject WorldCamera
+
+        // Internals
+        Boolean MRT
+    
+
+    }
+
+    Technique {
+        
+        VertexShader  GLSL150:   Pipeline/DeferredPBR/DeferredPBR.vert
+        FragmentShader GLSL150: Pipeline/DeferredPBR/DeferredPBR.frag
+
+
+        Defines {         
+            MRT:MRT       
+        }
+    }
+}
+

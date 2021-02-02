@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Implementation-Title: jMonkeyEngine
+Automatic-Module-Name: jme3.bullet
+Implementation-Version: 3.3.0-SNAPSHOT
+

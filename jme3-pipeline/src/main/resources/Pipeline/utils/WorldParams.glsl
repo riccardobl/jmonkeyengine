@@ -62,6 +62,15 @@ mat4 Geometry_getWorldMatrix(in Geometry geo){
 }
 
 
+vec3 Geometry_transformWorldNormal(in Geometry geo,in vec3 normal){
+    #if defined INSTANCING
+        vec4 quat = vec4(inInstanceData[0].w, inInstanceData[1].w,inInstanceData[2].w, inInstanceData[3].w);
+        return normal + vec3(2.0) * cross(cross(normal, quat.xyz) + vec3(quat.w) * normal, quat.xyz);
+    #else
+        return normalize(geo.worldNormalMatrix*normal);
+    #endif 
+
+}
 
 
 

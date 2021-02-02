@@ -95,7 +95,9 @@ public class FrameBufferFactory {
             int samples
     ) {
         if(depthOut==getDefaultTarget())return defaultFrameBuffer;
-        for(Texture t:colorOut)       if(t==getDefaultTarget())return defaultFrameBuffer;
+        
+        for(Texture t:colorOut) if(t==getDefaultTarget()) return defaultFrameBuffer;
+        
         
         Integer hash=hashFb(width,height,colorFormat,depthFormat,colorOut,depthOut,srgb,samples);
         FrameBuffer fb=framebufferCache.get(hash);
@@ -105,7 +107,9 @@ public class FrameBufferFactory {
             fb.setSrgb(srgb);
             fb.setMultiTarget(colorOut.size()>1);
 
-            for (Texture tx : colorOut) {            
+            for (Texture tx : colorOut) {    
+                assert tx!=null : "Texture is null?!";
+                assert tx.getImage()!=null: "Image is null for "+tx;        
                 if(tx.getImage().getMultiSamples()!=samples){
                     throw new UnsupportedOperationException("Framebuffer and targets must have the same number of samples");
                 }

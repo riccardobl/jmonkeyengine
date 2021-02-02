@@ -95,6 +95,7 @@ public class MaterialHandler {
             if (type.isTextureType()) {
                 renderer.setTexture(unit.textureUnit, (Texture) param.getValue());
                 uniform.setValue(VarType.Int, unit.textureUnit);
+
                 unit.textureUnit++;
             } else {
                 uniform.setValue(type, param.getValue());
@@ -147,6 +148,7 @@ public class MaterialHandler {
         for (int i = 0; i < paramValues.size(); i++) {
             MatParam param = paramValues.getValue(i);
             VarType type = param.getVarType();
+            System.out.println("Set "+param);
             updateShaderMaterialParameter(renderer, type, shader, param, bindUnits, true);
         }
 

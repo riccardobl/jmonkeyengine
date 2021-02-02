@@ -202,9 +202,11 @@ public class Node extends Spatial {
      */
     void invalidateUpdateList() {
         updateListValid = false;
+        setStateUpdateNeeded();
         if (parent != null) {
             parent.invalidateUpdateList();
         }
+        
     }
 
     private SafeArrayList<Spatial> getUpdateList() {

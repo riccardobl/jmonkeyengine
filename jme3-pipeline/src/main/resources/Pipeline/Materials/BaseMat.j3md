@@ -1,10 +1,45 @@
 MaterialDef BaseMat {
 
     MaterialParameters {
+
+        // Alpha threshold for fragment discarding
+        Float AlphaDiscardThreshold (AlphaTestFallOff)
+
+        //metalness of the material
+        Float Metallic : 1.0
+        //Roughness of the material
+        Float Roughness : 1.0        
+        // Base material color
+        Color BaseColor : 1.0 1.0 1.0 1.0
+        // The emissive color of the object
+        Color Emissive              
+        // the emissive intensity
+        Float EmissiveIntensity : 2.0
+
+        // BaseColor map
+        Texture2D BaseColorMap
+
+        //Metallic and Roughness are packed respectively in the b and g channel of a single map
+        // r: Ambient Occlusion
+        // g: Roughness
+        // b: Metallic
+        Texture2D AORoughnessMetallicMap -LINEAR
+
+        // Texture of the emissive parts of the material
+        Texture2D EmissiveMap
+
+        // Normal map
+        Texture2D NormalMap -LINEAR
+        //The type of normal map: -1.0 (DirectX), 1.0 (OpenGl)
+        Float NormalType : -1.0
+
+        // Parallax/height map
+        Texture2D ParallaxMap -LINEAR
+
+        // Scene
         UniformBufferObject WorldCamera
         UniformBufferObject WorldTimer
         UniformBufferObject CurrentGeometry
-
 
         // Internals
         Boolean MRT
@@ -30,11 +65,19 @@ MaterialDef BaseMat {
 
 
         Defines {         
+            BASECOLORMAP : BaseColorMap            
+            NORMALMAP : NormalMap
+            AO_ROUGHNESS_METALLIC_MAP : AORoughnessMetallicMap
+            EMISSIVEMAP : EmissiveMap
+            EMISSIVE : Emissive
+            PARALLAXMAP : ParallaxMap
+            DISCARD_ALPHA : AlphaDiscardThreshold                        
+            NORMAL_TYPE: NormalType
+
             MRT:MRT
             NUM_BONES : NumberOfBones                        
             INSTANCING : UseInstancing
          
-            VERTEX_COLOR : UseVertexColor
        
         }
     }

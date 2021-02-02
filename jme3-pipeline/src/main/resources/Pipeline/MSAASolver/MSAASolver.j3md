@@ -4,6 +4,8 @@ MaterialDef MSAASolver {
             Texture2D Input$i 
             Int ResolveMethod$i: 0
         #endfor 
+        Texture2D InputDepth
+        Int ResolveMethodDepth: 0
         Int NumSamples
     }
 
@@ -16,6 +18,8 @@ MaterialDef MSAASolver {
                 INPUT_$i:Input$i
                 RESOLVE_METHOD_$i: ResolveMethod$i
             #endfor
+            RESOLVE_DEPTH: InputDepth
+            RESOLVE_METHOD_DEPTH: ResolveMethodDepth
             NUM_SAMPLES:NumSamples
         }
     }

@@ -21,7 +21,7 @@ import com.jme3.rendering.pipeline.params.smartobj.SmartObject;
  * 
  * @author Riccardo Balbo
  */
-public abstract class PipelinePass<T extends PipelinePass> {
+public abstract class PipelinePass {
     private  static final java.util.logging.Logger logger =  java.util.logging.Logger.getLogger( PipelinePass.class.getName());
     private int id;
     private String name;
@@ -34,6 +34,11 @@ public abstract class PipelinePass<T extends PipelinePass> {
 
     private final Map<Object,Object> tmpInputs=new HashMap<Object,Object>();
     private final Map<Object,Object> tmpOutputs=new HashMap<Object,Object>();
+
+    private PipelinePointerResolver pointersResolver;
+    void setPointerResolver(PipelinePointerResolver resolver){
+        this.pointersResolver=resolver;
+    }
 
     void setId(final int id) {
         this.id=id;
@@ -273,16 +278,7 @@ public abstract class PipelinePass<T extends PipelinePass> {
     protected abstract void onOutput(Pipeline pipeline,Object key,Object value);
 
 
-    private float speed=1f;
 
-    public T speed(final float v){
-        this.speed=v;
-        return (T)this;
-    }
-
-    protected float getSpeed(){
-        return speed;
-    }
 
 
     protected void proxyInputOutput(Object in, Object out) {
@@ -333,8 +329,13 @@ public abstract class PipelinePass<T extends PipelinePass> {
         else   onInput(pipeline,key,value);           
     }
 
+    protected void skip(Pipeline pipeline){
+        if(pointersResolver!=null)pointersResolver.reset(pipeline, this);
+    }
+    
     public final void run(final Pipeline pipeline,float tpf){
-        tpf*=speed;
+        // if(pointersResolver!=null)pointersResolver.reset(pipeline, this);
+        // tpf*=speed;
         // setIO(pipeline);
 
 
@@ -364,9 +365,9 @@ public abstract class PipelinePass<T extends PipelinePass> {
         return this.name==null?this.getClass().getSimpleName():this.name;
     }
 
-    public T  name(final String name){
+    public PipelinePass setName(final String name){
         this.name=name;
-        return (T)this;
+        return this;
     }
 
 

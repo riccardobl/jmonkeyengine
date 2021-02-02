@@ -26,40 +26,45 @@ import com.jme3.util.IntMap;
 import com.jme3.util.IntMap.Entry;
 import com.jme3.util.SafeArrayList;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class JmeInputHandlerPass extends PipelinePass<JmeInputHandlerPass>  {
+public class JmeInputHandlerPass extends PipelinePass  {
     private final Jme3ContextCreator contextFactory;
     private final InputManager inputManager;
-    private List<InputEvent> outQueue;
+    private final Collection<InputEvent> outQueue;
 
-    public enum Params {
-         OutputQueue
-    }
+    // public enum Params {
+    //      OutputQueue
+    // }
     // private final Vector2f cursorPos = new Vector2f();
     // private boolean eventsPermitted = false;
     // private final IntMap<Long> pressedButtons = new IntMap<Long>();
     // private final IntMap<Float> axisValues = new IntMap<Float>();
     // private final ArrayList<InputEvent> inputQueue = new ArrayList<InputEvent>();
 
-    public JmeInputHandlerPass(InputManager inputManager,Jme3ContextCreator contextFactory) {
+    public JmeInputHandlerPass(InputManager inputManager,Jme3ContextCreator contextFactory, Collection<InputEvent>  outQueue) {
         this.contextFactory = contextFactory;
         this.inputManager=inputManager;
+        this.outQueue=outQueue;
     }
 
+    public JmeInputHandlerPass(InputManager inputManager,Jme3ContextCreator contextFactory) {
+        this(inputManager,contextFactory,null);
+    }
   
 
-    public JmeInputHandlerPass outQueue(List<InputEvent> output) {
-        useInput(Params.OutputQueue, output);
-        return this;
-    }
+    // public JmeInputHandlerPass outQueue(List<InputEvent> output) {
+    //     useInput(Params.OutputQueue, output);
+    //     return this;
+    // }
 
     @Override
     protected void beforeIO(Pipeline pipeline) {
-        outQueue = null;
+        // outQueue = null;
     }
 
     @Override
@@ -69,18 +74,23 @@ public class JmeInputHandlerPass extends PipelinePass<JmeInputHandlerPass>  {
 
     @Override
     protected void onOutput(Pipeline pipeline, Object key, Object value) {
-        if (key == Params.OutputQueue) {
-            outQueue = (List) value;
-        }
+        // if (key == Params.OutputQueue) {
+        //     outQueue = (List) value;
+        // }
     }
 
     @Override
     protected void onRun(Pipeline pipeline, float tpf) {
         if(!inputManager.isInitialized()){
             JmeContext ctx=contextFactory.getContext().get();
+            if(ctx.getMouseInput()!=null)ctx.getMouseInput().initialize();
+            if(ctx.getKeyInput()!=null)ctx.getKeyInput().initialize();
+            if(ctx.getJoyInput()!=null)ctx.getJoyInput().initialize();
+            if(ctx.getTouchInput()!=null)ctx.getTouchInput().initialize();
             inputManager.initialize(ctx.getMouseInput(), ctx.getKeyInput(),ctx.getJoyInput(),ctx.getTouchInput());
         }
         inputManager.update(tpf, false);
+        
         if (outQueue != null) {
             outQueue.clear();
             outQueue.addAll(inputManager.getInputQueue());

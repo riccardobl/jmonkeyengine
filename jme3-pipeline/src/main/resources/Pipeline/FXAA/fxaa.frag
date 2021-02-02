@@ -1,21 +1,24 @@
 #extension GL_ARB_explicit_attrib_location : enable
-#extension GL_ARB_explicit_attrib_location : enable
 
 #import "Pipeline/utils/WorldParams.glsl"
 #import "Pipeline/FXAA/fxaa.glsl"
 
 
 #for i=0..6 ( #ifdef SCENE_$i $0 #endif )
-    uniform sampler2D m_Scene$i;
+    uniform sampler2D Input$i;
     #ifdef MRT 
         layout(location=$i) 
     #endif 
         out vec4 outScene$i;
 #endfor 
 
+#ifdef DEPTH
+    uniform sampler2D InputDepth;
+#endif
 
-uniform float m_SpanMax;
-uniform float m_ReduceMul;
+
+uniform float SpanMax;
+uniform float ReduceMul;
 
 bindUBO(Camera,WorldCamera);
 
@@ -26,6 +29,10 @@ noperspective in vec2 TexCoord;
 
 void main(){
     #for i=0..6 ( #ifdef SCENE_$i $0 #endif )
-        outScene$i = FxaaPixelShader(FxaaPos, m_Scene$i, u_WorldCamera.resolutionInverse,m_ReduceMul,m_SpanMax);
+        outScene$i = FxaaPixelShader(FxaaPos, Input$i, WorldCamera.resolutionInverse,ReduceMul,SpanMax);
     #endfor 
+
+    #ifdef DEPTH
+        gl_FragDepth = FxaaPixelShader(FxaaPos, InputDepth$i, WorldCamera.resolutionInverse,ReduceMul,SpanMax).r;
+    #endif
 }

@@ -1,6 +1,9 @@
 #ifndef _UTILS_
 #define _UTILS_
 
+#ifndef PI
+    #define PI 3.1415926536f
+#endif
 
 /**
 * Exponential to linear depth
@@ -58,5 +61,38 @@ vec3 Utils_getScreenPos(in vec2 texCoord,in float depth){
 
  vec3 Utils_projectPointToPlane(in  vec3 v,in vec3 plane_pos,in vec3 plane_normal){
     return v+plane_normal*-Utils_distancePointPlane(v,plane_pos,plane_normal);
+ }
+
+float Utils_atan2(in float y, in float x){
+    bool s = (abs(x) > abs(y));
+    return mix(PI/2.0 - atan(x,y), atan(y,x), s);
+}
+/*
+Encode vec3 normals in any space into vec2 spherical coordinates
+https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/atan.xhtml
+*/
+vec2 Utils_encodeNormals2C(in vec3 n){
+    return 
+         vec2(
+             Utils_atan2(n.y,n.x),
+              n.z 
+        );
+ }
+
+
+
+/*
+Decode vec3 normals in any space into vec2 spherical coordinates
+https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/atan.xhtml
+*/
+ vec3 Utils_decodeNormals2C(in vec2 enc){
+    vec2 ang = enc;
+    float v=ang.x ;
+
+    float scthX=sin(v);
+    float scthY=cos(v);
+        
+    vec2 scphi = vec2(sqrt(1.0 - ang.y*ang.y), ang.y);
+    return normalize(vec3(scthY*scphi.x, scthX*scphi.x, scphi.y));
  }
 #endif

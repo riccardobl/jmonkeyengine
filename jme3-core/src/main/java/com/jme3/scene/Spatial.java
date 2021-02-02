@@ -389,7 +389,7 @@ public abstract class Spatial extends StatefulObject implements Savable, Cloneab
                 frustrumIntersects = cam.contains(getWorldBound());
             }
         }
-
+        System.out.println(">>>"+frustrumIntersects);
         return frustrumIntersects != Camera.FrustumIntersect.Outside;
     }
 

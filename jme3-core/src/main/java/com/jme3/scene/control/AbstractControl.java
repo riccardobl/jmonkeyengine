@@ -35,9 +35,11 @@ import com.jme3.export.InputCapsule;
 import com.jme3.export.JmeExporter;
 import com.jme3.export.JmeImporter;
 import com.jme3.export.OutputCapsule;
+import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Spatial;
+import com.jme3.texture.FrameBuffer;
 import com.jme3.util.clone.Cloner;
 import com.jme3.util.clone.JmeCloneable;
 import java.io.IOException;
@@ -47,7 +49,8 @@ import java.io.IOException;
  *
  * @author Kirill Vainer
  */
-public abstract class AbstractControl implements Control, JmeCloneable {
+@Deprecated
+public abstract class AbstractControl implements Control,JmeCloneable {
 
     protected boolean enabled = true;
     protected Spatial spatial;
@@ -63,14 +66,17 @@ public abstract class AbstractControl implements Control, JmeCloneable {
         this.spatial = spatial;
     }
     
+    @Override
     public Spatial getSpatial(){
         return spatial;
     }
 
+    @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
+    @Override
     public boolean isEnabled() {
         return enabled;
     }
@@ -110,21 +116,25 @@ public abstract class AbstractControl implements Control, JmeCloneable {
         this.spatial = cloner.clone(spatial);
     }
          
-    @Override
+    @Override    @Deprecated
     public void update(float tpf) {
         if (!enabled)
             return;
 
         controlUpdate(tpf);
+    
     }
 
-    @Override
+    @Override @Deprecated
     public void render(RenderManager rm, ViewPort vp) {
         if (!enabled)
             return;
 
         controlRender(rm, vp);
+        
     }
+
+ 
 
     @Override
     public void write(JmeExporter ex) throws IOException {

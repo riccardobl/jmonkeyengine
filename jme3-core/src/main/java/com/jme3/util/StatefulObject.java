@@ -1,6 +1,9 @@
 package com.jme3.util;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.jme3.util.functional.NoArgFunction;
 import com.jme3.util.functional.VoidFunction;
@@ -9,23 +12,26 @@ import com.jme3.util.functional.VoidFunction;
  * StatefulObject
  */
 public class StatefulObject implements Cloneable{
-    private static ThreadLocal<Long> globalId = new ThreadLocal<Long>() {
-        @Override
-        protected Long initialValue() {
-            return Long.MIN_VALUE;
-        }
-    };
+//     private static ThreadLocal<Long> globalId = new ThreadLocal<Long>() {
+//         @Override
+//         protected Long initialValue() {
+//             return Long.MIN_VALUE;
+//         }
+//     };
+
+
+    private static AtomicLong globalId=new AtomicLong(Long.MIN_VALUE);
 
     private static long getGlobalId(){
-        long n=globalId.get();
-        long nn=n+1;
-        if(nn==-1||n==0)nn=1;
-        globalId.set(nn);
-        return n;
+        return  globalId.getAndUpdate(n->{
+            long nn=n+1;
+            if(nn==-1||n==0)nn=1;    
+            return nn;
+        });
     }
 
     public static class State{
-        private boolean updateNeeded=true;
+        private volatile boolean updateNeeded=true;
         private long stateId=0;
 
         public long getStateId(){
@@ -50,20 +56,20 @@ public class StatefulObject implements Cloneable{
         }
     }
 
-    private transient ThreadLocal<WeakHashMap<Object, State>> states;
+    // private transient ThreadLocal<WeakHashMap<Object, State>> states;
+    private transient Map<Object, State> states=null;
     
-    
-
-    protected WeakHashMap<Object, State> getStates(){
+    protected Map<Object, State> getStates(){
         if(states==null){
-            states = new ThreadLocal<WeakHashMap<Object, State>>() {
-                @Override
-                protected WeakHashMap<Object, State> initialValue() {
-                    return new WeakHashMap<Object, State>();
-                }
-            };
+            states=(Map<Object, State>) Collections.synchronizedMap(new WeakHashMap<Object, State>());
+            // states = new ThreadLocal<WeakHashMap<Object, State>>() {
+            //     @Override
+            //     protected WeakHashMap<Object, State> initialValue() {
+            //         return new WeakHashMap<Object, State>();
+            //     }
+            // };
         }
-        return states.get();
+        return states;
     }
 
     public <T extends State> T  getState(Object id, NoArgFunction<T> constructor) {
@@ -81,7 +87,7 @@ public class StatefulObject implements Cloneable{
     }
 
     protected void setStateUpdateNeeded(){
-        WeakHashMap<Object,State> m= getStates();
+        Map<Object,State> m= getStates();
         for(State s:m.values()){
             s.setStateUpdateNeeded();
         }
@@ -89,7 +95,7 @@ public class StatefulObject implements Cloneable{
     }
 
     protected void forEachState(VoidFunction<State> f){
-        WeakHashMap<Object,State> m= getStates();
+        Map<Object,State> m= getStates();
         for(State s:m.values()){
             f.eval(s);
         }
@@ -102,8 +108,8 @@ public class StatefulObject implements Cloneable{
     protected StatefulObject clone() throws CloneNotSupportedException {
         StatefulObject clone=(StatefulObject)super.clone();
         clone.states=null;
-        WeakHashMap<Object,State> states=getStates();
-        WeakHashMap<Object,State> clonedStates=clone.getStates();
+        Map<Object,State> states=getStates();
+        Map<Object,State> clonedStates=clone.getStates();
         assert states!=clonedStates;        
         for(Object k:states.keySet()){
             State s=states.get(k);

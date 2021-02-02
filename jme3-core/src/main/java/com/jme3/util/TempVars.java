@@ -83,6 +83,7 @@ public class TempVars {
      */
     private boolean isUsed = false;
 
+    protected StackTraceElement[] claimStackTrace=null;
     private TempVars() {
     }
 
@@ -98,6 +99,25 @@ public class TempVars {
     public static TempVars get() {
         TempVarsStack stack = varsLocal.get();
 
+
+        boolean assertsEnabled = false;
+        assert assertsEnabled = true; 
+
+        if(assertsEnabled&&stack.index>=stack.tempVars.length){
+            StringBuilder report=new StringBuilder();
+            for(int i=0;i<stack.tempVars.length;i++){
+                report.append("TempVar["+i+"] claimed from\n");
+                if(stack.tempVars[i].claimStackTrace==null){
+                    report.append("Unknown?!");
+                }else{
+                    for(StackTraceElement trace:stack.tempVars[i].claimStackTrace){
+                        report.append("    ").append(trace.toString()).append("\n");
+                    }
+                }   
+            }
+            throw new RuntimeException("All TempVars are claimed (Possible memory leak). \n"+report);
+        }
+
         TempVars instance = stack.tempVars[stack.index];
 
         if (instance == null) {
@@ -111,6 +131,11 @@ public class TempVars {
         stack.index++;
 
         instance.isUsed = true;
+        
+
+        if(assertsEnabled){
+            instance.claimStackTrace=new Exception().getStackTrace();
+        }
 
         return instance;
     }
@@ -128,6 +153,7 @@ public class TempVars {
         }
 
         isUsed = false;
+        claimStackTrace=null;
 
         TempVarsStack stack = varsLocal.get();
 

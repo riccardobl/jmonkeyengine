@@ -7,14 +7,13 @@ import com.jme3.system.SystemListener;
 
 public class GlobalListener implements SystemListener {
     private final Collection<SystemListener> listeners;
-
+    boolean initialized=false;
     public GlobalListener(Collection<SystemListener> listeners) {
         this.listeners = listeners;
     }
 
     @Override
     public void initialize() {
-        for (SystemListener l : listeners) l.initialize();
     }
 
     @Override
@@ -24,6 +23,10 @@ public class GlobalListener implements SystemListener {
 
     @Override
     public void update() {
+        if(!initialized){
+            for (SystemListener l : listeners) l.initialize();
+            initialized=true;
+        }
         for (SystemListener l : listeners) l.update();
     }
 

@@ -31,12 +31,12 @@ import com.jme3.texture.Texture.WrapMode;
 /**
  * An effect is a group of passes, a layer.
  */
-public abstract class Effect<T extends Effect> extends PipelinePass<T> {
+public abstract class Effect extends PipelinePass {
 
     private  static final java.util.logging.Logger logger =  java.util.logging.Logger.getLogger( Effect.class.getName());
 
 
-    private final static Object DEFAULT=new Object();
+    // private final static Object DEFAULT=new Object();
 
     private final PipelinePointerFactory localPointers;
     private final  Pipeline localPipeline;
@@ -44,8 +44,8 @@ public abstract class Effect<T extends Effect> extends PipelinePass<T> {
     private final  FrameBufferFactory localFbFactory;
     
 
-    private Map<Object,List<Object>> effectOutputs=new HashMap<Object,List<Object>>(); // key, pass (if pass==DEFAULT, last out)
-    private Map<Object,List<Object>> effectInputs=new HashMap<Object,List<Object>>(); // key, pass (if pass==DEFAULT, all in)
+    // private Map<Object,List<Object>> effectOutputs=new HashMap<Object,List<Object>>(); // key, pass (if pass==DEFAULT, last out)
+    // private Map<Object,List<Object>> effectInputs=new HashMap<Object,List<Object>>(); // key, pass (if pass==DEFAULT, all in)
 
 
 
@@ -53,7 +53,7 @@ public abstract class Effect<T extends Effect> extends PipelinePass<T> {
         localPointers=pointerRes==null?new PipelinePointerFactory():pointerRes;
         localRunner=runner==null?new PipelineRunner():runner;
         localFbFactory=fbFactory==null?new FrameBufferFactory():fbFactory;
-        localPipeline=pipeline==null?new Pipeline():pipeline;        
+        localPipeline=pipeline==null?new Pipeline(localPointers):pipeline;        
         localRunner.addPipeline(localPipeline);
 
     }
@@ -86,117 +86,117 @@ public abstract class Effect<T extends Effect> extends PipelinePass<T> {
 
 
    
-    private void unmarkEffectValueForPass(Map<Object,List<Object>> map,Object key,Object pass){
-            List<Object> passesRefs=map.get(key);
-            if(passesRefs!=null){
-                passesRefs.remove(pass);
-                if(passesRefs.size()==0){
-                    map.remove(key);
-                }
-            }
+    // private void unmarkEffectValueForPass(Map<Object,List<Object>> map,Object key,Object pass){
+    //         List<Object> passesRefs=map.get(key);
+    //         if(passesRefs!=null){
+    //             passesRefs.remove(pass);
+    //             if(passesRefs.size()==0){
+    //                 map.remove(key);
+    //             }
+    //         }
        
-    }
+    // }
 
 
-    private void markEffectValueForPass(Map<Object,List<Object>> map,Object key,Object pass){
+    // private void markEffectValueForPass(Map<Object,List<Object>> map,Object key,Object pass){
   
-            List<Object> passesRefs=map.get(key);
-            if(passesRefs==null){
-                map.put(key,passesRefs=new ArrayList<Object>());
-            }
-            passesRefs.add(pass);
+    //         List<Object> passesRefs=map.get(key);
+    //         if(passesRefs==null){
+    //             map.put(key,passesRefs=new ArrayList<Object>());
+    //         }
+    //         passesRefs.add(pass);
         
-    }
+    // }
 
-    /**
-     * Input to every pass
-     * @param key
-     */
+    // /**
+    //  * Input to every pass
+    //  * @param key
+    //  */
 
-     @Override
-    public Object useInput(Object key,Object value){
-        if(value==null){
-            unmarkEffectValueForPass(effectInputs,key,DEFAULT);
-            useInputOnPass(DEFAULT,key,value);
-        }else{
-            markEffectValueForPass(effectInputs,key,DEFAULT);
-        } 
-        return super.useInput(key, value);
-    }
+    //  @Override
+    // public Object useInput(Object key,Object value){
+    //     if(value==null){
+    //         unmarkEffectValueForPass(effectInputs,key,DEFAULT);
+    //         useInputOnPass(DEFAULT,key,value);
+    //     }else{
+    //         markEffectValueForPass(effectInputs,key,DEFAULT);
+    //     } 
+    //     return super.useInput(key, value);
+    // }
 
-    /**
-     * Input to id
-     * @param id
-     * @param key
-     */
+    // /**
+    //  * Input to id
+    //  * @param id
+    //  * @param key
+    //  */
     
-    public Object useInput(int id,Object key,Object value){
-        if(id<0)id=0;
-        if(value==null){
-            unmarkEffectValueForPass(effectInputs,key,id);
-            useInputOnPass(id,key,value);
-        }else{
-            markEffectValueForPass(effectInputs,key,id);
-        }    
-        return super.useInput(key, value);
-    }
+    // public Object useInput(int id,Object key,Object value){
+    //     if(id<0)id=0;
+    //     if(value==null){
+    //         unmarkEffectValueForPass(effectInputs,key,id);
+    //         useInputOnPass(id,key,value);
+    //     }else{
+    //         markEffectValueForPass(effectInputs,key,id);
+    //     }    
+    //     return super.useInput(key, value);
+    // }
 
-    /**
-     * Input to pass
-     */
-    public Object useInput(PipelinePass pass,Object key,Object value){
-        if(value==null){
-            unmarkEffectValueForPass(effectInputs,key,pass);
-            useInputOnPass(pass,key,value);
-        }else{
-            markEffectValueForPass(effectInputs,key,pass);
-        }    
-        return super.useInput(key, value);
+    // /**
+    //  * Input to pass
+    //  */
+    // public Object useInput(PipelinePass pass,Object key,Object value){
+    //     if(value==null){
+    //         unmarkEffectValueForPass(effectInputs,key,pass);
+    //         useInputOnPass(pass,key,value);
+    //     }else{
+    //         markEffectValueForPass(effectInputs,key,pass);
+    //     }    
+    //     return super.useInput(key, value);
 
-    }
+    // }
 
  
-    @Override
-    public Object useOutput(Object key,Object value){
-        if(value==null){
-            unmarkEffectValueForPass(effectOutputs,key,DEFAULT);
-            useOutputOnPass(DEFAULT,key,value);            
-        }else{
-            markEffectValueForPass(effectOutputs,key,DEFAULT);
-        } 
-        return super.useOutput(key,value);
-    }
+    // @Override
+    // public Object useOutput(Object key,Object value){
+    //     if(value==null){
+    //         unmarkEffectValueForPass(effectOutputs,key,DEFAULT);
+    //         useOutputOnPass(DEFAULT,key,value);            
+    //     }else{
+    //         markEffectValueForPass(effectOutputs,key,DEFAULT);
+    //     } 
+    //     return super.useOutput(key,value);
+    // }
 
-    /**
-     * Outout from id
-     * @param id
-     * @param key
-     */
+    // /**
+    //  * Outout from id
+    //  * @param id
+    //  * @param key
+    //  */
 
-    public Object useOutput(int id,Object key,Object value){
-        if(id<0)id=0;
-        if(value==null){
-            unmarkEffectValueForPass(effectOutputs,key,id);
-            useOutputOnPass(id,key,value);
-        }else{
-            markEffectValueForPass(effectOutputs,key,id);
-        } 
-        return super.useOutput(key,value);
-    }
+    // public Object useOutput(int id,Object key,Object value){
+    //     if(id<0)id=0;
+    //     if(value==null){
+    //         unmarkEffectValueForPass(effectOutputs,key,id);
+    //         useOutputOnPass(id,key,value);
+    //     }else{
+    //         markEffectValueForPass(effectOutputs,key,id);
+    //     } 
+    //     return super.useOutput(key,value);
+    // }
 
-    /**
-     * Output from pass
-     */
+    // /**
+    //  * Output from pass
+    //  */
   
-    public Object useOutput(PipelinePass pass,Object key,Object value){
-        if(value==null){
-            unmarkEffectValueForPass(effectOutputs,key,pass);
-            useOutputOnPass(pass,key,value);
-        }else{
-            markEffectValueForPass(effectOutputs,key,pass);
-        } 
-        return super.useOutput(key,value);
-    }
+    // public Object useOutput(PipelinePass pass,Object key,Object value){
+    //     if(value==null){
+    //         unmarkEffectValueForPass(effectOutputs,key,pass);
+    //         useOutputOnPass(pass,key,value);
+    //     }else{
+    //         markEffectValueForPass(effectOutputs,key,pass);
+    //     } 
+    //     return super.useOutput(key,value);
+    // }
 
     // @Override
     // public void clearInputs(){
@@ -211,107 +211,61 @@ public abstract class Effect<T extends Effect> extends PipelinePass<T> {
     // }
 
 
-    private void useInputOnPass(Object proxyTo,Object key,Object value){
+    // private void useInputOnPass(Object proxyTo,Object key,Object value){
 
-        if(logger.isLoggable(java.util.logging.Level.  FINER  ))logger.log(java.util.logging.Level.FINER,
-            "Set effect input {0}={1} on {2}",new Object[]{key,value,proxyTo}   
-        );
+    //     if(logger.isLoggable(java.util.logging.Level.  FINER  ))logger.log(java.util.logging.Level.FINER,
+    //         "Set effect input {0}={1} on {2}",new Object[]{key,value,proxyTo}   
+    //     );
 
 
-        if(proxyTo instanceof Number){
-            int in=((Number)proxyTo).intValue();
-            if(in>=localPipeline.size())in=localPipeline.size()-1;
-            localPipeline.get(in).useInput(key, value);
-        }else if(proxyTo instanceof PipelinePass){
-            PipelinePass pass=(PipelinePass)proxyTo;
-            pass.useInput(key, value);            
-        }else  {                
-            for(PipelinePass pass:localPipeline.getPasses()){
-                pass.useInput(key,value);
-            }
-        }
-    }
+    //     if(proxyTo instanceof Number){
+    //         int in=((Number)proxyTo).intValue();
+    //         if(in>=localPipeline.size())in=localPipeline.size()-1;
+    //         localPipeline.get(in).useInput(key, value);
+    //     }else if(proxyTo instanceof PipelinePass){
+    //         PipelinePass pass=(PipelinePass)proxyTo;
+    //         pass.useInput(key, value);            
+    //     }else  {                
+    //         for(PipelinePass pass:localPipeline.getPasses()){
+    //             pass.useInput(key,value);
+    //         }
+    //     }
+    // }
 
-    private void useOutputOnPass(Object proxyTo,Object key,Object value){
+    // private void useOutputOnPass(Object proxyTo,Object key,Object value){
     
-        if(logger.isLoggable(java.util.logging.Level.  FINER  ))logger.log(java.util.logging.Level.FINER,
-            "Set effect output {0}={1} on {2}",new Object[]{key,value,proxyTo}   
-        );
+    //     if(logger.isLoggable(java.util.logging.Level.  FINER  ))logger.log(java.util.logging.Level.FINER,
+    //         "Set effect output {0}={1} on {2}",new Object[]{key,value,proxyTo}   
+    //     );
 
-        if(proxyTo instanceof Number){
-            int in=((Number)proxyTo).intValue();
-            if(in>=localPipeline.size())in=localPipeline.size()-1;
-            localPipeline.get(in).useOutput(key, value);
-        }else if(proxyTo instanceof PipelinePass){
-            PipelinePass pass=(PipelinePass)proxyTo;
-            pass.useOutput(key, value);            
-        }else  {                
-            localPipeline.get(localPipeline.size()-1).useOutput(key,value);                
-        }
-    }
+    //     if(proxyTo instanceof Number){
+    //         int in=((Number)proxyTo).intValue();
+    //         if(in>=localPipeline.size())in=localPipeline.size()-1;
+    //         localPipeline.get(in).useOutput(key, value);
+    //     }else if(proxyTo instanceof PipelinePass){
+    //         PipelinePass pass=(PipelinePass)proxyTo;
+    //         pass.useOutput(key, value);            
+    //     }else  {                
+    //         localPipeline.get(localPipeline.size()-1).useOutput(key,value);                
+    //     }
+    // }
 
-    @Override
-    protected void onInput(Pipeline pipeline, Object key, Object value) {
-        List<Object> proxyTo=effectInputs.get(key);
-        if(proxyTo!=null){
-            for(Object p:proxyTo)useInputOnPass(p,key,value);
-        }
-    }
+    // @Override
+    // protected void onInput(Pipeline pipeline, Object key, Object value) {
+    //     List<Object> proxyTo=effectInputs.get(key);
+    //     if(proxyTo!=null){
+    //         for(Object p:proxyTo)useInputOnPass(p,key,value);
+    //     }
+    // }
 
-    @Override
-    protected void onOutput(Pipeline pipeline, Object key, Object value) {
-        List<Object>  proxyTo=effectOutputs.get(key);
-        if(proxyTo!=null){
-            for(Object p:proxyTo)useOutputOnPass(p,key,value);
-        }
-    }
+    // @Override
+    // protected void onOutput(Pipeline pipeline, Object key, Object value) {
+    //     List<Object>  proxyTo=effectOutputs.get(key);
+    //     if(proxyTo!=null){
+    //         for(Object p:proxyTo)useOutputOnPass(p,key,value);
+    //     }
+    // }
 
-    @Override
-    protected void preAttach(Pipeline pipeline) {
-        // TODO Auto-generated method stub
 
-    }
-
-    @Override
-    protected void postAttach(Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void preDetach(Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void postDetach(Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void beforeIO(Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void afterIO(Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void beforeRun(Pipeline pipeline, float tpf) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void afterRun(Pipeline pipeline, float tpf) {
-        // TODO Auto-generated method stub
-
-    }
-
+  
 }

@@ -12,6 +12,7 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.material.Technique;
 import com.jme3.material.TechniqueDef;
+import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
@@ -22,6 +23,7 @@ import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.rendering.pipeline.PipelinePass;
 import com.jme3.rendering.pipeline.renderer.*;
 import com.jme3.rendering.pipeline.jme3.context.*;
+import com.jme3.rendering.pipeline.params.smartobj.SmartObject;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.instancing.InstancedGeometry;
@@ -48,7 +50,7 @@ import com.jme3.util.SafeArrayList;
  * 
  * @author Riccardo Balbo
  */
-public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3GeometriesRenderPass> implements GeometriesRenderPass<Jme3GeometriesRenderPass> {
+public class Jme3GeometriesRenderPass extends Jme3RenderPass<Jme3GeometriesRenderPass> {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Jme3GeometriesRenderPass.class.getName());
 
 
@@ -74,7 +76,6 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
     protected RenderState aggregatorRenderState=new RenderState();
 
     public Jme3GeometriesRenderPass( final Jme3ContextCreator contextFactory,final FrameBufferFactory fbFactory) {
-        super();
         this.setFrameBufferFactory(fbFactory);
         this.contextFactory=contextFactory;
         useDefaultInput("WorldCamera", worldCameraParam);
@@ -84,14 +85,38 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
     }
     
 
+    private class DeferredParamBuilder{
+        VarType type;
+        String key;
+        Object value;
+        MatParam built;
+        DeferredParamBuilder(VarType type,String key,Object value){
+            this.type=type;
+            this.key=key;
+            this.value=value;
+        }
+        MatParam get(Pipeline pipeline,PipelinePass pass){
+            if(built==null)built=new MatParam(type,key,null);
+            Object v=SmartObject.from(value).get(pipeline,pass);
+            built.setValue(v);
+            return built;
+
+        }
+    }
   
 
     @Override
     public Jme3GeometriesRenderPass useParam(final VarType type,final String key,final Object value){
-        final MatParam param=new MatParam(type,key,value);
-        useInput(key,param);
+        DeferredParamBuilder dmat=new DeferredParamBuilder(type,key,value);
+        useInput(key,dmat);
         return this;
     }
+
+    public Object clearParam(String key){
+        return useInput(key,null);
+        
+    }
+
 
     @Override
     public Jme3GeometriesRenderPass useParam(final MatParam param){
@@ -175,6 +200,10 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
                     break;
                 }
             }
+        }else if(key instanceof String && value instanceof DeferredParamBuilder){
+            DeferredParamBuilder dmp=(DeferredParamBuilder)value;
+            MatParam matp=dmp.get(pipeline,this);
+            defaultParams.add(matp);
         } else if(key instanceof String && value instanceof MatParam){
             if(value instanceof MatParamOverride){
                 worldOverrides.add((MatParamOverride)value);
@@ -202,9 +231,12 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
 
     @Override
     protected void afterIO(final Pipeline pipeline) {
-        worldCameraParam.setValue(WorldParams.updateAndGet(worldCamera).get());
-        worldTimerParam.setValue(WorldParams.updateAndGet(worldTimer, 1f).get());
-
+        if(worldCamera!=null){
+            worldCameraParam.setValue(WorldParams.updateAndGet(worldCamera).get());
+        }
+        if(worldTimer!=null){
+            worldTimerParam.setValue(WorldParams.updateAndGet(worldTimer, 1f).get());
+        }
         super.afterIO(pipeline);
 
     }
@@ -215,7 +247,6 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
     }
 
     public void renderGeometry(final Geometry geom,ViewPort vp) {        
-        geom.runControlRender(this.contextFactory.getContext().getRenderManager(), vp);
         renderGeometry(geom);
     }
 
@@ -247,6 +278,7 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
         final GLRenderer renderer= (GLRenderer) this.contextFactory.getContext().get().getRenderer();
         Jme3DebuggerAppState.beginSection(getName());
 
+        
         // Set output framebuffer
         final FrameBuffer outFb = getFrameBuffer(outColors, outDepth);
         renderer.setFrameBuffer(outFb);
@@ -257,6 +289,8 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
         final int w = getFrameBufferFactory().getFrameBufferWidth(outFb);
         final int h = getFrameBufferFactory().getFrameBufferHeight(outFb);
         MRT.setValue(outColors.size() > 1);
+
+        worldCamera.setPlaneState(0);
 
         beforeRender(pipeline, tpf, w, h, geoLists);
 
@@ -270,7 +304,7 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
         virtualViewPort.setClearStencil(false);
         virtualViewPort.setBackgroundColor(ColorRGBA.BlackNoAlpha);
 
-        
+        // renderer.clearBuffers(false, true, false);
 
         for (final GeometryList geoList : geoLists) {
             beforeGeometryListRender(pipeline, tpf, w, h, geoList);
@@ -302,7 +336,7 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
                 final SafeArrayList<MatParamOverride> worldOverrides = this.worldOverrides;
 
                 // Get shader (build source)
-                final Shader shader = tech.getShader(null, null, renderer.getCaps());
+                final Shader shader = tech.getShader(defaultParams, material.getParamsMap().values(),geoOverrides, worldOverrides, renderer.getCaps());
 
                 // Reset uniform state
                 MaterialHandler.clearUniformsSetByCurrent(shader);
@@ -354,76 +388,113 @@ public class Jme3GeometriesRenderPass extends Jme3FrameBufferPass<Jme3Geometries
     }
 
     @Override
-    protected void preAttach(final Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void postAttach(final Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void preDetach(final Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    protected void postDetach(final Pipeline pipeline) {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    protected void afterRun(final Pipeline pipeline, final float tpf) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public FrameBuffer getFrameBuffer(final List outColors, final Texture outDepth) {
+    public Jme3GeometriesRenderPass useBackgroundColor(ColorRGBA c) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void beforeRender(final Pipeline pipeline, final float tpf, final int w, final int h, final GeometryLists lists) {
+    public Jme3GeometriesRenderPass clearColor(boolean v) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Jme3GeometriesRenderPass clearDepth(boolean v) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Jme3GeometriesRenderPass clearStencil(boolean v) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isClearColor() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isClearDepth() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isClearStencil() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    protected void beforeRender(Pipeline pipeline, float tpf, int w, int h, GeometryLists lists) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void afterRender(final Pipeline pipeline, final float tpf, final int w, final int h, final GeometryLists lists) {
+    protected void afterRender(Pipeline pipeline, float tpf, int w, int h, GeometryLists lists) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void beforeGeometryListRender(final Pipeline pipeline, final float tpf, final int w, final int h, final GeometryList list) {
+    protected void beforeGeometryListRender(Pipeline pipeline, float tpf, int w, int h, GeometryList list) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void afterGeometryListRender(final Pipeline pipeline, final float tpf, final int w, final int h, final GeometryList list) {
+    protected void afterGeometryListRender(Pipeline pipeline, float tpf, int w, int h, GeometryList list) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void beforeGeometryRender(final Pipeline pipeline, final float tpf, final int w, final int h, final Geometry geo) {
+    protected void beforeGeometryRender(Pipeline pipeline, float tpf, int w, int h, Geometry geo) {
         // TODO Auto-generated method stub
 
     }
 
     @Override
-    public void afterGeometryRender(final Pipeline pipeline, final float tpf, final int w, final int h, final Geometry geo) {
+    protected void afterGeometryRender(Pipeline pipeline, float tpf, int w, int h, Geometry geo) {
         // TODO Auto-generated method stub
 
     }
+
+    @Override
+    protected void preAttach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void postAttach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void preDetach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void postDetach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    protected void afterRun(Pipeline pipeline, float tpf) {
+        // TODO Auto-generated method stub
+
+    }
+
+    
 
 }

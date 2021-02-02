@@ -44,6 +44,8 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.texture.FrameBuffer;
+
 import java.io.IOException;
 
 public class BillboardControl extends AbstractControl {
@@ -68,8 +70,8 @@ public class BillboardControl extends AbstractControl {
         Camera,
 
         /**
-          * Aligns this Billboard to the screen, but keeps the Y axis fixed.
-          */
+         * Aligns this Billboard to the screen, but keeps the Y axis fixed.
+         */
         AxialY,
 
         /**
@@ -87,12 +89,12 @@ public class BillboardControl extends AbstractControl {
     }
 
     // default implementation from AbstractControl is equivalent
-    //public Control cloneForSpatial(Spatial spatial) {
-    //    BillboardControl control = new BillboardControl();
-    //    control.alignment = this.alignment;
-    //    control.setSpatial(spatial);
-    //    return control;
-    //}
+    // public Control cloneForSpatial(Spatial spatial) {
+    // BillboardControl control = new BillboardControl();
+    // control.alignment = this.alignment;
+    // control.setSpatial(spatial);
+    // return control;
+    // }
 
     @Override
     protected void controlUpdate(float tpf) {
@@ -103,24 +105,24 @@ public class BillboardControl extends AbstractControl {
         Camera cam = vp.getCamera();
         rotateBillboard(cam);
     }
-    
-    private void fixRefreshFlags(){
+
+    private void fixRefreshFlags() {
         // force transforms to update below this node
         spatial.updateGeometricState();
-        
+
         // force world bound to update
         Spatial rootNode = spatial;
-        while (rootNode.getParent() != null){
+        while (rootNode.getParent() != null) {
             rootNode = rootNode.getParent();
         }
-        rootNode.getWorldBound(); 
+        rootNode.getWorldBound();
     }
 
     /**
      * rotate the billboard based on the type set
      *
      * @param cam
-     *            Camera
+     *                Camera
      */
     private void rotateBillboard(Camera cam) {
         switch (alignment) {
@@ -143,12 +145,11 @@ public class BillboardControl extends AbstractControl {
      * Aligns this Billboard so that it points to the camera position.
      *
      * @param camera
-     *            Camera
+     *                   Camera
      */
     private void rotateCameraAligned(Camera camera) {
-        look.set(camera.getLocation()).subtractLocal(
-                spatial.getWorldTranslation());
-        // co-opt left for our own purposes.
+        look.set(camera.getLocation()).subtractLocal(spatial.getWorldTranslation());
+        // coopt left for our own purposes.
         Vector3f xzp = left;
         // The xzp vector is the projection of the look vector on the xz plane
         xzp.set(look.x, 0, look.z);
@@ -184,7 +185,7 @@ public class BillboardControl extends AbstractControl {
      * camera's facing
      *
      * @param camera
-     *            Camera
+     *                   Camera
      */
     private void rotateScreenAligned(Camera camera) {
         // co-opt diff for our in direction:
@@ -193,9 +194,9 @@ public class BillboardControl extends AbstractControl {
         left.set(camera.getLeft()).negateLocal();
         orient.fromAxes(left, camera.getUp(), look);
         Node parent = spatial.getParent();
-        Quaternion rot=new Quaternion().fromRotationMatrix(orient);
-        if ( parent != null ) {
-            rot =  parent.getWorldRotation().inverse().multLocal(rot);
+        Quaternion rot = new Quaternion().fromRotationMatrix(orient);
+        if (parent != null) {
+            rot = parent.getWorldRotation().inverse().multLocal(rot);
             rot.normalizeLocal();
         }
         spatial.setLocalRotation(rot);
@@ -206,15 +207,15 @@ public class BillboardControl extends AbstractControl {
      * Rotate the billboard towards the camera, but keeping a given axis fixed.
      *
      * @param camera
-     *            Camera
+     *                   Camera
      */
     private void rotateAxial(Camera camera, Vector3f axis) {
         // Compute the additional rotation required for the billboard to face
         // the camera. To do this, the camera must be inverse-transformed into
         // the model space of the billboard.
-        look.set(camera.getLocation()).subtractLocal(
-                spatial.getWorldTranslation());   
-        spatial.getParent().getWorldRotation().mult(look, left); // co-opt left for our own purposes.
+        look.set(camera.getLocation()).subtractLocal(spatial.getWorldTranslation());
+        spatial.getParent().getWorldRotation().mult(look, left); // coopt left for our own
+        // purposes.
         left.x *= 1.0f / spatial.getWorldScale().x;
         left.y *= 1.0f / spatial.getWorldScale().y;
         left.z *= 1.0f / spatial.getWorldScale().z;
@@ -276,11 +277,9 @@ public class BillboardControl extends AbstractControl {
     }
 
     /**
-     * Sets the type of rotation this Billboard will have. The alignment can
-     * be Camera, Screen, AxialY, or AxialZ. Invalid alignments will
-     * assume no billboard rotation.
-     * 
-     * @param alignment the desired alignment (Camera/Screen/AxialY/AxialZ)
+     * Sets the type of rotation this Billboard will have. The alignment can be
+     * Camera, Screen, AxialY, or AxialZ. Invalid alignments will assume no
+     * billboard rotation.
      */
     public void setAlignment(Alignment alignment) {
         this.alignment = alignment;
@@ -305,4 +304,6 @@ public class BillboardControl extends AbstractControl {
         left = (Vector3f) capsule.readSavable("left", null);
         alignment = capsule.readEnum("alignment", Alignment.class, Alignment.Screen);
     }
+
+
 }
