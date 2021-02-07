@@ -449,7 +449,7 @@ jobs:
         run: |
            curl https://dl.min.io/client/mc/release/linux-amd64/mc -o /tmp/mc && chmod +x /tmp/mc
            /tmp/mc alias set jmeOS ${{ secrets.OBJECT_STORAGE_HOST }} ${{ secrets.OBJECT_STORAGE_USER }} ${{ secrets.OBJECT_STORAGE_PASSWORD }}
-           /tmp/mc --recursive cp dist/maven/* jmeOS/artifacts/
+           /tmp/mc cp --recursive  dist/maven/* jmeOS/artifacts/
            
       - name: Deploy to Maven Central
         run: |
