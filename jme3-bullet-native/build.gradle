@@ -274,3 +274,4 @@ class MyDownload extends DefaultTask {
         ant.get(src: sourceUrl, dest: target)
     }
 }
+
