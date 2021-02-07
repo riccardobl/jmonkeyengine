@@ -434,17 +434,28 @@ jobs:
           --data-binary @"$filename" \
           "$url"
             
-      - name: Deploy to bintray
+#       - name: Deploy to bintray
+#         run: |
+#           source .github/actions/tools/uploadToMaven.sh
+#           if [ "${{ secrets.BINTRAY_MAVEN_REPO }}" = "" ];
+#           then
+#             echo "Configure the following secrets to enable bintray deployment"
+#             echo "BINTRAY_MAVEN_REPO, BINTRAY_USER, BINTRAY_APIKEY"
+#           else
+#             uploadAllToMaven dist/maven/ https://api.bintray.com/maven/${{ secrets.BINTRAY_MAVEN_REPO }} ${{ secrets.BINTRAY_USER }} ${{ secrets.BINTRAY_APIKEY }} "https://github.com/${GITHUB_REPOSITORY}" "${{ secrets.BINTRAY_LICENSE }}"
+#           fi
+
+      - name: Deploy to Object Storage
         run: |
-          source .github/actions/tools/uploadToMaven.sh
-          if [ "${{ secrets.BINTRAY_MAVEN_REPO }}" = "" ];
-          then
-            echo "Configure the following secrets to enable bintray deployment"
-            echo "BINTRAY_MAVEN_REPO, BINTRAY_USER, BINTRAY_APIKEY"
-          else
-            uploadAllToMaven dist/maven/ https://api.bintray.com/maven/${{ secrets.BINTRAY_MAVEN_REPO }} ${{ secrets.BINTRAY_USER }} ${{ secrets.BINTRAY_APIKEY }} "https://github.com/${GITHUB_REPOSITORY}" "${{ secrets.BINTRAY_LICENSE }}"
-          fi
-      
+           curl https://dl.min.io/client/mc/release/linux-amd64/mc -o /tmp/mc && chmod +x /tmp/mc
+           /tmp/mc alias set jmeOS ${{ secrets.OBJECT_STORAGE_HOST }} ${{ secrets.OBJECT_STORAGE_USER }} ${{ secrets.OBJECT_STORAGE_PASSWORD }}
+           /tmp/mc --recursive cp dist/maven/* jmeOS/artifacts/
+           
+      - name: Deploy to Maven Central
+        run: |
+          cp -Rf  dist/maven  dist/mavenCentral
+          # rm
+           
       # - name: Deploy to github package registry
       #   run: |
       #     source .github/actions/tools/uploadToMaven.sh
