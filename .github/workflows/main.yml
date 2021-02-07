@@ -453,8 +453,12 @@ jobs:
            
       - name: Deploy to Maven Central
         run: |
+          # Prepare central deployment
           cp -Rf  dist/maven  dist/mavenCentral
-          # rm
+          # Remove artifacts that don't meet the requirements for central
+          rm -Rf dist/mavenCentral/org/jmonkeyengine/jme3-testdata
+          # Upload to central
+          # ??????
            
       # - name: Deploy to github package registry
       #   run: |
