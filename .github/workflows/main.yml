@@ -362,7 +362,7 @@ jobs:
               else
                 # Deploy snapshot
                 curl https://dl.min.io/client/mc/release/linux-amd64/mc -o /tmp/mc && chmod +x /tmp/mc
-                /tmp/mc alias set jmeOS ${{ secrets.OBJECT_STORAGE_HOST }} ${{ secrets.$OBJECT_STORAGE_USER }} ${{ secrets.$OBJECT_STORAGE_PASSWORD }}
+                /tmp/mc alias set jmeOS ${{ secrets.OBJECT_STORAGE_HOST }} ${{ secrets.OBJECT_STORAGE_USER }} ${{ secrets.OBJECT_STORAGE_PASSWORD }}
                 /tmp/mc cp dist/jme3-natives.zip jmeOS/native-snapshots/$GITHUB_SHA/jme3-natives.zip
              
                 # We reference the snapshot by writing its commit hash in  natives-snapshot.properties 
