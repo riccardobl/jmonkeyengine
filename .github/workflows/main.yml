@@ -354,20 +354,17 @@ jobs:
             then
               echo "No changes, skip."
             else
-              if [ "${{ secrets.BINTRAY_GENERIC_REPO }}" = "" ];
+            
+              if [ "${{ secrets.OBJECT_STORAGE_HOST }}" = "" ];
               then               
                 echo "Configure the following secrets to enable native snapshot deployment"
-                echo "BINTRAY_GENERIC_REPO, BINTRAY_USER, BINTRAY_APIKEY"           
+                echo "OBJECT_STORAGE_HOST, OBJECT_STORAGE_USER, OBJECT_STORAGE_PASSWORD"           
               else
                 # Deploy snapshot
-                bintray_uploadFile dist/jme3-natives.zip \
-                  $GITHUB_SHA/$GITHUB_SHA/jme3-natives.zip \
-                  ${{ secrets.BINTRAY_GENERIC_REPO }} "content" "natives" \
-                  ${{ secrets.BINTRAY_USER }} \
-                  ${{ secrets.BINTRAY_APIKEY }}  \
-                  "https://github.com/${GITHUB_REPOSITORY}" \
-                  "${{ secrets.BINTRAY_LICENSE }}" "true"
-
+                curl https://dl.min.io/client/mc/release/linux-amd64/mc -o /tmp/mc && chmod +x /tmp/mc
+                /tmp/mc alias set jmeOS $OBJECT_STORAGE_HOST $OBJECT_STORAGE_USER $OBJECT_STORAGE_PASSWORD
+                /tmp/mc cp dist/jme3-natives.zip jmeOS/native-snapshots/$GITHUB_SHA/jme3-natives.zip
+             
                 # We reference the snapshot by writing its commit hash in  natives-snapshot.properties 
                 echo "natives.snapshot=$GITHUB_SHA" > natives-snapshot.properties
                 
