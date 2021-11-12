@@ -916,7 +916,14 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             if (!override&&uniform.isSetByCurrentMaterial())  return;
             
             if (type.isTextureType()) {
-                renderer.setTexture(unit.textureUnit, (Texture) param.getValue());
+                try{
+                    renderer.setTexture(unit.textureUnit, (Texture) param.getValue());
+                } catch (TextureUnitException exception) {
+                    int numTexParams = unit.textureUnit + 1;
+                    String message = "Too many texture parameters ("
+                            + numTexParams + ") assigned\n to " + toString();
+                    throw new IllegalStateException(message);
+                }
                 uniform.setValue(VarType.Int, unit.textureUnit);
                 unit.textureUnit++;
             } else {

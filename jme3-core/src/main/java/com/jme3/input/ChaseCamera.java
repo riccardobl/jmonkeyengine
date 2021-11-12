@@ -1039,4 +1039,9 @@ public class ChaseCamera implements ActionListener, AnalogListener, Control, Jme
         }
         inputManager.addListener(this, CameraInput.CHASECAM_MOVELEFT, CameraInput.CHASECAM_MOVERIGHT);
     }
+
+    @Override
+    public Spatial getSpatial() {
+        return target;
+    }
 }

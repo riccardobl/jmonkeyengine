@@ -18,7 +18,7 @@ dependencies {
     compile project(':jme3-core')
     compile project(':jme3-desktop')
     compile project(':jme3-lwjgl3')
-    compile project(':jme3-bullet-native')
+    // compile project(':jme3-bullet-native')
 
 
     compileOnly 'com.github.polincdev:JesseModel:-SNAPSHOT'

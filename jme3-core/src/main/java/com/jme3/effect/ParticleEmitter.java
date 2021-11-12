@@ -113,7 +113,8 @@ public class ParticleEmitter extends Geometry {
     public static class ParticleEmitterControl implements Control, JmeCloneable {
 
         ParticleEmitter parentEmitter;
-
+        private Spatial spatial;
+        
         public ParticleEmitterControl() {
         }
 
@@ -143,6 +144,7 @@ public class ParticleEmitter extends Geometry {
 
         @Override
         public void setSpatial(Spatial spatial) {
+            this.spatial=spatial;
         }
 
         public void setEnabled(boolean enabled) {
@@ -169,6 +171,11 @@ public class ParticleEmitter extends Geometry {
 
         @Override
         public void read(JmeImporter im) throws IOException {
+        }
+
+        @Override
+        public Spatial getSpatial() {
+            return spatial;
         }
     }
 

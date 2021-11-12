@@ -279,7 +279,7 @@ public class NullRenderer implements Renderer {
     @Override
     public boolean isMainFrameBufferSrgb() {
         return false;
-
+    }
 
     @Override
     public void updateShaderStorageBufferObjectData(BufferObject bo) {

@@ -70,7 +70,7 @@ public class StatsView extends Node implements Control, JmeCloneable {
     private boolean enabled = true;
 
     private final StringBuilder stringBuilder = new StringBuilder();
-
+    private Spatial spatial;
     public StatsView(String name, AssetManager manager, Statistics stats){
         super(name);
 
@@ -135,6 +135,7 @@ public class StatsView extends Node implements Control, JmeCloneable {
 
     @Override
     public void setSpatial(Spatial spatial) {
+        this.spatial=spatial;
     }
 
     public void setEnabled(boolean enabled) {
@@ -148,6 +149,11 @@ public class StatsView extends Node implements Control, JmeCloneable {
 
     @Override
     public void render(RenderManager rm, ViewPort vp) {
+    }
+
+    @Override
+    public Spatial getSpatial() {
+        return this.spatial;
     }
 
 }
