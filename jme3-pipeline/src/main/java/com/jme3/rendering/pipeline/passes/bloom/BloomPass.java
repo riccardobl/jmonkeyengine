@@ -3,14 +3,19 @@ package com.jme3.rendering.pipeline.passes.bloom;
 import java.util.ArrayList;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
 import com.jme3.rendering.pipeline.Pipeline;
+import com.jme3.rendering.pipeline.jme3.context.Jme3ContextCreator;
 import com.jme3.rendering.pipeline.params.primitives.MutableBoolean;
 import com.jme3.rendering.pipeline.params.primitives.MutableNumber;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture;
-import com.jme3.rendering.pipeline.passes.MaterialPass;
+import com.jme3.rendering.pipeline.passes.Effect;
+import com.jme3.rendering.pipeline.renderer.RenderOutput;
+import com.jme3.rendering.pipeline.renderer.generic.RenderPass;
+import com.jme3.shader.VarType;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.Texture.MagFilter;
@@ -20,12 +25,19 @@ import com.jme3.texture.Texture.WrapMode;
 /**
  * BloomPass
  */
-public class BloomPass extends MaterialPass<BloomPass> {
+public class BloomPass extends Effect{
+    private RenderPass<? extends RenderPass> renderer;
+    private int inputI=0;
+    private int outI=0;
+    private static class PassIn{
+        private static int scene=0;
+    }
 
-
-    protected BloomPass(RenderManager renderManager, FrameBufferFactory fbFactory, AssetManager assetManager) {
-        super(renderManager, fbFactory, null, assetManager, "Pipeline/FastBloom/FastBloom.j3md");
-
+    public BloomPass(Jme3ContextCreator contextFactory,FrameBufferFactory fbFactory,AssetManager assetManager){
+        super(fbFactory);
+        Material mat=new Material(assetManager,"Pipeline/FastBloom/FastBloom.j3md");
+        renderer=contextFactory.newSurfaceRenderPass(mat, fbFactory);
+        getEffectPipeline().add(renderer);
     }
 
     public BloomPass brightPoint(MutableNumber<Float> brightPoint) {
@@ -43,83 +55,137 @@ public class BloomPass extends MaterialPass<BloomPass> {
         return this;
     }
 
-
-
-    // Vector2f outSize = new Vector2f();
-    // ArrayList<Vector2f> inSizes = new ArrayList<Vector2f>();
-    // int inSizesI = 0;
-
-    public BloomPass inColors(Texture2D... colors) {
-        for(int i=0;;i++)  if(useInput("Scene"+i,null)==null)break; //reset
-        for(int i=0;i<colors.length;i++) useInput("Scene" + (i), colors[i]);        
+    public BloomPass inColor(Texture texture){
+        useInput(PassIn.scene+inputI,texture);
+        inputI++; 
         return this;
     }
 
-    public BloomPass outColors(Texture2D... colors) {
-        for(int i=0;;i++)  if(useOutput(RENDER_OUT_COLOR +i,null)==null)break; //reset
-        for(int i=0;i<colors.length;i++) useOutput(RENDER_OUT_COLOR + (i), colors[i]);        
+ 
+    public BloomPass outColor(Texture outScene){
+        useOutput(RenderOutput.Color+outI,outScene);       
+        outI++;
         return this;
     }
+    
+    @Override
+    protected void onInput(Pipeline pipeline, Object key, Object value) {
+        if (key instanceof Number) {
+            int keyi = ((Number) key).intValue();
+            if (keyi >= PassIn.scene) {
+                if (value instanceof Texture) {
+                    SmartTexture stx = SmartTexture.from(value);
+
+                    stx.minFilter(MinFilter.BilinearNoMipMaps);
+                    stx.magFilter(MagFilter.Bilinear);
+                    stx.wrapAxis(WrapMode.EdgeClamp, WrapMode.EdgeClamp, WrapMode.EdgeClamp);
+
+                    value = stx.get(pipeline, this);
+                    
+                    renderer.useParam(VarType.Texture2D,"Scene",value);
+                }
+            }
+        }
+
+    }
+
 
     @Override
-    protected Object onMatParamInput(Pipeline pipeline, String skey, Object value) {
-        if (value instanceof Texture) {
-            SmartTexture stx = SmartTexture.from(value);
-
-            stx.minFilter(MinFilter.BilinearNoMipMaps);
-            stx.magFilter(MagFilter.Bilinear);
-            stx.wrapAxis(WrapMode.EdgeClamp, WrapMode.EdgeClamp, WrapMode.EdgeClamp);
-
-            value = stx.get(pipeline, this);
-
-            // if (value instanceof Texture2D) {
-            //     while (inSizesI - inSizes.size() >= 0) inSizes.add(new Vector2f());
-            //     Texture2D tx = (Texture2D) value;
-            //     inSizes.get(inSizesI++).set(tx.getImage().getWidth(), tx.getImage().getHeight());
-            // }
-            return value;
+    protected void onOutput(Pipeline pipeline, Object key, Object value) {
+        if(key instanceof Number){
+            int keyi=((Number)key).intValue();
+            if(keyi>=RenderOutput.Color){
+                renderer.outColor(keyi-RenderOutput.Color,(Texture)value);
+            }
         }
-        return super.onMatParamInput(pipeline, skey, value);
     }
 
     @Override
-    protected Object onMatParamOutput(Pipeline pipeline, int skey, Object value) {
-        if (value instanceof Texture) {
-            SmartTexture stx = SmartTexture.from(value);
+    protected void preAttach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+        
+    }
 
-            stx.minFilter(MinFilter.BilinearNoMipMaps);
-            stx.magFilter(MagFilter.Bilinear);
-            stx.wrapAxis(WrapMode.EdgeClamp, WrapMode.EdgeClamp, WrapMode.EdgeClamp);
+    @Override
+    protected void postAttach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+        
+    }
 
-            value = stx.get(pipeline, this);
+    @Override
+    protected void preDetach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+        
+    }
 
-            // if (value instanceof Texture2D) {
-            //     Texture2D tx = (Texture2D) value;
-            //     assert tx.getImage()!=null;
-            //     outSize.set(tx.getImage().getWidth(), tx.getImage().getHeight());
-            // }
-            return value;
-        }
-        return super.onMatParamOutput(pipeline, skey, value);
+    @Override
+    protected void postDetach(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected void beforeIO(Pipeline pipeline) {
+        // TODO Auto-generated method stub
+        
     }
 
     @Override
     protected void afterIO(Pipeline pipeline) {
-        super.afterIO(pipeline);
-        // boolean scale = false;
-
-        // while (inSizes.size() > inSizesI)  inSizes.remove(inSizes.size()-1);
-        // inSizes.trimToSize();
-        // inSizesI=0;
-        // if(inSizes.size()==0)return;
-
-        // for (Vector2f ins : inSizes) {
-        //     if (!ins.equals(outSize)) {
-        //         scale = true;
-        //         break;
-        //     }
-        // }
-        // useInput("Scale", scale);
+        // TODO Auto-generated method stub
+        
     }
 
+    @Override
+    protected void beforeRun(Pipeline pipeline, float tpf) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected void afterRun(Pipeline pipeline, float tpf) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    // @Override
+    // protected void onOutput(Pipeline pipeline, Object key, Object value) {
+    //     if (key instanceof Number) {
+    //         int keyi = ((Number) key).intValue();
+    //         if (keyi >= PassIn.scene) {
+    //             if (value instanceof Texture) {
+    //                 SmartTexture stx = SmartTexture.from(value);
+
+    //                 stx.minFilter(MinFilter.BilinearNoMipMaps);
+    //                 stx.magFilter(MagFilter.Bilinear);
+    //                 stx.wrapAxis(WrapMode.EdgeClamp, WrapMode.EdgeClamp, WrapMode.EdgeClamp);
+
+    //                 value = stx.get(pipeline, this);
+                    
+    //                 renderer.useParam(VarType.Texture2D,"Scene",value);
+    //             }
+    //         }
+    //     }
+
+    // }
+    // @Override
+    // protected Object onMatParamOutput(Pipeline pipeline, int skey, Object value) {
+    //     if (value instanceof Texture) {
+    //         SmartTexture stx = SmartTexture.from(value);
+
+    //         stx.minFilter(MinFilter.BilinearNoMipMaps);
+    //         stx.magFilter(MagFilter.Bilinear);
+    //         stx.wrapAxis(WrapMode.EdgeClamp, WrapMode.EdgeClamp, WrapMode.EdgeClamp);
+
+    //         value = stx.get(pipeline, this);
+
+    //         // if (value instanceof Texture2D) {
+    //         //     Texture2D tx = (Texture2D) value;
+    //         //     assert tx.getImage()!=null;
+    //         //     outSize.set(tx.getImage().getWidth(), tx.getImage().getHeight());
+    //         // }
+    //         return value;
+    //     }
+    //     return super.onMatParamOutput(pipeline, skey, value);
+    // }
 }

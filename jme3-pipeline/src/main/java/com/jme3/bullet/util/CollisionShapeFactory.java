@@ -38,8 +38,8 @@ import com.jme3.math.Matrix3f;
 import com.jme3.math.Transform;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.*;
-import com.jme3.terrain.geomipmap.TerrainPatch;
-import com.jme3.terrain.geomipmap.TerrainQuad;
+// import com.jme3.terrain.geomipmap.TerrainPatch;
+// import com.jme3.terrain.geomipmap.TerrainQuad;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -80,29 +80,32 @@ public class CollisionShapeFactory {
     private static CompoundCollisionShape createCompoundShape(Node realRootNode,
             Node rootNode, CompoundCollisionShape shape, boolean meshAccurate, boolean dynamic) {
         for (Spatial spatial : rootNode.getChildren()) {
-            if (spatial instanceof TerrainQuad) {
-                Boolean bool = spatial.getUserData(UserData.JME_PHYSICSIGNORE);
-                if (bool != null && bool.booleanValue()) {
-                    continue; // go to the next child in the loop
-                }
-                TerrainQuad terrain = (TerrainQuad) spatial;
-                Transform trans = getTransform(spatial, realRootNode);
-                shape.addChildShape(new HeightfieldCollisionShape(terrain.getHeightMap(), trans.getScale()),
-                        trans.getTranslation(),
-                        trans.getRotation().toRotationMatrix());
-            } else if (spatial instanceof Node) {
+            // if (spatial instanceof TerrainQuad) {
+            //     Boolean bool = spatial.getUserData(UserData.JME_PHYSICSIGNORE);
+            //     if (bool != null && bool.booleanValue()) {
+            //         continue; // go to the next child in the loop
+            //     }
+            //     TerrainQuad terrain = (TerrainQuad) spatial;
+            //     Transform trans = getTransform(spatial, realRootNode);
+            //     shape.addChildShape(new HeightfieldCollisionShape(terrain.getHeightMap(), trans.getScale()),
+            //             trans.getTranslation(),
+            //             trans.getRotation().toRotationMatrix());
+            // } else 
+            if (spatial instanceof Node) {
                 createCompoundShape(realRootNode, (Node) spatial, shape, meshAccurate, dynamic);
-            } else if (spatial instanceof TerrainPatch) {
-                Boolean bool = spatial.getUserData(UserData.JME_PHYSICSIGNORE);
-                if (bool != null && bool.booleanValue()) {
-                    continue; // go to the next child in the loop
-                }
-                TerrainPatch terrain = (TerrainPatch) spatial;
-                Transform trans = getTransform(spatial, realRootNode);
-                shape.addChildShape(new HeightfieldCollisionShape(terrain.getHeightMap(), terrain.getLocalScale()),
-                        trans.getTranslation(),
-                        trans.getRotation().toRotationMatrix());
-            } else if (spatial instanceof Geometry) {
+            } 
+            // else if (spatial instanceof TerrainPatch) {
+            //     Boolean bool = spatial.getUserData(UserData.JME_PHYSICSIGNORE);
+            //     if (bool != null && bool.booleanValue()) {
+            //         continue; // go to the next child in the loop
+            //     }
+            //     TerrainPatch terrain = (TerrainPatch) spatial;
+            //     Transform trans = getTransform(spatial, realRootNode);
+            //     shape.addChildShape(new HeightfieldCollisionShape(terrain.getHeightMap(), terrain.getLocalScale()),
+            //             trans.getTranslation(),
+            //             trans.getRotation().toRotationMatrix());
+            // } 
+            else if (spatial instanceof Geometry) {
                 Boolean bool = spatial.getUserData(UserData.JME_PHYSICSIGNORE);
                 if (bool != null && bool.booleanValue()) {
                     continue; // go to the next child in the loop
@@ -161,13 +164,14 @@ public class CollisionShapeFactory {
      * @return A MeshCollisionShape or a CompoundCollisionShape with MeshCollisionShapes as children if the supplied spatial is a Node. A HeightieldCollisionShape if a TerrainQuad was supplied.
      */
     public static CollisionShape createMeshShape(Spatial spatial) {
-        if (spatial instanceof TerrainQuad) {
-            TerrainQuad terrain = (TerrainQuad) spatial;
-            return new HeightfieldCollisionShape(terrain.getHeightMap(), terrain.getLocalScale());
-        } else if (spatial instanceof TerrainPatch) {
-            TerrainPatch terrain = (TerrainPatch) spatial;
-            return new HeightfieldCollisionShape(terrain.getHeightMap(), terrain.getLocalScale());
-        } else if (spatial instanceof Geometry) {
+        // if (spatial instanceof TerrainQuad) {
+        //     TerrainQuad terrain = (TerrainQuad) spatial;
+        //     return new HeightfieldCollisionShape(terrain.getHeightMap(), terrain.getLocalScale());
+        // } else if (spatial instanceof TerrainPatch) {
+        //     TerrainPatch terrain = (TerrainPatch) spatial;
+        //     return new HeightfieldCollisionShape(terrain.getHeightMap(), terrain.getLocalScale());
+        // } else 
+        if (spatial instanceof Geometry) {
             return createSingleMeshShape((Geometry) spatial, spatial);
         } else if (spatial instanceof Node) {
             return createMeshCompoundShape((Node) spatial);

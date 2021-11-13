@@ -1103,15 +1103,10 @@ public class DacLinks
         }
     }
 
-    boolean inScene=false;
-    @Override
-    public boolean isInScene() {
-        // TODO Auto-generated method stub
-        return inScene;
-    }
 
     @Override
-    public void setInScene(boolean v) {
-        inScene=v;
+    public void onPhysicsUpdate(float tpf) {
+        // TODO Auto-generated method stub
+        
     }
 }

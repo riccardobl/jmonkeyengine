@@ -17,6 +17,7 @@ import com.jme3.opencl.Buffer;
 import com.jme3.renderer.Caps;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
+import com.jme3.renderer.TextureUnitException;
 import com.jme3.renderer.queue.RenderQueue.Bucket;
 import com.jme3.scene.Geometry;
 import com.jme3.shader.*;
@@ -93,7 +94,14 @@ public class MaterialHandler {
             if (!override && uniform.isSetByCurrentMaterial()) return;
 
             if (type.isTextureType()) {
-                renderer.setTexture(unit.textureUnit, (Texture) param.getValue());
+                try{
+                    renderer.setTexture(unit.textureUnit, (Texture) param.getValue());
+                } catch (TextureUnitException exception) {
+                    int numTexParams = unit.textureUnit + 1;
+                    String message = "Too many texture parameters ("
+                            + numTexParams + ") assigned";
+                    throw new IllegalStateException(message);
+                }
                 uniform.setValue(VarType.Int, unit.textureUnit);
 
                 unit.textureUnit++;

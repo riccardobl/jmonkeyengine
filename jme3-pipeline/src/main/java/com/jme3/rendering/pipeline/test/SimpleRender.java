@@ -34,7 +34,6 @@ import com.jme3.rendering.pipeline.passes.FXAAPass;
 import com.jme3.rendering.pipeline.passes.GradientFogPass;
 import com.jme3.rendering.pipeline.passes.MSAASolverPass;
 import com.jme3.rendering.pipeline.passes.PrintPass;
-import com.jme3.rendering.pipeline.passes.RenderViewPortPass;
 import com.jme3.rendering.pipeline.logic.InputEventQueueExecutorPass;
 import com.jme3.rendering.pipeline.logic.LogicExecutorPass;
 import com.jme3.rendering.pipeline.logic.ControlExtractorPass;

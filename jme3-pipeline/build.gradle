@@ -13,21 +13,22 @@ repositories{
     			maven { url 'https://jitpack.io' }
 }
 dependencies {
-    testCompile project(':jme3-testdata')
+    testImplementation project(':jme3-testdata')
 
-    compile project(':jme3-core')
-    compile project(':jme3-desktop')
-    compile project(':jme3-lwjgl3')
+    implementation project(':jme3-core')
+    implementation project(':jme3-desktop')
+    implementation project(':jme3-lwjgl3')
     // compile project(':jme3-bullet-native')
+    implementation project(':jme3-terrain')
 
 
-    compileOnly 'com.github.polincdev:JesseModel:-SNAPSHOT'
-    compile project(':jme3-effects')
+    implementation 'com.github.polincdev:JesseModel:-SNAPSHOT'
+    implementation project(':jme3-effects')
 
-    compile project(':jme3-jogg')
-    compile project(':jme3-lwjgl3')
-    compile project(':jme3-networking')
-    compile project(':jme3-plugins')
-    compile project(':jme3-testdata')
+    implementation project(':jme3-jogg')
+    implementation project(':jme3-lwjgl3')
+    implementation project(':jme3-networking')
+    implementation project(':jme3-plugins')
+    implementation project(':jme3-testdata')
     
 }

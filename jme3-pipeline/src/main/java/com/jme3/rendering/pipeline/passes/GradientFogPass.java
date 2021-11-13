@@ -1,6 +1,7 @@
 package com.jme3.rendering.pipeline.passes;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.material.Material;
 import com.jme3.math.Matrix4f;
 import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
@@ -8,9 +9,13 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.rendering.pipeline.FrameBufferFactory;
 import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.rendering.pipeline.WorldParamsUtil.WorldParam;
+import com.jme3.rendering.pipeline.jme3.context.Jme3ContextCreator;
+import com.jme3.rendering.pipeline.jme3.renderer.WorldParams;
 import com.jme3.rendering.pipeline.params.primitives.MutableNumber;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture;
-import com.jme3.rendering.pipeline.renderer.gl.WorldParams;
+import com.jme3.rendering.pipeline.renderer.RenderOutput;
+import com.jme3.rendering.pipeline.renderer.generic.RenderPass;
+import com.jme3.shader.VarType;
 import com.jme3.system.Timer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.MagFilter;
@@ -21,38 +26,26 @@ import com.jme3.texture.Texture.WrapMode;
  * Gradient based fog
  * @author Riccardo Balbo
  */
-public class GradientFogPass  extends MaterialPass<GradientFogPass>{
+public class GradientFogPass  extends Effect{
     private  static final java.util.logging.Logger logger =  java.util.logging.Logger.getLogger( GradientFogPass.class.getName());
+    private RenderPass<? extends RenderPass> renderer;
+    private static class PassIn{
+        private static int depth=200;
+        private static int cam=100;
+        private static int scene=0;
+    }
+    private int inputI=0;
+    private int outI=0;
  
-    
-    // class SceneCam{
-    //     Camera cam;
-    //     final Vector2f frustumNearFar=new Vector2f();
-    //     final Matrix4f viewProjectionMatrixInverse=new Matrix4f();   
-    // }
-
-    // SceneCam cams[];
- 
-    public GradientFogPass(RenderManager renderManager,  Timer timer,FrameBufferFactory fbFactory,AssetManager assetManager){
-        super(renderManager,fbFactory,timer,assetManager,"Pipeline/GradientFog/GradientFog.j3md");
-        gradient(assetManager.loadTexture("Pipeline/GradientFog/defaultGradient.png"));
+    public GradientFogPass(Jme3ContextCreator contextFactory,FrameBufferFactory fbFactory,AssetManager assetManager,Timer timer){
+        super(fbFactory);
+        Material mat=new Material(assetManager,"Pipeline/GradientFog/GradientFog.j3md");
+        renderer=contextFactory.newSurfaceRenderPass(mat, fbFactory);
+        getEffectPipeline().add(renderer);
     }
 
 
-    public GradientFogPass sceneCamera(Camera... cams){
-        for(int i=0;;i++)   if(useInput("SceneCamera"+i,null)==null )break; //reset
-
-        // this.cams=new SceneCam[cams.length];
-        for(int i=0;i<cams.length;i++){
-            useInput("SceneCamera"+i,cams[i]);
-            // this.cams[i]=new SceneCam();
-            // this.cams[i].cam=cams[i];
-            // useInput("FrustumNearFar"+i,   this.cams[i].frustumNearFar);
-            // useInput("ViewProjectionMatrixInverse"+i,   this.cams[i].viewProjectionMatrixInverse);
-        }
-        return this;
-    }
-    
+      
     public GradientFogPass density(MutableNumber<Float> v){
         useInput("Density",v);
         return this;
@@ -67,34 +60,100 @@ public class GradientFogPass  extends MaterialPass<GradientFogPass>{
         return this;
     }
 
-
-    public GradientFogPass inColor(Texture...inColor ){
-        for(int i=0;;i++)   if(useInput("Scene"+i,null)==null )break; //reset
-        for(int i=0;i<inColor.length;i++)useInput("Scene"+i,inColor[i]);
+ 
+    public GradientFogPass inScene(Texture texture, Texture depth,Camera cam){
+        if(inputI>=100)throw new RuntimeException("Too many inputs");
+        useInput(PassIn.scene+inputI,texture);
+        useInput(PassIn.depth+inputI,depth);
+        useInput(PassIn.cam+inputI,cam);
+        inputI++; 
         return this;
     }
+    
 
-    public GradientFogPass inDepth(Texture...inDepth ){
-        for(int i=0;;i++) if(useInput("Depth"+i,null)==null  )break;//reset
-        for(int i=0;i<inDepth.length;i++)useInput("Depth"+i,inDepth[i]);
+    public GradientFogPass outColor(Texture outScene){
+        useOutput(RenderOutput.Color+outI,outScene);       
+        outI++;
         return this;
     }
-
-    public GradientFogPass outColor(Texture... outScene){
-        for(int i=0;;i++)   if(useOutput(RenderPass.RENDER_OUT_COLOR+i,null)==null )break; //reset
-        for(int i=0;i<outScene.length;i++)useOutput(RenderPass.RENDER_OUT_COLOR+i,outScene[i]);
-        return this;
-    }
+    
 
     @Override
     public void beforeIO(Pipeline pipeline){
-        super.beforeIO(pipeline);
-        // for(SceneCam sceneCam:cams){
-        //     sceneCam.frustumNearFar.set(sceneCam.cam.getFrustumNear(),sceneCam.cam.getFrustumFar());   
-        //     sceneCam.cam.getViewProjectionMatrix().invert(sceneCam.viewProjectionMatrixInverse);    
-        // }
+        renderer.resetOutColors();
+        renderer.resetOutDepth();
+        for(int i=0;;i++)  {
+            if(
+                renderer.clearParam("Scene"+i)==null
+                ||renderer.clearParam("SceneCamera"+i)==null
+                ||renderer.clearParam("Depth"+i)==null
+            )break; //reset
+        }
+    }
+
+    @Override
+    protected void onInput(Pipeline pipeline, Object key, Object value) {  
+        if(key instanceof Number){
+            int keyi=((Number)key).intValue();
+            if(keyi>=PassIn.cam){
+                renderer.useParam(VarType.Texture2D,"Depth"+(keyi-PassIn.depth),value);
+            }else if(keyi>=PassIn.cam){
+                renderer.useParam(VarType.ShaderStorageBufferObject,"SceneCam"+(keyi-PassIn.cam),WorldParams.updateAndGet((Camera)value));
+            }else if(keyi>=PassIn.scene){
+                renderer.useParam(VarType.Texture2D,"Scene"+keyi,value);
+            }
+        }        
+    }
+
+    @Override
+    protected void onOutput(Pipeline pipeline, Object key, Object value) {
+        if(key instanceof Number){
+            int keyi=((Number)key).intValue();
+            if(keyi>=RenderOutput.Color){
+                renderer.outColor(keyi-RenderOutput.Color,(Texture)value);
+            }
+        }
     }
 
 
+    @Override
+    protected void preAttach(Pipeline pipeline) {
+        
+    }
 
+
+    @Override
+    protected void postAttach(Pipeline pipeline) {
+        
+    }
+
+
+    @Override
+    protected void preDetach(Pipeline pipeline) {
+        
+    }
+
+
+    @Override
+    protected void postDetach(Pipeline pipeline) {
+        
+    }
+
+
+    @Override
+    protected void afterIO(Pipeline pipeline) {
+        
+    }
+
+
+    @Override
+    protected void beforeRun(Pipeline pipeline, float tpf) {
+        
+    }
+
+
+    @Override
+    protected void afterRun(Pipeline pipeline, float tpf) {
+        
+    }
 }

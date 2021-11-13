@@ -10,12 +10,12 @@ import com.jme3.rendering.pipeline.Pipeline;
 import com.jme3.rendering.pipeline.PipelinePass;
 import com.jme3.rendering.pipeline.PipelinePointerFactory;
 import com.jme3.rendering.pipeline.PipelineRunner;
+import com.jme3.rendering.pipeline.jme3.context.Jme3ContextCreator;
 import com.jme3.rendering.pipeline.params.primitives.MutableBoolean;
 import com.jme3.rendering.pipeline.params.primitives.MutableNumber;
 import com.jme3.rendering.pipeline.params.smartobj.SmartObject;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture;
 import com.jme3.rendering.pipeline.passes.Effect;
-import com.jme3.rendering.pipeline.passes.RenderPass;
 import com.jme3.rendering.pipeline.passes.bloom.BloomEffect.BloomLayer;
 import com.jme3.system.Timer;
 import com.jme3.texture.Texture;
@@ -29,21 +29,21 @@ import com.jme3.texture.Texture.WrapMode;
  */
 public class BloomEffectBuilder {
 
-    public static BloomEffectBuilder newBuilder(RenderManager renderManager, FrameBufferFactory fbFactory, AssetManager assetManager) {
-        return new BloomEffectBuilder(renderManager, fbFactory, assetManager);
+    public static BloomEffectBuilder newBuilder(Jme3ContextCreator contextFactory,FrameBufferFactory fbFactory,AssetManager assetManager) {
+        return new BloomEffectBuilder(contextFactory, fbFactory, assetManager);
     }
 
     public static class BloomLayerBuilder {
         private final int nLayer;
         private final BloomEffectBuilder effectBuilder;
-        private final RenderManager renderManager;
+        private final Jme3ContextCreator contextFactory;
         private final FrameBufferFactory fbFactory;
         private final AssetManager assetManager;
 
         private final BloomLayer layer=new BloomLayer();
 
-        private BloomLayerBuilder(RenderManager renderManager, FrameBufferFactory fbFactory, AssetManager assetManager, BloomEffectBuilder effectBuilder, int nLayer) {
-            this.renderManager = renderManager;
+        private BloomLayerBuilder(Jme3ContextCreator contextFactory, FrameBufferFactory fbFactory, AssetManager assetManager, BloomEffectBuilder effectBuilder, int nLayer) {
+            this.contextFactory = contextFactory;
             this.fbFactory = fbFactory;
             this.assetManager = assetManager;
             this.nLayer = nLayer;
@@ -65,7 +65,7 @@ public class BloomEffectBuilder {
         }
 
         public BloomLayerBuilder newBlurPass(Vector2f directionStrength) {
-            BloomPass pass = new BloomPass(renderManager, fbFactory, assetManager);
+            BloomPass pass = new BloomPass(contextFactory, fbFactory, assetManager);
             pass.direction(directionStrength);
             layer.passes.add(pass);
             return this;
@@ -81,7 +81,7 @@ public class BloomEffectBuilder {
 
             if (downscale) {
                 // Add one pass for downscale
-                BloomPass pass = new BloomPass(renderManager, fbFactory, assetManager);
+                BloomPass pass = new BloomPass(contextFactory, fbFactory, assetManager);
                 // we will use this pass also to extract
                 pass.extract(new MutableBoolean(extract));
                 extract = false;
@@ -117,15 +117,15 @@ public class BloomEffectBuilder {
     }
 
 
-    private final RenderManager renderManager;
+    private final Jme3ContextCreator contextFactory;
     private final FrameBufferFactory fbFactory;
     private final AssetManager assetManager;
     private final ArrayList<BloomLayer> layers = new ArrayList<BloomLayer>();
 
     private BloomLayerBuilder lastLayer;
 
-    private BloomEffectBuilder(RenderManager renderManager, FrameBufferFactory fbFactory, AssetManager assetManager) {
-        this.renderManager = renderManager;
+    private BloomEffectBuilder(Jme3ContextCreator contextFactory,FrameBufferFactory fbFactory,AssetManager assetManager) {
+        this.contextFactory = contextFactory;
         this.fbFactory = fbFactory;
         this.assetManager = assetManager;
     }
@@ -135,14 +135,14 @@ public class BloomEffectBuilder {
     }
 
     public BloomLayerBuilder newLayer() {
-        return lastLayer = new BloomLayerBuilder(renderManager, fbFactory, assetManager, this, layers.size());
+        return lastLayer = new BloomLayerBuilder(contextFactory, fbFactory, assetManager, this, layers.size());
     }
 
     public BloomEffect buildEffect() {
         if (lastLayer != null) {
             lastLayer.buildLayer();
         }
-        return new BloomEffect(renderManager,assetManager,fbFactory, layers.toArray(new BloomLayer[0]));
+        return new BloomEffect(contextFactory,assetManager,fbFactory, layers.toArray(new BloomLayer[0]));
     }
 
 }

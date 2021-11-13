@@ -11,7 +11,6 @@ import com.jme3.rendering.pipeline.PipelinePointerFactory;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture;
 import com.jme3.rendering.pipeline.params.smartobj.SmartTexture2D;
 
-import com.jme3.rendering.pipeline.test.TestApp;
 import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture2D;
 import com.jme3.texture.Image.Format;
