@@ -1,3 +1,4 @@
+
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -25,6 +26,7 @@ allprojects {
         duplicatesStrategy = 'include'
     }
 }
+
 
 // Set the license for IDEs that understand this
 ext.license = file("$rootDir/license.txt")

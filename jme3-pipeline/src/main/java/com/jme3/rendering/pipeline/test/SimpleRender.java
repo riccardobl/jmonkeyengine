@@ -93,7 +93,7 @@ public class SimpleRender implements SystemListener {
             e.printStackTrace();
         }
     }
-    
+        
 
     public void start(){
             AppSettings settings=new AppSettings(true);
