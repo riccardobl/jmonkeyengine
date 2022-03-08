@@ -45,6 +45,7 @@ name: Build jMonkeyEngine
 on:
   push:
     branches:
+      - ubop2
       - master
       - v3.5
       - v3.4
