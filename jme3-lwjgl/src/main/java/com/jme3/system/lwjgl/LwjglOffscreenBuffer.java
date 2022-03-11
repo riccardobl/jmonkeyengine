@@ -54,10 +54,11 @@ public class LwjglOffscreenBuffer extends LwjglContext implements Runnable {
     private int height;
     private PixelFormat pixelFormat;
 
-    protected void initInThread(){
+    @Override
+    public boolean initInThread(){
         if ((Pbuffer.getCapabilities() & Pbuffer.PBUFFER_SUPPORTED) == 0){
             logger.severe("Offscreen surfaces are not supported.");
-            return;
+            return false;
         }
 
         int samples = getNumSamplesToUse();
@@ -92,6 +93,7 @@ public class LwjglOffscreenBuffer extends LwjglContext implements Runnable {
         }
         super.internalCreate();
         listener.initialize();
+        return true;
     }
 
     protected boolean checkGLError(){
@@ -104,7 +106,7 @@ public class LwjglOffscreenBuffer extends LwjglContext implements Runnable {
         return true;
     }
 
-    protected void runLoop(){
+    protected void runLoop() {
         if (!created.get()) {
             throw new IllegalStateException();
         }
@@ -115,7 +117,7 @@ public class LwjglOffscreenBuffer extends LwjglContext implements Runnable {
             try {
                 pbuffer = new Pbuffer(width, height, pixelFormat, null);
                 pbuffer.makeCurrent();
-                
+
                 // Context MUST be reset here to avoid invalid objects!
                 renderer.invalidateState();
             } catch (LWJGLException ex) {
@@ -127,7 +129,7 @@ public class LwjglOffscreenBuffer extends LwjglContext implements Runnable {
         assert checkGLError();
 
         renderer.postFrame();
-        
+
         // Need to flush GL commands 
         // to see any result on the pbuffer's front buffer.
         GL11.glFlush();
@@ -138,7 +140,8 @@ public class LwjglOffscreenBuffer extends LwjglContext implements Runnable {
         }
     }
 
-    protected void deinitInThread(){
+    @Override
+    public void deinitInThread(){
         renderable.set(false);
 
         listener.destroy();

@@ -307,7 +307,8 @@ public abstract class LwjglWindowVR extends LwjglContextVR implements Runnable {
     /**
      * Does LWJGL display initialization in the OpenGL thread
      */
-    protected boolean initInThread() {
+    @Override
+    public boolean initInThread() {
         try {
             if (!JmeSystem.isLowPermissions()) {
                 // Enable uncaught exception handler only for current thread
@@ -431,8 +432,8 @@ public abstract class LwjglWindowVR extends LwjglContextVR implements Runnable {
     /**
      * De-initialize in the OpenGL thread.
      */
-
-    protected void deinitInThread() {
+    @Override
+    public void deinitInThread() {
         listener.destroy();
 
         destroyContext();

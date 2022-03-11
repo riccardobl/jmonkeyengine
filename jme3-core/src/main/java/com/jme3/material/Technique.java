@@ -44,6 +44,8 @@ import com.jme3.shader.Shader;
 import com.jme3.shader.VarType;
 import com.jme3.util.ListMap;
 import com.jme3.util.SafeArrayList;
+
+import java.util.Collection;
 import java.util.EnumSet;
 
 /**
@@ -123,6 +125,22 @@ public final class Technique {
             }
         }
     }
+    
+    private void defineParams(DefineList defineList, Collection<? extends MatParam> params) {
+        for (MatParam param : params) {
+            if (param instanceof MatParamOverride&&!((MatParamOverride)param).isEnabled()) {
+                continue;
+            }
+            Integer defineId = def.getShaderParamDefineId(param.name);
+            if (defineId != null) {
+                if (def.getDefineIdType(defineId) == param.type) {
+                    defineList.set(defineId, param.type, param.value);
+                }
+            }
+        }
+    }
+    
+ 
 
     /**
      * Called by the material to determine which shader to use for rendering.
@@ -151,6 +169,33 @@ public final class Technique {
         }
 
         return logic.makeCurrent(assetManager, renderManager, rendererCaps, lights, dynamicDefines);
+    }
+
+
+    public Shader getShader(Collection<? extends MatParam> defaultParams, Collection<? extends MatParam> matParams,Collection<? extends MatParam> geoParams, Collection<? extends MatParam> worldParams,EnumSet<Caps> rendererCaps) {
+        AssetManager assetManager = owner.getMaterialDef().getAssetManager();
+
+        dynamicDefines.clear();
+
+        if (defaultParams != null) {
+            defineParams(dynamicDefines, defaultParams);
+        }
+        
+        if (matParams != null) {
+            defineParams(dynamicDefines, matParams);
+        }
+
+        if (geoParams != null) {
+            defineParams(dynamicDefines, geoParams);
+        }
+
+        if (worldParams != null) {
+            defineParams(dynamicDefines, worldParams);
+        }
+ 
+   
+        return def.getShader(assetManager, rendererCaps, dynamicDefines);
+
     }
     
     /**

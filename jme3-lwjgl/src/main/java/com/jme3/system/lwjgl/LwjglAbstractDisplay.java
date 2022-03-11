@@ -96,7 +96,8 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
      * 
      * @return true if successful, otherwise false
      */
-    protected boolean initInThread() {
+    @Override
+    public boolean initInThread() {
         try {
             if (!JmeSystem.isLowPermissions()) {
                 // Enable uncaught exception handler only for current thread
@@ -201,7 +202,8 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
     /**
      * De-initialize in the OpenGL thread.
      */
-    protected void deinitInThread(){
+    @Override
+    public void deinitInThread(){
         destroyContext();
 
         listener.destroy();

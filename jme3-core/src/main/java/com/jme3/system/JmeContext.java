@@ -187,4 +187,15 @@ public interface JmeContext {
      */
     public void destroy(boolean waitFor);
 
+    public default boolean runOnce(){
+        return false;
+    }
+
+    public default boolean initInThread(){
+        return false;           
+    }
+
+    public default void deinitInThread(){
+
+    }
 }

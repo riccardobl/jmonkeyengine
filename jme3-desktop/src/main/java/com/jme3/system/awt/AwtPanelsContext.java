@@ -190,11 +190,13 @@ public class AwtPanelsContext implements JmeContext {
         return panel;
     }
 
-    private void initInThread(){
+    @Override
+    public boolean initInThread(){
         listener.initialize();
+        return true;
     }
 
-    private void updateInThread(){
+    public void updateInThread(){
         // Check if throttle required
         boolean needThrottle = true;
 

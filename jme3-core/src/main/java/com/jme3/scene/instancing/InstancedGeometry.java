@@ -220,6 +220,11 @@ public class InstancedGeometry extends Geometry {
         return geometries.length;
     }
 
+
+    public int getActualNumInstances() {
+        return firstUnusedIndex - numCulledGeometries;
+    }
+
     /**
      * @return The number of instances are visible by camera.
      */
@@ -256,13 +261,13 @@ public class InstancedGeometry extends Geometry {
             InstancedNode.setGeometryStartIndex2(geometries[idx2], idx2);
         }
     }
-
+    int numCulledGeometries;
     public void updateInstances() {
         FloatBuffer fb = (FloatBuffer) transformInstanceData.getData();
         fb.limit(fb.capacity());
         fb.position(0);
 
-        int numCulledGeometries = 0;
+        numCulledGeometries = 0;
         TempVars vars = TempVars.get();
         {
             float[] temp = vars.matrixWrite;

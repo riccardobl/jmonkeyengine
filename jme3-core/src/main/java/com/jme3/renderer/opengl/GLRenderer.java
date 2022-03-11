@@ -2889,6 +2889,11 @@ public final class GLRenderer implements Renderer {
         return -1;
     }
 
+
+    public RenderContext getContext() {
+        return this.context;
+    }
+
     @Override
     public void updateShaderStorageBufferObjectData(BufferObject bo) {
         if (!caps.contains(Caps.ShaderStorageBufferObject)) throw new IllegalArgumentException("The current video hardware doesn't support shader storage buffer objects ");

@@ -1021,6 +1021,12 @@ public class ALAudioRenderer implements AudioRenderer, Runnable {
         }
     }
 
+
+    @Override
+    public Listener getListener(){
+        return this.listener;
+    }
+    
     @Override
     public void pauseAll() {
         if (!supportPauseDevice) {

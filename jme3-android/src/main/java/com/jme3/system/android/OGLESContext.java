@@ -189,7 +189,8 @@ public class OGLESContext implements JmeContext, GLSurfaceView.Renderer, SoftTex
         }
     }
 
-    protected void initInThread() {
+    @Override
+    public boolean initInThread() {
         created.set(true);
 
         logger.fine("OGLESContext create");
@@ -217,12 +218,14 @@ public class OGLESContext implements JmeContext, GLSurfaceView.Renderer, SoftTex
         JmeSystem.setSoftTextDialogInput(this);
 
         needClose.set(false);
+        return true;
     }
 
     /**
      * De-initialize in the OpenGL thread.
      */
-    protected void deinitInThread() {
+    @Override
+    public void deinitInThread() {
         if (renderable.get()) {
             created.set(false);
             if (renderer != null) {

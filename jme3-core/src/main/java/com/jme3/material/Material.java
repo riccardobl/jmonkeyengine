@@ -754,6 +754,32 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
     /**
      * Select the technique to use for rendering this material.
      * <p>
+     * Any candidate technique for selection (either default or named) must be
+     * verified to be compatible with the system, for that, the
+     * <code>renderManager</code> is queried for capabilities.
+     *
+     * @param name
+     *            The name of the technique to select, pass
+     *            {@link TechniqueDef#DEFAULT_TECHNIQUE_NAME} to select one of
+     *            the default techniques.
+     * @param renderManager
+     *            The {@link RenderManager render manager} to query for
+     *            capabilities.
+     *
+     * @throws IllegalArgumentException
+     *             If no technique exists with the given name.
+     * @throws UnsupportedOperationException
+     *             If no candidate technique supports the system capabilities.
+     */
+    public void selectTechnique(String name, final RenderManager renderManager) {
+        EnumSet<Caps> rendererCaps = renderManager.getRenderer().getCaps();
+        LightMode preferredLightMode=renderManager.getPreferredLightMode();
+        selectTechnique(name, rendererCaps, preferredLightMode);
+    }
+
+    /**
+     * Select the technique to use for rendering this material.
+     * <p>
      * Any candidate technique for selection (either default or named)
      * must be verified to be compatible with the system, for that, the
      * <code>renderManager</code> is queried for capabilities.
@@ -761,32 +787,31 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
      * @param name The name of the technique to select, pass
      * {@link TechniqueDef#DEFAULT_TECHNIQUE_NAME} to select one of the default
      * techniques.
-     * @param renderManager The {@link RenderManager render manager}
-     * to query for capabilities.
+     * @param rendererCaps The renderer capabilities
+     * @param preferredLightMode The preferred light mode used to calculate techniques weight (null = no preferred mode)
      *
      * @throws IllegalArgumentException If no technique exists with the given
      * name.
      * @throws UnsupportedOperationException If no candidate technique supports
      * the system capabilities.
      */
-    public void selectTechnique(String name, final RenderManager renderManager) {
+    public void selectTechnique(String name, EnumSet<Caps> rendererCaps, LightMode preferredLightMode) {
         // check if already created
         Technique tech = techniques.get(name);
         // When choosing technique, we choose one that
         // supports all the caps.
         if (tech == null) {
-            EnumSet<Caps> rendererCaps = renderManager.getRenderer().getCaps();
             List<TechniqueDef> techDefs = def.getTechniqueDefs(name);
             if (techDefs == null || techDefs.isEmpty()) {
-                throw new IllegalArgumentException(
-                        String.format("The requested technique %s is not available on material %s", name, def.getName()));
+                throw new IllegalArgumentException(String.format("The requested technique %s is not available on material %s", name, def.getName()));
             }
 
             TechniqueDef lastTech = null;
             float weight = 0;
             for (TechniqueDef techDef : techDefs) {
                 if (rendererCaps.containsAll(techDef.getRequiredCaps())) {
-                    float techWeight = techDef.getWeight() + (techDef.getLightMode() == renderManager.getPreferredLightMode() ? 10f : 0);
+                    float techWeight = techDef.getWeight() ;
+                    if(preferredLightMode != null) techWeight+= (techDef.getLightMode() == preferredLightMode ? 10f : 0);
                     if (techWeight > weight) {
                         tech = new Technique(this, techDef);
                         techniques.put(name, tech);
@@ -797,10 +822,8 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
             }
             if (tech == null) {
                 throw new UnsupportedOperationException(
-                        String.format("No technique '%s' on material "
-                                + "'%s' is supported by the video hardware. "
-                                + "The capabilities %s are required.",
-                                name, def.getName(), lastTech.getRequiredCaps()));
+                        String.format("No technique '%s' on material " + "'%s' is supported by the video hardware. " + "The capabilities %s are required.", name, def.getName(),
+                                lastTech.getRequiredCaps()));
             }
             if (logger.isLoggable(Level.FINE)) {
                 logger.log(Level.FINE, this.getMaterialDef().getName() + " selected technique def " + tech.getDef());
@@ -817,6 +840,7 @@ public class Material implements CloneableSmartAsset, Cloneable, Savable {
         // shader was changed
         sortingId = -1;
     }
+
 
     private void applyOverrides(Renderer renderer, Shader shader, SafeArrayList<MatParamOverride> overrides, BindUnits bindUnits) {
         for (MatParamOverride override : overrides.getArray()) {
