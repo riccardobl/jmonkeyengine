@@ -67,10 +67,10 @@ public class StructUtils {
             Field[] fields = structClass.getDeclaredFields();
             for (Field field : fields) {
                 field.setAccessible(true);
-                if (classFields != null) classFields.add(field);
 
                 Object o = field.get(struct);
                 if (o instanceof StructField) {
+                    if (classFields != null) classFields.add(field);
                     StructField<?> so = (StructField<?>) o;
                     structFields.add(so);
                 }
