@@ -140,7 +140,7 @@ public class StructUtils {
             int start = serializer.align(pos + 1, basicAlignment);
             int end = start + length - 1;
 
-            if ((i == fields.size() - 1) || f.getDepth() > fields.get(i + 1).getDepth()) {
+            if ((i == fields.size() - 1) || f.getGroup()!= fields.get(i + 1).getGroup()){// > fields.get(i + 1).getDepth()) {
                 end = (serializer.align(end, 16)) - 1;
             }
 
