@@ -65,6 +65,7 @@ import com.jme3.texture.image.LastTextureState;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.ListMap;
 import com.jme3.util.MipMapGenerator;
+import com.jme3.util.NativeObject;
 import com.jme3.util.NativeObjectManager;
 
 import jme3tools.shader.ShaderDebug;
@@ -1352,21 +1353,24 @@ public final class GLRenderer implements Renderer {
 
         switch (bufferType) {
             case UniformBufferObject: {
-                // update shader bindpoint if needed
-                if (bufferBlock.isUpdateNeeded() || bufferBlock.getLocation() != bindingPoint) {
+                setUniformBufferObject(bindingPoint, bufferObject); // rebind buffer if needed
+                if (bufferBlock.isUpdateNeeded()) {
                     int blockIndex = gl3.glGetUniformBlockIndex(shaderId, bufferBlock.getName());
-                    gl3.glBindBufferBase(GL3.GL_UNIFORM_BUFFER, bindingPoint, bufferObject.getId());
-                    if (blockIndex != -1) gl3.glUniformBlockBinding(shaderId, blockIndex, bindingPoint);
-                    bufferBlock.setLocation(bindingPoint);
+                    bufferBlock.setLocation(blockIndex);
+                    if (bufferBlock.getLocation() != NativeObject.INVALID_ID) {
+                        gl3.glUniformBlockBinding(shaderId, bufferBlock.getLocation(), bindingPoint);
+                    } 
                 }
                 break;
             }
             case ShaderStorageBufferObject: {
-                // update shader bindpoint if needed
-                if (bufferBlock.isUpdateNeeded() || bufferBlock.getLocation() != bindingPoint) {
+                setShaderStorageBufferObject(bindingPoint, bufferObject); // rebind buffer if needed
+                if (bufferBlock.isUpdateNeeded() ) {
                     int blockIndex = gl4.glGetProgramResourceIndex(shaderId, GL4.GL_SHADER_STORAGE_BLOCK, bufferBlock.getName());
-                    if (blockIndex != -1) gl4.glShaderStorageBlockBinding(shaderId, blockIndex, bindingPoint);
-                    bufferBlock.setLocation(bindingPoint);
+                    bufferBlock.setLocation(blockIndex);
+                    if (bufferBlock.getLocation() != NativeObject.INVALID_ID) {
+                        gl4.glShaderStorageBlockBinding(shaderId, bufferBlock.getLocation(), bindingPoint);
+                    }
                 }
                 break;
             }
