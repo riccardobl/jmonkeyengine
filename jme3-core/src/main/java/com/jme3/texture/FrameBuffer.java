@@ -842,4 +842,16 @@ public class FrameBuffer extends NativeObject {
     public boolean isSrgb() {
         return srgb;
     }
+
+    private Boolean mipsGenerationHint = null;
+
+    @Deprecated
+    public void setMipsGenerationHint(Boolean v) {
+        mipsGenerationHint = v;
+    }
+
+    @Deprecated
+    public Boolean hasMipsGenerationHint() {
+        return mipsGenerationHint;
+    }
 }

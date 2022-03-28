@@ -106,6 +106,7 @@ public final class GLRenderer implements Renderer {
     private int defaultAnisotropicFilter = 1;
     private boolean linearizeSrgbImages;
     private HashSet<String> extensions;
+    private boolean generateMipmapsForFramebuffers = true;
 
     private final GL gl;
     private final GL2 gl2;
@@ -117,12 +118,16 @@ public final class GLRenderer implements Renderer {
 
     public GLRenderer(GL gl, GLExt glext, GLFbo glfbo) {
         this.gl = gl;
-        this.gl2 = gl instanceof GL2 ? (GL2)gl : null;
-        this.gl3 = gl instanceof GL3 ? (GL3)gl : null;
-        this.gl4 = gl instanceof GL4 ? (GL4)gl : null;
+        this.gl2 = gl instanceof GL2 ? (GL2) gl : null;
+        this.gl3 = gl instanceof GL3 ? (GL3) gl : null;
+        this.gl4 = gl instanceof GL4 ? (GL4) gl : null;
         this.glfbo = glfbo;
         this.glext = glext;
         this.texUtil = new TextureUtil(gl, gl2, glext);
+    }
+    
+    public void setGenerateMipMapsForFrameBuffers(boolean v) {
+        generateMipmapsForFramebuffers = v;
     }
 
     @Override
@@ -130,7 +135,7 @@ public final class GLRenderer implements Renderer {
         return statistics;
     }
 
-    @Override
+    @Override 
     public EnumSet<Caps> getCaps() {
         return caps;
     }
@@ -2074,7 +2079,7 @@ public final class GLRenderer implements Renderer {
         }
 
         // generate mipmaps for last FB if needed
-        if (context.boundFB != null) {
+        if (context.boundFB != null && (context.boundFB.hasMipsGenerationHint()!=null?context.boundFB.hasMipsGenerationHint():generateMipmapsForFramebuffers)) {
             for (int i = 0; i < context.boundFB.getNumColorBuffers(); i++) {
                 RenderBuffer rb = context.boundFB.getColorBuffer(i);
                 Texture tex = rb.getTexture();
