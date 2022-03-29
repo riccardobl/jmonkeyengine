@@ -527,6 +527,16 @@ public interface Renderer {
      */
     public boolean isMainFrameBufferSrgb();
     public void setShaderStorageBufferObject(int bindingPoint, BufferObject bufferObject) ;
-    public void setUniformBufferObject(int bindingPoint, BufferObject bufferObject) ;
+
+    public void setUniformBufferObject(int bindingPoint, BufferObject bufferObject);
+    
+
+    public default void popDebugGroup() {
+     
+    }
+
+    public default void pushDebugGroup(String name) {
+ 
+    }
     
 }

@@ -75,6 +75,7 @@ public class BufferObject extends NativeObject implements Savable {
 
     protected ByteBuffer data = null;
     protected ArrayList<BufferRegion> regions = new ArrayList<BufferRegion>();
+    private String name;
 
     public BufferObject() {
         super();
@@ -334,12 +335,21 @@ public class BufferObject extends NativeObject implements Savable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName()).append("{\n");
+        sb.append(getName()).append("{\n");
         for (BufferRegion r : regions) {
             sb.append("    ").append(r).append("\n");
         }
         sb.append("}");
         return sb.toString();
+    }
+
+
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
     }
 
 }
