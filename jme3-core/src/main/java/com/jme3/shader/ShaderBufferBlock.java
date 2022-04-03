@@ -63,6 +63,7 @@ public class ShaderBufferBlock extends ShaderVariable {
         if (bufferObject == null) {
             throw new IllegalArgumentException("for storage block " + name + ": storageData cannot be null");
         }
+        if (bufferObject == this.bufferObject && type == this.type) return;
         this.bufferObject = bufferObject;
         this.bufferObjectRef = new WeakReference<BufferObject>(bufferObject);
         this.type = type;
