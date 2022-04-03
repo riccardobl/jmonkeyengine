@@ -20,9 +20,9 @@ public class SubStructArrayField<T extends Struct> extends StructField<T[]> {
     private void initializeToZero(Class<? extends T> structClass) {
         for (int i = 0; i < value.length; i++) {
             if (value[i] == null) try {
-                value[i] = structClass.newInstance();
+                value[i] = structClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                throw new RuntimeException("Can't create new instance of " + structClass + " default constructor is missing?");
+                throw new RuntimeException("Can't create new instance of " + structClass + " default constructor is missing? ",e);
             }
         }
     }
