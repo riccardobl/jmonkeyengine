@@ -1,6 +1,7 @@
 package com.jme3.util.struct.fields;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 
 import com.jme3.util.struct.Struct;
 import com.jme3.util.struct.StructField;
@@ -20,7 +21,9 @@ public class SubStructArrayField<T extends Struct> extends StructField<T[]> {
     private void initializeToZero(Class<? extends T> structClass) {
         for (int i = 0; i < value.length; i++) {
             if (value[i] == null) try {
-                value[i] = structClass.getDeclaredConstructor().newInstance();
+                Constructor<? extends T> constructor = structClass.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                value[i] = constructor.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException("Can't create new instance of " + structClass + " default constructor is missing? ",e);
             }
