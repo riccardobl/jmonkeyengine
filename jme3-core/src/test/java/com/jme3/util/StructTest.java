@@ -60,7 +60,7 @@ public class StructTest {
 
         ByteBuffer bbf = bo.getData();
 
-        String expectedData = "100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 0 0 0 0 0 0 72 67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -106 67 0 0 0 0 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 100 0 0 0 0 0 -56 66 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ";
+        String expectedData = "100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 0 0 0 0 0 0 72 67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -106 67 0 0 0 0 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ";
         String actualData = "";
         while (bbf.hasRemaining()) {
             actualData += bbf.get() + " ";
@@ -78,8 +78,8 @@ public class StructTest {
         java.util.List<StructField<?>> fields = StructUtils.getFields(test);
         StructUtils.setStd140BufferLayout(fields, layout, bo);
         int bolength = bo.getData().limit();
-        assertEquals(112, bolength);
-        assertEquals(112, bo.getData().capacity());
+        assertEquals(128, bolength);
+        assertEquals(128, bo.getData().capacity());
         
         int nUpdated;
 
@@ -96,7 +96,7 @@ public class StructTest {
             int end = region.getEnd();
             System.out.println("Update from " + start + " to " + end + " in buffer of length " + bolength);
             assertEquals(0, start);
-            assertEquals(111,end);
+            assertEquals(127,end);
             assertTrue(region.isFullBufferRegion());
             assertTrue(region.isDirty());
             region.clearDirty();
@@ -172,8 +172,8 @@ public class StructTest {
                 assertEquals(4, start);
                 assertEquals(7, end);
             } else {
-                assertEquals(96, start);
-                assertEquals(111, end);
+                assertEquals(112, start);
+                assertEquals(127, end);
             }
             assertFalse(region.isFullBufferRegion());
             assertTrue(region.isDirty());
