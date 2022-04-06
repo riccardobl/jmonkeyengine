@@ -307,6 +307,16 @@ public class SpotLight extends Light {
     }
 
     @Override
+    public float distance(Spatial sp) {
+        if (sp.getWorldBound() != null) {
+            BoundingVolume bv = sp.getWorldBound();
+            return bv.distanceSquaredTo(position);
+        } else {
+            return sp.getWorldTranslation().distanceSquared(position);
+        }
+    }
+
+    @Override
     public Type getType() {
         return Type.Spot;
     }

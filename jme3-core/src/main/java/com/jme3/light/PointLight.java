@@ -118,6 +118,16 @@ public class PointLight extends Light {
         }
     }
 
+    @Override
+    public float distance(Spatial sp) {
+        if (sp.getWorldBound() != null) {
+            BoundingVolume bv = sp.getWorldBound();
+            return bv.distanceSquaredTo(position);
+        } else {
+            return sp.getWorldTranslation().distanceSquared(position);
+        }
+    }
+    
     /**
      * Returns the world space position of the light.
      *

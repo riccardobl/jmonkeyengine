@@ -285,6 +285,8 @@ public abstract class Light extends StatefulObject implements Savable, Cloneable
      */
     protected abstract void computeLastDistance(Spatial owner);
     
+    public abstract float distance(Spatial spatial);
+
     /**
      * Returns the light type
      * 

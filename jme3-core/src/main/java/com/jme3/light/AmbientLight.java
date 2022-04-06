@@ -79,6 +79,12 @@ public class AmbientLight extends Light {
     }
 
     @Override
+    public float distance(Spatial sp) {
+        // ambient lights must always be before directional lights.
+        return -2;
+    }
+
+    @Override
     public Type getType() {
         return Type.Ambient;
     }
