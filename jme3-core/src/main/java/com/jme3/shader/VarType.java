@@ -38,7 +38,7 @@ public enum VarType {
     Float("float",float.class,Float.class),
     Vector2("vec2",Vector2f.class),
     Vector3("vec3",Vector3f.class),
-    Vector4("vec4",Vector4f.class),
+    Vector4("vec4",Vector4f.class, ColorRGBA.class),
 
     IntArray(true,false,"int",int[].class,Integer[].class),
     FloatArray(true,false,"float",float[].class,Float[].class),
@@ -54,12 +54,12 @@ public enum VarType {
     Matrix3Array(true,false,"mat3",Matrix3f[].class),
     Matrix4Array(true,false,"mat4",Matrix4f[].class),
     
-    TextureBuffer(false,true,"sampler1D|sampler1DShadow",Void.class), // wtf?
-    Texture2D(false,true,"sampler2D|sampler2DShadow",Texture2D.class),
-    Texture3D(false,true,"sampler3D",Texture3D.class),
-    TextureArray(false,true,"sampler2DArray|sampler2DArrayShadow",TextureArray.class),
-    TextureCubeMap(false,true,"samplerCube",TextureCubeMap.class),
-    Int("int",int.class),
+    TextureBuffer(false,true,"sampler1D|sampler1DShadow"), 
+    Texture2D(false,true,"sampler2D|sampler2DShadow",Texture2D.class,Texture.class),
+    Texture3D(false,true,"sampler3D",Texture3D.class,Texture.class),
+    TextureArray(false,true,"sampler2DArray|sampler2DArrayShadow",TextureArray.class,Texture.class),
+    TextureCubeMap(false,true,"samplerCube",TextureCubeMap.class,Texture.class),
+    Int("int",int.class,Integer.class),
     UniformBufferObject(false, false, "custom",BufferObject.class),
     ShaderStorageBufferObject(false, false, "custom",BufferObject.class)  ;
 
@@ -70,16 +70,26 @@ public enum VarType {
     
     VarType(String glslType,Class<?> ...javaTypes){
         this.glslType = glslType;
-        this.javaTypes=javaTypes;
+        if (javaTypes != null) {
+            this.javaTypes = javaTypes;
+        } else {
+            this.javaTypes = new Class<?>[0];
+        }
+        
     }
 
 
-    VarType(boolean multiData, boolean textureType,String glslType,Class ...javaTypes){
+    VarType(boolean multiData, boolean textureType, String glslType, Class<?>... javaTypes) {
         usesMultiData = multiData;
         this.textureType = textureType;
         this.glslType = glslType;
+        if (javaTypes != null) {
+            this.javaTypes = javaTypes;
+        } else {
+            this.javaTypes = new Class<?>[0];
+        }
     }
-
+    
     public boolean isOfType(Object o){
         for(Class<?> c : javaTypes){
             if(c.isAssignableFrom(o.getClass()))return true;
