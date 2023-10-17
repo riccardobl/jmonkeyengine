@@ -102,7 +102,7 @@ public class BufferObject extends NativeObject implements Savable {
      *            mark all regions for update
      */
     public void setUpdateNeeded(boolean dirtyAll) {
-        if (dirtyAll) markAllRegionsDirty();
+        if (dirtyAll) markAllRegionsDirty();        
         updateNeeded = true;
     }
 
