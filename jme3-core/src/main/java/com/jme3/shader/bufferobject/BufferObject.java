@@ -32,6 +32,7 @@
 package com.jme3.shader.bufferobject;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,9 +103,9 @@ public class BufferObject extends NativeObject implements Savable {
     private transient int binding = -1;
     protected transient DirtyRegionsIterator dirtyRegionsIterator;
 
-    protected ByteBuffer data = null;
+    protected Buffer data = null;
     protected ArrayList<BufferRegion> regions = new ArrayList<BufferRegion>();
-    private String name;
+    protected String name;
 
     public BufferObject() {
         super();
@@ -175,10 +176,10 @@ public class BufferObject extends NativeObject implements Savable {
             return;
         }
         ByteBuffer source = data == this.data ? data.duplicate() : data;
-        ByteBuffer oldData = this.data;
+        ByteBuffer oldData = (ByteBuffer) this.data;
 
         this.data = BufferUtils.createByteBuffer(source.remaining());
-        this.data.put(source);
+        ((ByteBuffer) this.data).put(source);
 
         if (oldData != null) {
             BufferUtils.destroyDirectBuffer(oldData);
@@ -193,7 +194,17 @@ public class BufferObject extends NativeObject implements Savable {
      * 
      * @return
      */
-    public ByteBuffer getData() {
+    @SuppressWarnings("unchecked")
+    public <T extends Buffer> T getData() {
+        return (T) getByteData();
+    }
+
+    /**
+     * Rewind and return byte-addressable buffer data.
+     *
+     * @return byte buffer data
+     */
+    public ByteBuffer getByteData() {
         if (regions.size() == 0) {
             if (data == null) data = BufferUtils.createByteBuffer(0);
         } else {
@@ -205,8 +216,9 @@ public class BufferObject extends NativeObject implements Savable {
                 ByteBuffer newData = BufferUtils.createByteBuffer(regionsEnd + 1);
 
                 // copy old buffer in new buffer
-                if (newData.limit() < data.limit()) data.limit(newData.limit());
-                newData.put(data);
+                ByteBuffer oldData = (ByteBuffer) data;
+                if (newData.limit() < oldData.limit()) oldData.limit(newData.limit());
+                newData.put(oldData);
 
                 // destroy old buffer
                 BufferUtils.destroyDirectBuffer(data);
@@ -215,7 +227,7 @@ public class BufferObject extends NativeObject implements Savable {
             }
         }
         data.rewind();
-        return data;
+        return (ByteBuffer) data;
     }
 
     /**
@@ -235,6 +247,35 @@ public class BufferObject extends NativeObject implements Savable {
     public void unsetRegions() {
         regions.clear();
         regions.trimToSize();
+    }
+
+    /**
+     * Returns true when this buffer has explicit dirty/layout regions.
+     *
+     * @return true if regions are defined
+     */
+    public boolean hasRegions() {
+        return !regions.isEmpty();
+    }
+
+    /**
+     * Adds a byte range that needs to be uploaded.
+     *
+     * @param start byte offset of the first dirty byte
+     * @param length number of dirty bytes
+     */
+    public void addDirtyRegion(int start, int length) {
+        if (start < 0) {
+            throw new IllegalArgumentException("Region start cannot be negative");
+        }
+        if (length <= 0) {
+            return;
+        }
+        BufferRegion region = new BufferRegion(start, start + length - 1);
+        region.bo = this;
+        region.markDirty();
+        regions.add(region);
+        updateNeeded = true;
     }
 
     /**
@@ -272,6 +313,7 @@ public class BufferObject extends NativeObject implements Savable {
     @Override
     public void resetObject() {
         this.id = -1;
+        setUpdateNeeded();
     }
 
     @Override
@@ -340,7 +382,7 @@ public class BufferObject extends NativeObject implements Savable {
         oc.write(accessHint.ordinal(), "accessHint", 0);
         oc.write(natureHint.ordinal(), "natureHint", 0);
         oc.writeSavableArrayList(regions, "regions", null);
-        oc.write(data, "data", null);
+        oc.write((ByteBuffer) data, "data", null);
     }
 
     @Override

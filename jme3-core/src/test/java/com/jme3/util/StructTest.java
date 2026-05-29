@@ -54,11 +54,11 @@ public class StructTest {
         Std140Layout layout = new Std140Layout();
         BufferObject bo = new BufferObject();
         StructUtils.setStd140BufferLayout(fields, layout, bo);
-        System.out.println(bo.getData().getInt());
+        System.out.println(bo.getByteData().getInt());
         
         StructUtils.updateBufferData(fields, false, layout, bo);
 
-        ByteBuffer bbf = bo.getData();
+        ByteBuffer bbf = bo.getByteData();
 
         String expectedData = "100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 0 0 0 0 0 0 72 67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -106 67 0 0 0 0 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 100 0 0 0 0 0 -56 66 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ";
         String actualData = "";
@@ -77,9 +77,9 @@ public class StructTest {
 
         java.util.List<StructField<?>> fields = StructUtils.getFields(test);
         StructUtils.setStd140BufferLayout(fields, layout, bo);
-        int bolength = bo.getData().limit();
+        int bolength = bo.getByteData().limit();
         assertEquals(128, bolength);
-        assertEquals(128, bo.getData().capacity());
+        assertEquals(128, bo.getByteData().capacity());
         
         int nUpdated;
 

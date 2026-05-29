@@ -61,7 +61,7 @@ public class DirtyRegionsIteratorTest {
                 new BufferRegion(4, 7),
                 new BufferRegion(8, 11)));
 
-        bo.getData().order(ByteOrder.LITTLE_ENDIAN);
+        bo.getByteData().order(ByteOrder.LITTLE_ENDIAN);
         bo.getRegion(0).markDirty();
         bo.getRegion(1).markDirty();
         bo.getRegion(2).clearDirty();
@@ -101,10 +101,10 @@ public class DirtyRegionsIteratorTest {
         source.flip();
         bo.setData(source);
 
-        ByteBuffer sameBuffer = bo.getData();
+        ByteBuffer sameBuffer = bo.getByteData();
         bo.setData(sameBuffer);
 
-        ByteBuffer result = bo.getData();
+        ByteBuffer result = bo.getByteData();
         assertEquals(4, result.remaining());
         assertEquals((byte) 0x11, result.get());
         assertEquals((byte) 0x22, result.get());
@@ -119,11 +119,11 @@ public class DirtyRegionsIteratorTest {
         source.put(new byte[]{1, 2, 3, 4});
         source.flip();
         bo.setData(source);
-        assertEquals(4, bo.getData().remaining());
+        assertEquals(4, bo.getByteData().remaining());
 
         bo.setData(null);
         // getData() auto-allocates an empty buffer when internal data is null
-        assertEquals(0, bo.getData().remaining());
+        assertEquals(0, bo.getByteData().remaining());
     }
 
     @Test
@@ -131,6 +131,6 @@ public class DirtyRegionsIteratorTest {
         BufferObject bo = new BufferObject();
         // Should not throw when internal buffer is already null
         bo.setData(null);
-        assertEquals(0, bo.getData().remaining());
+        assertEquals(0, bo.getByteData().remaining());
     }
 }

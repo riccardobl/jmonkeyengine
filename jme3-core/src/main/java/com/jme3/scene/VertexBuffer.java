@@ -34,6 +34,7 @@ package com.jme3.scene;
 import com.jme3.export.*;
 import com.jme3.math.FastMath;
 import com.jme3.renderer.Renderer;
+import com.jme3.shader.bufferobject.BufferObject;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.NativeObject;
 import java.io.IOException;
@@ -53,7 +54,7 @@ import java.nio.*;
  * For a 3D vector, a single component is one of the dimensions, X, Y or Z.</li>
  * </ul>
  */
-public class VertexBuffer extends NativeObject implements Savable, Cloneable {
+public class VertexBuffer extends BufferObject implements Savable, Cloneable {
     /**
      * Type of buffer. Specifies the actual attribute it defines.
      */
@@ -226,6 +227,11 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         MorphTarget11,
         MorphTarget12,
         MorphTarget13,
+        /**
+         * Application-defined vertex attribute. Custom buffers must provide
+         * an explicit shader attribute name with {@link #setAttributeName(String)}.
+         */
+        Custom,
     }
 
     /**
@@ -325,14 +331,13 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
      * derived from components * format.getComponentSize()
      */
     protected transient int componentsLength = 0;
-    protected Buffer data = null;
     protected Usage usage;
     protected Type bufType;
     protected Format format;
     protected boolean normalized = false;
     protected int instanceSpan = 0;
     protected transient boolean dataSizeChanged = false;
-    protected String name;
+    protected String attributeName;
 
     /**
      * Creates an empty, uninitialized buffer.
@@ -458,6 +463,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
      *
      * @return A native buffer, in the specified {@link Format format}.
      */
+    @SuppressWarnings("unchecked")
     public Buffer getData() {
         return data;
     }
@@ -520,6 +526,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
 //            throw new UnsupportedOperationException("Data has already been sent. Cannot set usage.");
 
         this.usage = usage;
+        unsetRegions();
         this.setUpdateNeeded();
     }
 
@@ -587,6 +594,45 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
      */
     public Type getBufferType() {
         return bufType;
+    }
+
+    /**
+     * Sets the shader attribute name used to bind this vertex buffer.
+     * Setting an explicit attribute name turns this buffer into a custom
+     * vertex attribute.
+     *
+     * @param attributeName the exact attribute name in the shader
+     */
+    public void setAttributeName(String attributeName) {
+        if (attributeName == null || attributeName.isEmpty()) {
+            throw new IllegalArgumentException("Attribute name cannot be null or empty");
+        }
+        this.attributeName = attributeName;
+        this.bufType = Type.Custom;
+    }
+
+    /**
+     * Returns the explicit shader attribute name, or null for built-in types.
+     *
+     * @return the custom attribute name
+     */
+    public String getAttributeName() {
+        return attributeName;
+    }
+
+    /**
+     * Returns the shader attribute name used by the renderer.
+     *
+     * @return shader attribute name
+     */
+    public String getShaderAttributeName() {
+        if (attributeName != null) {
+            return attributeName;
+        }
+        if (bufType == Type.Custom) {
+            throw new IllegalStateException("Custom vertex buffers require an attribute name");
+        }
+        return "in" + bufType.name();
     }
 
     /**
@@ -671,6 +717,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         this.format = format;
         this.componentsLength = components * format.getComponentSize();
         this.lastLimit = data.limit();
+        unsetRegions();
         setUpdateNeeded();
     }
 
@@ -707,7 +754,34 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         }
 
         this.data = data;
+        unsetRegions();
         setUpdateNeeded();
+    }
+
+    /**
+     * Marks a byte range in this vertex buffer for partial GPU upload.
+     *
+     * @param byteOffset first dirty byte
+     * @param byteLength number of dirty bytes
+     */
+    public void markBytesDirty(int byteOffset, int byteLength) {
+        addDirtyRegion(byteOffset, byteLength);
+    }
+
+    /**
+     * Marks a range of vertex elements for partial GPU upload.
+     *
+     * @param firstElement first dirty element
+     * @param elementCount number of dirty elements
+     */
+    public void markElementsDirty(int firstElement, int elementCount) {
+        if (firstElement < 0) {
+            throw new IllegalArgumentException("First element cannot be negative");
+        }
+        if (elementCount <= 0) {
+            return;
+        }
+        markBytesDirty(firstElement * componentsLength, elementCount * componentsLength);
     }
 
     /**
@@ -805,6 +879,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
                 throw new UnsupportedOperationException("Unrecognized buffer format: " + format);
         }
         data.clear();
+        unsetRegions();
         setUpdateNeeded();
         dataSizeChanged = true;
     }
@@ -854,6 +929,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
             default:
                 throw new UnsupportedOperationException("Unrecognized buffer format: " + format);
         }
+        markBytesDirty((elementIndex * components + componentIndex) * format.getComponentSize(), format.getComponentSize());
     }
 
     /**
@@ -1071,6 +1147,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         vb.id = -1;
         vb.normalized = normalized;
         vb.instanceSpan = instanceSpan;
+        vb.attributeName = attributeName;
         vb.offset = offset;
         vb.stride = stride;
         vb.updateNeeded = true;
@@ -1094,6 +1171,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
     public void resetObject() {
 //        assert this.id != -1;
         this.id = -1;
+        unsetRegions();
         setUpdateNeeded();
     }
 
@@ -1104,9 +1182,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
 
     @Override
     protected void deleteNativeBuffers() {
-        if (data != null) {
-            BufferUtils.destroyDirectBuffer(data);
-        }
+        super.deleteNativeBuffers();
     }
 
     @Override
@@ -1131,6 +1207,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         oc.write(stride, "stride", 0);
         oc.write(instanceSpan, "instanceSpan", 0);
         oc.write(name, "name", null);
+        oc.write(attributeName, "attributeName", null);
 
         String dataName = "data" + format.name();
         Buffer roData = getDataReadOnly();
@@ -1168,6 +1245,7 @@ public class VertexBuffer extends NativeObject implements Savable, Cloneable {
         stride = ic.readInt("stride", 0);
         instanceSpan = ic.readInt("instanceSpan", 0);
         name = ic.readString("name", null);
+        attributeName = ic.readString("attributeName", null);
 
         componentsLength = components * format.getComponentSize();
 

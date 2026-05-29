@@ -70,7 +70,7 @@ public class BufferRegion implements Savable, Cloneable {
      * @return ByteBuffer
      */
     public ByteBuffer getData() {
-        ByteBuffer source = bo.getData();
+        ByteBuffer source = bo.getByteData();
         assert end < source.capacity() : "Can't set limit at " + end + " on capacity " + source.capacity();
 
         ByteBuffer view = source.duplicate();
