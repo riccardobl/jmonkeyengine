@@ -1709,16 +1709,39 @@ public final class GLRenderer implements Renderer {
             block.setBinding(binding);
         }
 
-        // Pass 2: detect and resolve collisions.
+        int maxUboBindings = limits.getOrDefault(Limits.UniformBufferObjectMaxBindings, 0);
+        int maxSsboBindings = limits.getOrDefault(Limits.ShaderStorageBufferObjectMaxBindings, 0);
+        resolveBufferBlockBindingCollisions(bufferBlocks, maxUboBindings, maxSsboBindings);
+
+        // Set the binding on the shader program.
+        for (int i = 0; i < bufferBlocks.size(); i++) {
+            ShaderBufferBlock block = bufferBlocks.getValue(i);
+            int binding = block.getBinding();
+            if (binding < 0) continue;
+
+            BufferType bufferType = block.getType();
+            int blockIndex = block.getLocation();
+            if (blockIndex < 0 || blockIndex == NativeObject.INVALID_ID) {
+                continue;
+            }
+
+            if (bufferType == BufferType.ShaderStorageBufferObject) {
+                gl4.glShaderStorageBlockBinding(shaderId, blockIndex, binding);
+            } else {
+                gl3.glUniformBlockBinding(shaderId, blockIndex, binding);
+            }
+        }
+    }
+
+    static void resolveBufferBlockBindingCollisions(final ListMap<String, ShaderBufferBlock> bufferBlocks,
+                                                    int maxUboBindings, int maxSsboBindings) {
         // UBOs and SSBOs use separate GL binding namespaces, so track them independently.
         Set<Integer> usedUboBindings = new HashSet<>();
         Set<Integer> usedSsboBindings = new HashSet<>();
         int nextFreeUbo = 0;
         int nextFreeSsbo = 0;
-        int maxUboBindings = limits.getOrDefault(Limits.UniformBufferObjectMaxBindings, 0);
-        int maxSsboBindings = limits.getOrDefault(Limits.ShaderStorageBufferObjectMaxBindings, 0);
         int userUboBindingCount = BufferBindingPoints.getUserBindingCount(maxUboBindings);
-        int userSsboBindingCount = BufferBindingPoints.getUserBindingCount(maxSsboBindings);
+        int userSsboBindingCount = maxSsboBindings;
 
         for (int i = 0; i < bufferBlocks.size(); i++) {
             ShaderBufferBlock block = bufferBlocks.getValue(i);
@@ -1740,7 +1763,9 @@ public final class GLRenderer implements Renderer {
                 userBindingCount = userUboBindingCount;
             }
 
-            if (!engineBinding && BufferBindingPoints.isEngineReserved(getMaxBindingPoints(bufferType), binding)) {
+            if (bufferType == BufferType.UniformBufferObject
+                    && !engineBinding
+                    && BufferBindingPoints.isEngineReserved(maxUboBindings, binding)) {
                 binding = -1;
             }
 
@@ -1762,25 +1787,10 @@ public final class GLRenderer implements Renderer {
                 usedBindings.add(binding);
                 block.setBinding(binding);
             }
-
-            // Set the binding on the shader program
-            int blockIndex = block.getLocation();
-            if (bufferType == BufferType.ShaderStorageBufferObject) {
-                gl4.glShaderStorageBlockBinding(shaderId, blockIndex, binding);
-            } else {
-                gl3.glUniformBlockBinding(shaderId, blockIndex, binding);
-            }
         }
     }
 
-    private int getMaxBindingPoints(BufferType bufferType) {
-        if (bufferType == BufferType.ShaderStorageBufferObject) {
-            return limits.getOrDefault(Limits.ShaderStorageBufferObjectMaxBindings, 0);
-        }
-        return limits.getOrDefault(Limits.UniformBufferObjectMaxBindings, 0);
-    }
-
-    private boolean assignEngineBufferBlockBinding(ShaderBufferBlock block, int maxUboBindings) {
+    private static boolean assignEngineBufferBlockBinding(ShaderBufferBlock block, int maxUboBindings) {
         if (block.getType() != BufferType.UniformBufferObject) {
             return false;
         }
@@ -1836,14 +1846,25 @@ public final class GLRenderer implements Renderer {
      */
     protected void updateShaderBufferBlocks(final Shader shader) {
         final ListMap<String, ShaderBufferBlock> bufferBlocks = shader.getBufferBlockMap();
-        // Resolve binding points once per shader, detecting and fixing collisions
-        if (bufferBlocks.size() > 0 && bufferBlocks.getValue(0).getBinding() < 0) {
+        if (hasUnresolvedBufferBlockBindings(bufferBlocks)) {
             resolveBufferBlockBindings(shader);
         }
 
         for (int i = 0; i < bufferBlocks.size(); i++) {
             updateShaderBufferBlock(shader, bufferBlocks.getValue(i));
         }
+    }
+
+    static boolean hasUnresolvedBufferBlockBindings(final ListMap<String, ShaderBufferBlock> bufferBlocks) {
+        for (int i = 0; i < bufferBlocks.size(); i++) {
+            ShaderBufferBlock block = bufferBlocks.getValue(i);
+            if (block.getType() != null
+                    && block.getLocation() != NativeObject.INVALID_ID
+                    && block.getBinding() < 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected void resetUniformLocations(Shader shader) {
