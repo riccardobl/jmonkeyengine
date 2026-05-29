@@ -1796,13 +1796,13 @@ public final class GLRenderer implements Renderer {
         }
 
         int binding = -1;
-        if (BufferBindingPoints.MAT_PARAMS_BLOCK_NAME.equals(block.getName())) {
+        if (isEngineBufferBlock(block, BufferBindingPoints.MAT_PARAMS_BLOCK_NAME)) {
             binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.MatParams);
-        } else if (BufferBindingPoints.FRAME_BLOCK_NAME.equals(block.getName())) {
+        } else if (isEngineBufferBlock(block, BufferBindingPoints.FRAME_BLOCK_NAME)) {
             binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.Frame);
-        } else if (BufferBindingPoints.OBJECT_BLOCK_NAME.equals(block.getName())) {
+        } else if (isEngineBufferBlock(block, BufferBindingPoints.OBJECT_BLOCK_NAME)) {
             binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.Object);
-        } else if (BufferBindingPoints.LIGHTS_BLOCK_NAME.equals(block.getName())) {
+        } else if (isEngineBufferBlock(block, BufferBindingPoints.LIGHTS_BLOCK_NAME)) {
             binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.Lights);
         }
 
@@ -1811,6 +1811,12 @@ public final class GLRenderer implements Renderer {
             return true;
         }
         return false;
+    }
+
+    private static boolean isEngineBufferBlock(ShaderBufferBlock block, String engineName) {
+        BufferObject bufferObject = block.getBufferObject();
+        return engineName.equals(block.getName())
+                || (bufferObject != null && engineName.equals(bufferObject.getName()));
     }
 
     /**

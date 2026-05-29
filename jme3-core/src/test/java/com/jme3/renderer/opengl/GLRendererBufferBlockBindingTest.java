@@ -88,6 +88,18 @@ public class GLRendererBufferBlockBindingTest {
     }
 
     @Test
+    public void testMatParamInstanceBlockUsesEngineBinding() {
+        ListMap<String, ShaderBufferBlock> blocks = new ListMap<>();
+        ShaderBufferBlock block = block("MatParams", BufferType.UniformBufferObject, 0, 0);
+        block.getBufferObject().setName(BufferBindingPoints.MAT_PARAMS_BLOCK_NAME);
+        blocks.put("MatParams", block);
+
+        GLRenderer.resolveBufferBlockBindingCollisions(blocks, 36, 36);
+
+        assertEquals(35, block.getBinding());
+    }
+
+    @Test
     public void testUboAndSsboBindingsAreSeparateNamespaces() {
         ListMap<String, ShaderBufferBlock> blocks = new ListMap<>();
         blocks.put("Params", block("Params", BufferType.UniformBufferObject, 0, 1));

@@ -63,7 +63,7 @@ final class MatParamUniformBuffer {
     private static final Pattern BLOCK_PATTERN = Pattern.compile(
             "(?s)(?:layout\\s*\\(([^)]*)\\)\\s*)?uniform\\s+(\\w+)\\s*\\{(.*?)\\}\\s*(\\w+)?\\s*;");
     private static final Pattern MEMBER_PATTERN = Pattern.compile(
-            "(?s)(?:layout\\s*\\([^)]*\\)\\s*)?(?:highp\\s+|mediump\\s+|lowp\\s+)?(float|int|bool|vec2|vec3|vec4|mat3|mat4)\\s+([^;]+);");
+            "(?s)(?:layout\\s*\\([^)]*\\)\\s*)?(?:highp\\s+|mediump\\s+|lowp\\s+)?(float|int|bool|vec2|vec3|vec4|mat3|mat4)\\s+(.+)");
     private static final Pattern DECLARATOR_PATTERN = Pattern.compile("(\\w+)\\s*(?:\\[\\s*(\\d+)\\s*\\])?.*");
 
     private final BufferObject bufferObject = new BufferObject();
@@ -202,18 +202,31 @@ final class MatParamUniformBuffer {
     }
 
     private static Layout parseMembers(String blockName, String body) {
+        if (body.indexOf('#') >= 0) {
+            return null;
+        }
+
         ArrayList<Member> members = new ArrayList<>();
         int offset = 0;
         int maxAlignment = 0;
 
-        Matcher memberMatcher = MEMBER_PATTERN.matcher(body);
-        while (memberMatcher.find()) {
+        for (String statement : body.split(";")) {
+            statement = statement.trim();
+            if (statement.isEmpty()) {
+                continue;
+            }
+
+            Matcher memberMatcher = MEMBER_PATTERN.matcher(statement);
+            if (!memberMatcher.matches()) {
+                return null;
+            }
+
             String glslType = memberMatcher.group(1);
             String declarations = memberMatcher.group(2);
             for (String declaration : declarations.split(",")) {
                 Matcher declaratorMatcher = DECLARATOR_PATTERN.matcher(declaration.trim());
                 if (!declaratorMatcher.matches()) {
-                    continue;
+                    return null;
                 }
 
                 String memberName = declaratorMatcher.group(1);
@@ -221,7 +234,7 @@ final class MatParamUniformBuffer {
                 Member member = Member.create(members.size(), memberName, glslType,
                         arrayLength == null ? 0 : Integer.parseInt(arrayLength));
                 if (member == null) {
-                    continue;
+                    return null;
                 }
 
                 int alignment = STD140.getBasicAlignment(member.zeroValue());

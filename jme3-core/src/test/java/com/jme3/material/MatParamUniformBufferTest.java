@@ -44,6 +44,7 @@ import java.nio.ByteBuffer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,6 +60,30 @@ public class MatParamUniformBufferTest {
         assertEquals(0, layout.getMember("Color").offset);
         assertEquals(16, layout.getMember("Roughness").offset);
         assertEquals(32, layout.getMember("Weights").offset);
+    }
+
+    @Test
+    public void parsesInstanceNamedMatParamBlock() {
+        MatParamUniformBuffer.Layout layout = MatParamUniformBuffer.parseLayout("#version 330\n"
+                + "layout(std140) uniform MatParams {\n"
+                + "    vec4 Color;\n"
+                + "} m_MatParams;\n");
+
+        assertNotNull(layout);
+        assertEquals("MatParams", layout.blockName);
+        assertEquals(0, layout.getMember("Color").offset);
+    }
+
+    @Test
+    public void ignoresBlocksWithUnsupportedMembers() {
+        MatParamUniformBuffer.Layout layout = MatParamUniformBuffer.parseLayout("#version 330\n"
+                + "layout(std140) uniform m_MatParams {\n"
+                + "    vec4 Color;\n"
+                + "    sampler2D Unsupported;\n"
+                + "    float Roughness;\n"
+                + "};\n");
+
+        assertNull(layout);
     }
 
     @Test
