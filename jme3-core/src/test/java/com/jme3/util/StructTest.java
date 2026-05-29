@@ -10,6 +10,7 @@ import com.jme3.shader.bufferobject.BufferObject;
 import com.jme3.shader.bufferobject.BufferRegion;
 import com.jme3.shader.bufferobject.DirtyRegionsIterator;
 import com.jme3.shader.bufferobject.layout.Std140Layout;
+import com.jme3.shader.bufferobject.layout.Std430Layout;
 import com.jme3.util.struct.Struct;
 import com.jme3.util.struct.StructField;
 import com.jme3.util.struct.StructUtils;
@@ -31,6 +32,11 @@ public class StructTest {
         public final SubStructField<SubStruct> structField3 = new SubStructField<SubStruct>(3, "structField3", new SubStruct());
         public final SubStructArrayField<SubStruct> structArrayField5 = new SubStructArrayField<SubStruct>(5, "structArrayField5", new SubStruct[] { new SubStruct(), new SubStruct() });
         public final BooleanField boolField6 = new BooleanField(6, "boolField6", true);
+    }
+
+    static class PackedArrayStruct implements Struct {
+        public final FloatArrayField values = new FloatArrayField(0, "values", new Float[] { 1f, 2f, 3f });
+        public final FloatField tail = new FloatField(1, "tail", 4f);
     }
 
     @Test
@@ -214,5 +220,34 @@ public class StructTest {
 
 
 
+    }
+
+    @Test
+    public void testStd430ArrayPacking() {
+        PackedArrayStruct test = new PackedArrayStruct();
+        java.util.List<StructField<?>> fields = StructUtils.getFields(test);
+
+        BufferObject std140Bo = new BufferObject();
+        StructUtils.setBufferLayout(fields, new Std140Layout(), std140Bo);
+        assertEquals(64, std140Bo.getByteData().limit());
+        assertEquals(0, std140Bo.getRegion(0).getStart());
+        assertEquals(47, std140Bo.getRegion(0).getEnd());
+        assertEquals(48, std140Bo.getRegion(1).getStart());
+        assertEquals(63, std140Bo.getRegion(1).getEnd());
+
+        BufferObject std430Bo = new BufferObject();
+        StructUtils.setBufferLayout(fields, new Std430Layout(), std430Bo);
+        assertEquals(16, std430Bo.getByteData().limit());
+        assertEquals(0, std430Bo.getRegion(0).getStart());
+        assertEquals(11, std430Bo.getRegion(0).getEnd());
+        assertEquals(12, std430Bo.getRegion(1).getStart());
+        assertEquals(15, std430Bo.getRegion(1).getEnd());
+
+        StructUtils.updateBufferData(fields, false, new Std430Layout(), std430Bo);
+        ByteBuffer data = std430Bo.getByteData();
+        assertEquals(1f, data.getFloat(0));
+        assertEquals(2f, data.getFloat(4));
+        assertEquals(3f, data.getFloat(8));
+        assertEquals(4f, data.getFloat(12));
     }
 }
