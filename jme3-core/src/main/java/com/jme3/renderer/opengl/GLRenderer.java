@@ -3661,6 +3661,35 @@ public final class GLRenderer implements Renderer {
         updateBufferData(GL4.GL_UNIFORM_BUFFER, bo);
     }
 
+    @Override
+    public void readShaderStorageBufferObjectData(BufferObject bo, ByteBuffer store) {
+        if (!caps.contains(Caps.ShaderStorageBufferObject)) throw new IllegalArgumentException("The current video hardware doesn't support shader storage buffer objects ");
+        readBufferData(GL4.GL_SHADER_STORAGE_BUFFER, bo, store);
+    }
+
+    @Override
+    public void readUniformBufferObjectData(BufferObject bo, ByteBuffer store) {
+        if (!caps.contains(Caps.UniformBufferObject)) throw new IllegalArgumentException("The current video hardware doesn't support uniform buffer objects");
+        readBufferData(GL4.GL_UNIFORM_BUFFER, bo, store);
+    }
+
+    private void readBufferData(int type, BufferObject bo, ByteBuffer store) {
+        if (store == null) {
+            throw new IllegalArgumentException("Store buffer cannot be null");
+        }
+        if (bo.isUpdateNeeded()) {
+            updateBufferData(type, bo);
+        }
+        if (bo.getId() == -1) {
+            return;
+        }
+        gl.glBindBuffer(type, bo.getId());
+        store.clear();
+        gl.glGetBufferSubData(type, 0, store);
+        gl.glBindBuffer(type, 0);
+        store.rewind();
+    }
+
     private void updateBufferData(int type, BufferObject bo) {
         int bufferId = bo.getId();
         int usage = resolveUsageHint(bo.getAccessHint(), bo.getNatureHint());
