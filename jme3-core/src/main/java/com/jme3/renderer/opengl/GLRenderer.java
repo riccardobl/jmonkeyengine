@@ -3591,7 +3591,7 @@ public final class GLRenderer implements Renderer {
     }
 
     private Buffer sliceVertexBuffer(VertexBuffer vb, Buffer data, int byteOffset, int byteLength) {
-        int componentSize = vb.getFormat() == Format.Half ? 1 : vb.getFormat().getComponentSize();
+        int componentSize = vb.getFormat().getComponentSize();
         if (byteOffset % componentSize != 0 || byteLength % componentSize != 0) {
             throw new IllegalArgumentException("Dirty vertex buffer range is not aligned to " + vb.getFormat());
         }

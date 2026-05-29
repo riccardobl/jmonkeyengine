@@ -408,7 +408,8 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
             throw new AssertionError();
         } else if (data instanceof ShortBuffer && format != Format.Short && format != Format.UnsignedShort) {
             throw new AssertionError();
-        } else if (data instanceof ByteBuffer && format != Format.Byte && format != Format.UnsignedByte) {
+        } else if (data instanceof ByteBuffer && format != Format.Byte && format != Format.UnsignedByte
+                && format != Format.Half) {
             throw new AssertionError();
         }
         return true;
@@ -490,7 +491,8 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
         // does not have an asReadOnlyBuffer() method.
         Buffer result;
         if (data instanceof ByteBuffer) {
-            result = ((ByteBuffer) data).asReadOnlyBuffer();
+            ByteBuffer source = (ByteBuffer) data;
+            result = source.asReadOnlyBuffer().order(source.order());
         } else if (data instanceof FloatBuffer) {
             result = ((FloatBuffer) data).asReadOnlyBuffer();
         } else if (data instanceof ShortBuffer) {
@@ -847,8 +849,9 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
             case UnsignedByte:
             case Half:
                 ByteBuffer bbuf = (ByteBuffer) data;
-                bbuf.limit(total);
-                ByteBuffer bnewBuf = BufferUtils.createByteBuffer(total);
+                int byteTotal = total * format.getComponentSize();
+                bbuf.limit(byteTotal);
+                ByteBuffer bnewBuf = BufferUtils.createByteBuffer(byteTotal);
                 bnewBuf.put(bbuf);
                 data = bnewBuf;
                 break;
@@ -906,9 +909,12 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
         data.clear();
 
         switch (format) {
+            case Half:
+                ByteBuffer hbin = (ByteBuffer) data;
+                hbin.putShort(inPos + elementPos, (Short) val);
+                break;
             case Byte:
             case UnsignedByte:
-            case Half:
                 ByteBuffer bin = (ByteBuffer) data;
                 bin.put(inPos + elementPos, (Byte) val);
                 break;
@@ -952,9 +958,11 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
         Buffer srcData = getDataReadOnly();
 
         switch (format) {
+            case Half:
+                ByteBuffer hbin = (ByteBuffer) srcData;
+                return hbin.getShort(inPos + elementPos);
             case Byte:
             case UnsignedByte:
-            case Half:
                 ByteBuffer bin = (ByteBuffer) srcData;
                 return bin.get(inPos + elementPos);
             case Short:

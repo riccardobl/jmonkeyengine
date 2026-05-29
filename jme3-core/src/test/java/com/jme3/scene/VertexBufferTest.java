@@ -33,6 +33,7 @@ package com.jme3.scene;
 
 import com.jme3.shader.bufferobject.BufferRegion;
 import com.jme3.util.BufferUtils;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import org.junit.jupiter.api.Test;
 
@@ -72,5 +73,29 @@ public class VertexBufferTest {
         assertEquals(12, region.getStart());
         assertEquals(23, region.getEnd());
         assertEquals(12, region.length());
+    }
+
+    @Test
+    public void testHalfBuffersUseTwoBytesPerComponent() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.TexCoord);
+        ByteBuffer data = BufferUtils.createByteBuffer(6);
+        data.putShort((short) 0);
+        data.putShort((short) 0);
+        data.putShort((short) 0);
+        data.clear();
+
+        vb.setupData(VertexBuffer.Usage.Dynamic, 1, VertexBuffer.Format.Half, data);
+        assertTrue(vb.invariant());
+
+        vb.clearUpdateNeeded();
+        vb.setElementComponent(1, 0, (short) 0x3c00);
+
+        assertEquals((short) 0x3c00, vb.getElementComponent(1, 0));
+        BufferRegion region = vb.getDirtyRegions().next();
+        assertEquals(2, region.getStart());
+        assertEquals(3, region.getEnd());
+
+        vb.compact(2);
+        assertEquals(4, vb.getData().limit());
     }
 }
