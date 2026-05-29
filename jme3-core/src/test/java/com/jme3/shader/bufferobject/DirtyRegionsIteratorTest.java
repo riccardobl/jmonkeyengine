@@ -76,6 +76,22 @@ public class DirtyRegionsIteratorTest {
     }
 
     @Test
+    public void testAddedDirtyRegionsAreKeptSorted() {
+        BufferObject bo = new BufferObject();
+        bo.initializeEmpty(16);
+        bo.clearUpdateNeeded();
+
+        bo.addDirtyRegion(8, 4);
+        bo.addDirtyRegion(0, 4);
+
+        BufferRegion region = bo.getDirtyRegions().next();
+        assertNotNull(region);
+        assertEquals(0, region.getStart());
+        assertEquals(11, region.getEnd());
+        assertEquals(12, region.getData().remaining());
+    }
+
+    @Test
     public void testNoRegionsHasNextContract() {
         BufferObject bo = new BufferObject();
         bo.initializeEmpty(4);

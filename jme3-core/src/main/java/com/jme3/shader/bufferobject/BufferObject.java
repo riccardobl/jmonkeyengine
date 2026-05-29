@@ -274,7 +274,11 @@ public class BufferObject extends NativeObject implements Savable {
         BufferRegion region = new BufferRegion(start, start + length - 1);
         region.bo = this;
         region.markDirty();
-        regions.add(region);
+        int insertIndex = 0;
+        while (insertIndex < regions.size() && regions.get(insertIndex).getStart() <= start) {
+            insertIndex++;
+        }
+        regions.add(insertIndex, region);
         updateNeeded = true;
     }
 
