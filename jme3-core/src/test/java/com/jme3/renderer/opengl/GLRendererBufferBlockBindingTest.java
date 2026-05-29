@@ -38,6 +38,8 @@ import com.jme3.shader.bufferobject.BufferObject;
 import com.jme3.util.ListMap;
 import org.junit.jupiter.api.Test;
 
+import java.nio.ByteBuffer;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -109,6 +111,32 @@ public class GLRendererBufferBlockBindingTest {
 
         assertEquals(1, blocks.get("Params").getBinding());
         assertEquals(1, blocks.get("Data").getBinding());
+    }
+
+    @Test
+    public void testReadbackStoreIsClampedToBufferSize() {
+        BufferObject bufferObject = new BufferObject();
+        bufferObject.initializeEmpty(8);
+        ByteBuffer store = ByteBuffer.allocateDirect(16);
+
+        int readLength = GLRenderer.prepareBufferReadbackStore(bufferObject, store);
+
+        assertEquals(8, readLength);
+        assertEquals(0, store.position());
+        assertEquals(8, store.limit());
+    }
+
+    @Test
+    public void testReadbackStoreCanBeSmallerThanBuffer() {
+        BufferObject bufferObject = new BufferObject();
+        bufferObject.initializeEmpty(16);
+        ByteBuffer store = ByteBuffer.allocateDirect(8);
+
+        int readLength = GLRenderer.prepareBufferReadbackStore(bufferObject, store);
+
+        assertEquals(8, readLength);
+        assertEquals(0, store.position());
+        assertEquals(8, store.limit());
     }
 
     private static ShaderBufferBlock block(String name, BufferType type, int location, int binding) {

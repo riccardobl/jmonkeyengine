@@ -3710,11 +3710,25 @@ public final class GLRenderer implements Renderer {
         if (bo.getId() == -1) {
             return;
         }
+        int readLength = prepareBufferReadbackStore(bo, store);
+        if (readLength == 0) {
+            return;
+        }
         gl.glBindBuffer(type, bo.getId());
-        store.clear();
         gl.glGetBufferSubData(type, 0, store);
         gl.glBindBuffer(type, 0);
         store.rewind();
+    }
+
+    static int prepareBufferReadbackStore(BufferObject bo, ByteBuffer store) {
+        if (store == null) {
+            throw new IllegalArgumentException("Store buffer cannot be null");
+        }
+
+        int readLength = Math.min(store.capacity(), bo.getByteData().limit());
+        store.clear();
+        store.limit(readLength);
+        return readLength;
     }
 
     private void updateBufferData(int type, BufferObject bo) {
