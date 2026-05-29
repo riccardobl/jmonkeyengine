@@ -50,6 +50,7 @@ import com.jme3.shader.Shader.ShaderType;
 import com.jme3.system.JmeSystem;
 import com.jme3.system.Platform;
 import com.jme3.shader.ShaderBufferBlock.BufferType;
+import com.jme3.shader.bufferobject.BufferBindingPoints;
 import com.jme3.shader.bufferobject.BufferObject;
 import com.jme3.shader.bufferobject.BufferRegion;
 import com.jme3.shader.bufferobject.DirtyRegionsIterator;
@@ -703,6 +704,8 @@ public final class GLRenderer implements Renderer {
         if (hasExtension("GL_ARB_shader_storage_buffer_object") || caps.contains(Caps.OpenGL43)
                 || caps.contains(Caps.OpenGLES31)) {
             caps.add(Caps.ShaderStorageBufferObject);
+            limits.put(Limits.ShaderStorageBufferObjectMaxBindings,
+                    getInteger(GL4.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS));
             limits.put(Limits.ShaderStorageBufferObjectMaxBlockSize,
                     getInteger(GL4.GL_MAX_SHADER_STORAGE_BLOCK_SIZE));
             // Commented out until we support ComputeShaders and the ComputeShader Cap
@@ -729,6 +732,8 @@ public final class GLRenderer implements Renderer {
                 || caps.contains(Caps.WebGL)
                 || (caps.contains(Caps.OpenGLES30) && JmeSystem.getPlatform().getOs() != Platform.Os.iOS)) {
             caps.add(Caps.UniformBufferObject);
+            limits.put(Limits.UniformBufferObjectMaxBindings,
+                    getInteger(GL3.GL_MAX_UNIFORM_BUFFER_BINDINGS));
             limits.put(Limits.UniformBufferObjectMaxBlockSize,
                     getInteger(GL3.GL_MAX_UNIFORM_BLOCK_SIZE));
             if (caps.contains(Caps.GeometryShader)) {
@@ -859,6 +864,9 @@ public final class GLRenderer implements Renderer {
     @Override
     public void initialize() {
         loadCapabilities();
+        context.resetBufferObjectBindings(
+                limits.getOrDefault(Limits.UniformBufferObjectMaxBindings, 0),
+                limits.getOrDefault(Limits.ShaderStorageBufferObjectMaxBindings, 0));
 
         // Initialize default state..
         gl.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
@@ -1707,6 +1715,10 @@ public final class GLRenderer implements Renderer {
         Set<Integer> usedSsboBindings = new HashSet<>();
         int nextFreeUbo = 0;
         int nextFreeSsbo = 0;
+        int maxUboBindings = limits.getOrDefault(Limits.UniformBufferObjectMaxBindings, 0);
+        int maxSsboBindings = limits.getOrDefault(Limits.ShaderStorageBufferObjectMaxBindings, 0);
+        int userUboBindingCount = BufferBindingPoints.getUserBindingCount(maxUboBindings);
+        int userSsboBindingCount = BufferBindingPoints.getUserBindingCount(maxSsboBindings);
 
         for (int i = 0; i < bufferBlocks.size(); i++) {
             ShaderBufferBlock block = bufferBlocks.getValue(i);
@@ -1714,20 +1726,37 @@ public final class GLRenderer implements Renderer {
             if (binding < 0) continue;
 
             BufferType bufferType = block.getType();
+            boolean engineBinding = assignEngineBufferBlockBinding(block, maxUboBindings);
+            if (engineBinding) {
+                binding = block.getBinding();
+            }
             Set<Integer> usedBindings;
+            int userBindingCount;
             if (bufferType == BufferType.ShaderStorageBufferObject) {
                 usedBindings = usedSsboBindings;
+                userBindingCount = userSsboBindingCount;
             } else {
                 usedBindings = usedUboBindings;
+                userBindingCount = userUboBindingCount;
             }
 
-            if (!usedBindings.add(binding)) {
+            if (!engineBinding && BufferBindingPoints.isEngineReserved(getMaxBindingPoints(bufferType), binding)) {
+                binding = -1;
+            }
+
+            if (binding < 0 || !usedBindings.add(binding)) {
                 // Collision within the same namespace — find a free binding point
                 if (bufferType == BufferType.ShaderStorageBufferObject) {
-                    while (usedBindings.contains(nextFreeSsbo)) nextFreeSsbo++;
+                    while (nextFreeSsbo < userBindingCount && usedBindings.contains(nextFreeSsbo)) nextFreeSsbo++;
+                    if (nextFreeSsbo >= userBindingCount) {
+                        throw new RendererException("No free user SSBO binding point for block " + block.getName());
+                    }
                     binding = nextFreeSsbo;
                 } else {
-                    while (usedBindings.contains(nextFreeUbo)) nextFreeUbo++;
+                    while (nextFreeUbo < userBindingCount && usedBindings.contains(nextFreeUbo)) nextFreeUbo++;
+                    if (nextFreeUbo >= userBindingCount) {
+                        throw new RendererException("No free user UBO binding point for block " + block.getName());
+                    }
                     binding = nextFreeUbo;
                 }
                 usedBindings.add(binding);
@@ -1742,6 +1771,36 @@ public final class GLRenderer implements Renderer {
                 gl3.glUniformBlockBinding(shaderId, blockIndex, binding);
             }
         }
+    }
+
+    private int getMaxBindingPoints(BufferType bufferType) {
+        if (bufferType == BufferType.ShaderStorageBufferObject) {
+            return limits.getOrDefault(Limits.ShaderStorageBufferObjectMaxBindings, 0);
+        }
+        return limits.getOrDefault(Limits.UniformBufferObjectMaxBindings, 0);
+    }
+
+    private boolean assignEngineBufferBlockBinding(ShaderBufferBlock block, int maxUboBindings) {
+        if (block.getType() != BufferType.UniformBufferObject) {
+            return false;
+        }
+
+        int binding = -1;
+        if (BufferBindingPoints.MAT_PARAMS_BLOCK_NAME.equals(block.getName())) {
+            binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.MatParams);
+        } else if (BufferBindingPoints.FRAME_BLOCK_NAME.equals(block.getName())) {
+            binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.Frame);
+        } else if (BufferBindingPoints.OBJECT_BLOCK_NAME.equals(block.getName())) {
+            binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.Object);
+        } else if (BufferBindingPoints.LIGHTS_BLOCK_NAME.equals(block.getName())) {
+            binding = BufferBindingPoints.getEngineBinding(maxUboBindings, BufferBindingPoints.EngineBinding.Lights);
+        }
+
+        if (binding >= 0) {
+            block.setBinding(binding);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -3247,14 +3306,15 @@ public final class GLRenderer implements Renderer {
     
     @Override
     public void setUniformBufferObject(int bindingPoint, BufferObject bufferObject) {
+        validateBufferBindingPoint(bindingPoint, context.boundUniformBuffers.length, "uniform buffer");
         if (bufferObject.isUpdateNeeded()) {
             updateUniformBufferObjectData(bufferObject);
         }
 
-        if (context.boundBO[bindingPoint] == null || context.boundBO[bindingPoint].get() != bufferObject) {
+        if (context.boundUniformBuffers[bindingPoint] == null || context.boundUniformBuffers[bindingPoint].get() != bufferObject) {
             bindUniformBufferBase(bindingPoint, bufferObject.getId());
             bufferObject.setBinding(bindingPoint);
-            context.boundBO[bindingPoint] = bufferObject.getWeakRef();
+            context.boundUniformBuffers[bindingPoint] = bufferObject.getWeakRef();
         }
 
         bufferObject.setBinding(bindingPoint);
@@ -3267,18 +3327,26 @@ public final class GLRenderer implements Renderer {
 
     @Override
     public void setShaderStorageBufferObject(int bindingPoint, BufferObject bufferObject) {
+        validateBufferBindingPoint(bindingPoint, context.boundShaderStorageBuffers.length, "shader storage buffer");
         if (bufferObject.isUpdateNeeded()) {
             updateShaderStorageBufferObjectData(bufferObject);
         }
-        if (context.boundBO[bindingPoint] == null || context.boundBO[bindingPoint].get() != bufferObject) {
+        if (context.boundShaderStorageBuffers[bindingPoint] == null || context.boundShaderStorageBuffers[bindingPoint].get() != bufferObject) {
             bindShaderStorageBufferBase(bindingPoint, bufferObject.getId());
             bufferObject.setBinding(bindingPoint);
-            context.boundBO[bindingPoint] = bufferObject.getWeakRef();
+            context.boundShaderStorageBuffers[bindingPoint] = bufferObject.getWeakRef();
         }
         bufferObject.setBinding(bindingPoint);
 
         if (debug && caps.contains(Caps.GLDebug)) {
             if (bufferObject.getName() != null) glext.glObjectLabel(GLExt.GL_BUFFER, bufferObject.getId(), bufferObject.getName());
+        }
+    }
+
+    private void validateBufferBindingPoint(int bindingPoint, int bindingCount, String targetName) {
+        if (bindingPoint < 0 || bindingPoint >= bindingCount) {
+            throw new RendererException("Invalid " + targetName + " binding point " + bindingPoint
+                    + ". Available binding points: " + bindingCount);
         }
     }
 
