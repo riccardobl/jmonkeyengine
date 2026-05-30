@@ -290,6 +290,7 @@ public class BufferObject extends NativeObject implements Savable {
     public void setRegions(List<BufferRegion> lr) {
         regions.clear();
         regions.addAll(lr);
+        regions.sort((a, b) -> Integer.compare(a.getStart(), b.getStart()));
         regions.trimToSize();
         setUpdateNeeded();
     }
