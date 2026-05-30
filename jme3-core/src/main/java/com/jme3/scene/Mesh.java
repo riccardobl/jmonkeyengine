@@ -762,6 +762,11 @@ public class Mesh implements Savable, Cloneable, JmeCloneable {
                         }
                         break;
                     case Half:
+                        ByteBuffer hb = (ByteBuffer) vb.getData();
+                        for (int comp = 0; comp < vb.components; comp++) {
+                            dataBuf.putShort(hb.getShort());
+                        }
+                        break;
                     case Short:
                     case UnsignedShort:
                         ShortBuffer sb = (ShortBuffer) vb.getData();
