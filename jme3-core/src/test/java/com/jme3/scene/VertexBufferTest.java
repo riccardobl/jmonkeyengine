@@ -38,6 +38,7 @@ import java.nio.FloatBuffer;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,6 +58,20 @@ public class VertexBufferTest {
         assertEquals("inCustomData", vb.getAttributeName());
         assertEquals("inCustomData", vb.getShaderAttributeName());
         assertThrows(IllegalArgumentException.class, () -> mesh.getBuffer(VertexBuffer.Type.Custom));
+    }
+
+    @Test
+    public void testCloneWithOverrideTypeClearsCustomAttributeName() {
+        VertexBuffer custom = new VertexBuffer(VertexBuffer.Type.Custom);
+        custom.setAttributeName("inCustomData");
+        custom.setupData(VertexBuffer.Usage.Dynamic, 3, VertexBuffer.Format.Float,
+                BufferUtils.createFloatBuffer(0f, 0f, 0f));
+
+        VertexBuffer position = custom.clone(VertexBuffer.Type.Position);
+
+        assertEquals(VertexBuffer.Type.Position, position.getBufferType());
+        assertNull(position.getAttributeName());
+        assertEquals("inPosition", position.getShaderAttributeName());
     }
 
     @Test

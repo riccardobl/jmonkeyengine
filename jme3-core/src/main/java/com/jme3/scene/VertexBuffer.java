@@ -1218,7 +1218,7 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
         vb.id = -1;
         vb.normalized = normalized;
         vb.instanceSpan = instanceSpan;
-        vb.attributeName = attributeName;
+        vb.attributeName = overrideType == Type.Custom ? attributeName : null;
         vb.offset = offset;
         vb.stride = stride;
         vb.updateNeeded = true;
