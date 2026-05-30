@@ -78,7 +78,12 @@ public class DirtyRegionsIterator implements Iterator<BufferRegion> {
         if (bufferObject.regions.size() == 0) {
             return pos == 0 && bufferObject.isUpdateNeeded();
         }
-        return pos < bufferObject.regions.size();
+        for (int i = pos; i < bufferObject.regions.size(); i++) {
+            if (bufferObject.regions.get(i).isDirty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public BufferRegion next() {

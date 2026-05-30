@@ -125,6 +125,43 @@ public class DirtyRegionsIteratorTest {
     }
 
     @Test
+    public void testRegionHasNextSkipsCleanRegions() {
+        BufferObject bo = new BufferObject();
+        bo.initializeEmpty(12);
+        bo.setRegions(Arrays.asList(
+                new BufferRegion(0, 3),
+                new BufferRegion(4, 7),
+                new BufferRegion(8, 11)));
+        bo.getRegion(0).clearDirty();
+        bo.getRegion(1).clearDirty();
+        bo.getRegion(2).markDirty();
+        bo.setUpdateNeeded(false);
+
+        DirtyRegionsIterator iterator = bo.getDirtyRegions();
+        assertTrue(iterator.hasNext());
+        BufferRegion region = iterator.next();
+        assertEquals(8, region.getStart());
+        assertEquals(11, region.getEnd());
+        region.clearDirty();
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
+    public void testRegionHasNextReturnsFalseWhenAllRegionsClean() {
+        BufferObject bo = new BufferObject();
+        bo.initializeEmpty(8);
+        bo.setRegions(Arrays.asList(
+                new BufferRegion(0, 3),
+                new BufferRegion(4, 7)));
+        bo.getRegion(0).clearDirty();
+        bo.getRegion(1).clearDirty();
+        bo.setUpdateNeeded(false);
+
+        DirtyRegionsIterator iterator = bo.getDirtyRegions();
+        assertFalse(iterator.hasNext());
+    }
+
+    @Test
     public void testSetDataHandlesSelfAlias() {
         BufferObject bo = new BufferObject();
         ByteBuffer source = ByteBuffer.allocateDirect(4);
