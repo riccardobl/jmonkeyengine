@@ -75,6 +75,25 @@ public class MatParamUniformBufferTest {
     }
 
     @Test
+    public void writesInstanceNamedMatParamBlock() {
+        String source = "#version 330\n"
+                + "layout(std140) uniform MatParams {\n"
+                + "    vec4 Color;\n"
+                + "} m_MatParams;\n";
+        Shader shader = new Shader();
+        shader.addSource(Shader.ShaderType.Fragment, "mat-param-instance-test.frag", source, null, "GLSL330");
+
+        MatParamUniformBuffer buffer = new MatParamUniformBuffer();
+        buffer.begin(shader);
+        assertTrue(buffer.set(new MatParam(VarType.Vector4, "Color", new ColorRGBA(1f, 0f, 0f, 1f)), false));
+        buffer.finish(shader);
+
+        ShaderBufferBlock block = shader.getBufferBlock("MatParams");
+        assertSame(buffer.getBufferObject(), block.getBufferObject());
+        assertEquals(BufferBindingPoints.MAT_PARAMS_BLOCK_NAME, block.getBufferObject().getName());
+    }
+
+    @Test
     public void ignoresBlocksWithUnsupportedMembers() {
         MatParamUniformBuffer.Layout layout = MatParamUniformBuffer.parseLayout("#version 330\n"
                 + "layout(std140) uniform m_MatParams {\n"
