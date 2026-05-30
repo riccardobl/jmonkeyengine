@@ -777,6 +777,7 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
         }
         ByteBuffer source = data == this.data ? data.duplicate() : data;
         ByteBuffer copy = BufferUtils.createByteBuffer(source.remaining());
+        copy.order(source.order());
         copy.put(source);
         copy.clear();
         updateData(copy);

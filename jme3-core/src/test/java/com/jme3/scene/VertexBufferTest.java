@@ -34,6 +34,7 @@ package com.jme3.scene;
 import com.jme3.shader.bufferobject.BufferRegion;
 import com.jme3.util.BufferUtils;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import org.junit.jupiter.api.Test;
 
@@ -133,6 +134,22 @@ public class VertexBufferTest {
         assertEquals(2, vb.getNumElements());
         assertTrue(vb.hasDataSizeChanged());
         assertEquals(8, vb.getByteData().limit());
+    }
+
+    @Test
+    public void testByteBackedVertexBufferSetDataPreservesByteOrder() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.BoneIndex);
+        vb.setupData(VertexBuffer.Usage.Dynamic, 4, VertexBuffer.Format.UnsignedByte,
+                BufferUtils.createByteBuffer(new byte[] {0, 0, 0, 0}));
+
+        ByteBuffer source = ByteBuffer.allocateDirect(4).order(ByteOrder.LITTLE_ENDIAN);
+        source.putInt(0x11223344);
+        source.flip();
+
+        vb.setData(source);
+
+        assertEquals(ByteOrder.LITTLE_ENDIAN, vb.getByteData().order());
+        assertEquals(0x11223344, vb.getByteData().getInt());
     }
 
     @Test
