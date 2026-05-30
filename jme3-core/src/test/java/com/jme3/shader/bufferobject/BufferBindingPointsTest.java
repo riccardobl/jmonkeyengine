@@ -58,7 +58,9 @@ public class BufferBindingPointsTest {
 
     @Test
     public void testInsufficientBindings() {
-        assertEquals(0, BufferBindingPoints.getUserBindingCount(3));
+        assertEquals(3, BufferBindingPoints.getUserBindingCount(3));
         assertEquals(-1, BufferBindingPoints.getEngineBinding(3, BufferBindingPoints.EngineBinding.MatParams));
+        assertFalse(BufferBindingPoints.isEngineReserved(3, 0));
+        assertFalse(BufferBindingPoints.isEngineReserved(3, 2));
     }
 }

@@ -72,7 +72,10 @@ public final class BufferBindingPoints {
      * @return number of user binding points
      */
     public static int getUserBindingCount(int maxBindings) {
-        return Math.max(0, maxBindings - ENGINE_RESERVED_BINDINGS);
+        if (maxBindings < ENGINE_RESERVED_BINDINGS) {
+            return Math.max(0, maxBindings);
+        }
+        return maxBindings - ENGINE_RESERVED_BINDINGS;
     }
 
     /**
@@ -97,6 +100,9 @@ public final class BufferBindingPoints {
      * @return true if reserved for engine use
      */
     public static boolean isEngineReserved(int maxBindings, int bindingPoint) {
+        if (maxBindings < ENGINE_RESERVED_BINDINGS) {
+            return false;
+        }
         return bindingPoint >= getUserBindingCount(maxBindings) && bindingPoint < maxBindings;
     }
 }
