@@ -4,14 +4,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.jme3.export.binary.BinaryExporter;
+import com.jme3.export.binary.BinaryImporter;
 import com.jme3.shader.bufferobject.BufferObject;
 import com.jme3.shader.bufferobject.BufferRegion;
 import com.jme3.shader.bufferobject.DirtyRegionsIterator;
 import com.jme3.shader.bufferobject.layout.Std140Layout;
 import com.jme3.shader.bufferobject.layout.Std430Layout;
 import com.jme3.util.struct.Struct;
+import com.jme3.util.struct.StructStd430BufferObject;
 import com.jme3.util.struct.StructField;
 import com.jme3.util.struct.StructUtils;
 import com.jme3.util.struct.fields.*;
@@ -35,6 +41,11 @@ public class StructTest {
     }
 
     static class PackedArrayStruct implements Struct {
+        public final FloatArrayField values = new FloatArrayField(0, "values", new Float[] { 1f, 2f, 3f });
+        public final FloatField tail = new FloatField(1, "tail", 4f);
+    }
+
+    public static class SerializablePackedArrayStruct implements Struct {
         public final FloatArrayField values = new FloatArrayField(0, "values", new Float[] { 1f, 2f, 3f });
         public final FloatField tail = new FloatField(1, "tail", 4f);
     }
@@ -265,6 +276,22 @@ public class StructTest {
         assertEquals(2f, data.getFloat(4));
         assertEquals(3f, data.getFloat(8));
         assertEquals(4f, data.getFloat(12));
+    }
+
+    @Test
+    public void testStd430BufferObjectSerializationRestoresLayout() throws IOException {
+        StructStd430BufferObject bo = new StructStd430BufferObject(new SerializablePackedArrayStruct());
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        BinaryExporter.getInstance().save(bo, output);
+        StructStd430BufferObject copy = (StructStd430BufferObject) BinaryImporter.getInstance()
+                .load(new ByteArrayInputStream(output.toByteArray()));
+
+        assertEquals(16, copy.getByteData().limit());
+        assertEquals(0, copy.getRegion(0).getStart());
+        assertEquals(11, copy.getRegion(0).getEnd());
+        assertEquals(12, copy.getRegion(1).getStart());
+        assertEquals(15, copy.getRegion(1).getEnd());
     }
 
     @Test

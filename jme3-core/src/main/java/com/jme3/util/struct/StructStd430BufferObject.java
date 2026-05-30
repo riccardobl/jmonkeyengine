@@ -31,7 +31,12 @@
  */
 package com.jme3.util.struct;
 
+import com.jme3.export.InputCapsule;
+import com.jme3.export.JmeExporter;
+import com.jme3.export.JmeImporter;
+import com.jme3.export.OutputCapsule;
 import com.jme3.shader.bufferobject.layout.Std430Layout;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -75,5 +80,27 @@ public class StructStd430BufferObject extends com.jme3.shader.bufferobject.Buffe
             forceUpdate = true;
         }
         StructUtils.updateBufferData(resolvedFields, forceUpdate, std430, this);
+    }
+
+    @Override
+    public void write(JmeExporter ex) throws IOException {
+        super.write(ex);
+        OutputCapsule oc = ex.getCapsule(this);
+        oc.write(rootStruct.getName(), "rootClass", null);
+    }
+
+    @Override
+    public void read(JmeImporter im) throws IOException {
+        super.read(im);
+        InputCapsule ic = im.getCapsule(this);
+        try {
+            String rootClass = ic.readString("rootClass", null);
+            if (rootClass == null) throw new Exception("rootClass is undefined");
+            Class<? extends Struct> rootStructClass = Class.forName(rootClass).asSubclass(Struct.class);
+            Struct rootStruct = rootStructClass.newInstance();
+            loadLayout(rootStruct);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
