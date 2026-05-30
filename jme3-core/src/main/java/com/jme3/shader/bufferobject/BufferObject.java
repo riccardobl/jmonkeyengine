@@ -179,6 +179,7 @@ public class BufferObject extends NativeObject implements Savable {
         ByteBuffer oldData = (ByteBuffer) this.data;
 
         this.data = BufferUtils.createByteBuffer(source.remaining());
+        ((ByteBuffer) this.data).order(source.order());
         ((ByteBuffer) this.data).put(source);
 
         if (oldData != null) {
@@ -214,9 +215,11 @@ public class BufferObject extends NativeObject implements Savable {
             } else if (data.limit() <= regionsEnd) {
                 // new buffer
                 ByteBuffer newData = BufferUtils.createByteBuffer(regionsEnd + 1);
+                newData.order(((ByteBuffer) data).order());
 
                 // copy old buffer in new buffer
-                ByteBuffer oldData = (ByteBuffer) data;
+                ByteBuffer oldData = ((ByteBuffer) data).duplicate();
+                oldData.clear();
                 if (newData.limit() < oldData.limit()) oldData.limit(newData.limit());
                 newData.put(oldData);
 

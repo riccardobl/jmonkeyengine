@@ -184,6 +184,36 @@ public class DirtyRegionsIteratorTest {
     }
 
     @Test
+    public void testSetDataPreservesByteOrder() {
+        BufferObject bo = new BufferObject();
+        ByteBuffer source = ByteBuffer.allocateDirect(4).order(ByteOrder.LITTLE_ENDIAN);
+        source.putInt(0x11223344);
+        source.flip();
+
+        bo.setData(source);
+
+        assertEquals(ByteOrder.LITTLE_ENDIAN, bo.getByteData().order());
+        assertEquals(0x11223344, bo.getByteData().getInt());
+    }
+
+    @Test
+    public void testRegionResizeCopiesWholeBufferAndPreservesOrder() {
+        BufferObject bo = new BufferObject();
+        ByteBuffer source = ByteBuffer.allocateDirect(4).order(ByteOrder.LITTLE_ENDIAN);
+        source.putInt(0x11223344);
+        source.flip();
+        bo.setData(source);
+        bo.getByteData().position(4);
+
+        bo.setRegions(Arrays.asList(new BufferRegion(0, 7)));
+        ByteBuffer resized = bo.getByteData();
+
+        assertEquals(ByteOrder.LITTLE_ENDIAN, resized.order());
+        assertEquals(8, resized.limit());
+        assertEquals(0x11223344, resized.getInt(0));
+    }
+
+    @Test
     public void testSetDataNullClearsBuffer() {
         BufferObject bo = new BufferObject();
         ByteBuffer source = ByteBuffer.allocateDirect(4);
