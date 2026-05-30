@@ -117,6 +117,16 @@ public class MatParamUniformBufferTest {
     }
 
     @Test
+    public void ignoresBlocksWithExplicitMemberLayout() {
+        MatParamUniformBuffer.Layout layout = MatParamUniformBuffer.parseLayout("#version 330\n"
+                + "layout(std140) uniform m_MatParams {\n"
+                + "    layout(offset = 32) vec4 Color;\n"
+                + "};\n");
+
+        assertNull(layout);
+    }
+
+    @Test
     public void writesOnlyBlockMembersToBufferObject() {
         Shader shader = new Shader();
         shader.addSource(Shader.ShaderType.Fragment, "mat-param-test.frag", shaderSource(), null, "GLSL330");

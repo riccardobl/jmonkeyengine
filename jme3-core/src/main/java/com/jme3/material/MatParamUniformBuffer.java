@@ -215,6 +215,9 @@ final class MatParamUniformBuffer {
             if (statement.isEmpty()) {
                 continue;
             }
+            if (statement.startsWith("layout")) {
+                return null;
+            }
 
             Matcher memberMatcher = MEMBER_PATTERN.matcher(statement);
             if (!memberMatcher.matches()) {
