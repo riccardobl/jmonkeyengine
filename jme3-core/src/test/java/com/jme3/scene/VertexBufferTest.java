@@ -76,6 +76,44 @@ public class VertexBufferTest {
     }
 
     @Test
+    public void testDirtyRangesAreValidatedBeforeRendererUpload() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.Position);
+        vb.setupData(VertexBuffer.Usage.Dynamic, 3, VertexBuffer.Format.Float,
+                BufferUtils.createFloatBuffer(0f, 0f, 0f, 1f, 1f, 1f));
+
+        assertThrows(IllegalArgumentException.class, () -> vb.markBytesDirty(2, 4));
+        assertThrows(IllegalArgumentException.class, () -> vb.markBytesDirty(24, 4));
+        assertThrows(IllegalArgumentException.class, () -> vb.markElementsDirty(2, 1));
+    }
+
+    @Test
+    public void testTypedVertexBuffersRejectByteDataAccess() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.Position);
+        vb.setupData(VertexBuffer.Usage.Dynamic, 3, VertexBuffer.Format.Float,
+                BufferUtils.createFloatBuffer(0f, 0f, 0f));
+
+        assertThrows(UnsupportedOperationException.class, () -> vb.getByteData());
+        assertThrows(UnsupportedOperationException.class, () -> vb.setData(BufferUtils.createByteBuffer(12)));
+    }
+
+    @Test
+    public void testByteBackedVertexBufferSetDataPreservesLayoutMetadata() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.BoneIndex);
+        vb.setupData(VertexBuffer.Usage.Dynamic, 4, VertexBuffer.Format.UnsignedByte,
+                BufferUtils.createByteBuffer(new byte[] {0, 0, 0, 0}));
+        vb.clearUpdateNeeded();
+
+        ByteBuffer source = BufferUtils.createByteBuffer(new byte[] {1, 2, 3, 4, 5, 6, 7, 8});
+        vb.setData(source);
+
+        assertEquals(VertexBuffer.Format.UnsignedByte, vb.getFormat());
+        assertEquals(4, vb.getNumComponents());
+        assertEquals(2, vb.getNumElements());
+        assertTrue(vb.hasDataSizeChanged());
+        assertEquals(8, vb.getByteData().limit());
+    }
+
+    @Test
     public void testHalfBuffersUseTwoBytesPerComponent() {
         VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.TexCoord);
         ByteBuffer data = BufferUtils.createByteBuffer(6);

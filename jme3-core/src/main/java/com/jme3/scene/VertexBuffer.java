@@ -761,12 +761,64 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
     }
 
     /**
+     * Updates byte-addressable vertex data while preserving the vertex buffer
+     * layout metadata. Use {@link #updateData(Buffer)} for typed vertex data.
+     *
+     * @param data the new byte-addressable data
+     */
+    @Override
+    public void setData(ByteBuffer data) {
+        if (format != Format.Byte && format != Format.UnsignedByte && format != Format.Half) {
+            throw new UnsupportedOperationException("Use updateData(Buffer) for non-byte vertex buffer data");
+        }
+        if (data == null) {
+            updateData(null);
+            return;
+        }
+        ByteBuffer source = data == this.data ? data.duplicate() : data;
+        ByteBuffer copy = BufferUtils.createByteBuffer(source.remaining());
+        copy.put(source);
+        copy.clear();
+        updateData(copy);
+    }
+
+    /**
+     * Returns byte-addressable data only for byte-backed vertex buffers.
+     *
+     * @return byte-backed vertex data
+     */
+    @Override
+    public ByteBuffer getByteData() {
+        if (data == null || data instanceof ByteBuffer) {
+            return super.getByteData();
+        }
+        throw new UnsupportedOperationException("Use getData() for non-byte vertex buffer data");
+    }
+
+    /**
      * Marks a byte range in this vertex buffer for partial GPU upload.
      *
      * @param byteOffset first dirty byte
      * @param byteLength number of dirty bytes
      */
     public void markBytesDirty(int byteOffset, int byteLength) {
+        if (byteLength <= 0) {
+            return;
+        }
+        if (data == null) {
+            throw new IllegalStateException("VertexBuffer data has not been initialized");
+        }
+        if (byteOffset < 0) {
+            throw new IllegalArgumentException("Byte offset cannot be negative");
+        }
+        int componentSize = format.getComponentSize();
+        if (byteOffset % componentSize != 0 || byteLength % componentSize != 0) {
+            throw new IllegalArgumentException("Dirty range is not aligned to " + format);
+        }
+        int byteEnd = byteOffset + byteLength;
+        if (byteEnd < byteOffset || byteEnd > getDataSizeBytes()) {
+            throw new IllegalArgumentException("Dirty range exceeds vertex buffer data");
+        }
         addDirtyRegion(byteOffset, byteLength);
     }
 
@@ -783,7 +835,18 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
         if (elementCount <= 0) {
             return;
         }
+        int elementEnd = firstElement + elementCount;
+        if (elementEnd < firstElement || elementEnd > getNumElements()) {
+            throw new IllegalArgumentException("Dirty element range exceeds vertex buffer data");
+        }
         markBytesDirty(firstElement * componentsLength, elementCount * componentsLength);
+    }
+
+    private int getDataSizeBytes() {
+        if (data instanceof ByteBuffer) {
+            return data.limit();
+        }
+        return data.limit() * format.getComponentSize();
     }
 
     /**
