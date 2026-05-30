@@ -93,7 +93,11 @@ import java.util.logging.Logger;
  *
  *
  * @author Nehon
+ * @deprecated Prefer authoring LODs offline or loading scene-graph LODs through
+ * glTF extensions such as MSFT_lod. This generator only creates mesh
+ * index-buffer LODs and cannot represent node or material LOD variants.
  */
+@Deprecated
 public class LodGenerator {
     
     private static final Logger logger = Logger.getLogger(LodGenerator.class.getName());

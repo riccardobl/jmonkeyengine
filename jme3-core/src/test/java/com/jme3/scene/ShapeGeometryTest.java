@@ -35,9 +35,12 @@ import com.jme3.collision.CollisionResults;
 import com.jme3.math.FastMath;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Cylinder;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Ensures that geometries behave correctly, by casting rays and ensure they don't break.
@@ -74,5 +77,25 @@ public class ShapeGeometryTest {
             // If the geometry is invalid, this should throw various exceptions.
             scene.collideWith(ray, collisionResults);
         }
+    }
+
+    @Test
+    public void testSetLodLevelClampsToAvailableLevels() {
+        Mesh mesh = new Box(1, 1, 1);
+        Geometry geometry = new Geometry("box", mesh);
+
+        geometry.setLodLevel(3);
+        assertEquals(0, geometry.getLodLevel());
+
+        mesh.setLodLevels(new VertexBuffer[]{
+                mesh.getBuffer(VertexBuffer.Type.Index),
+                mesh.getBuffer(VertexBuffer.Type.Index)
+        });
+
+        geometry.setLodLevel(3);
+        assertEquals(1, geometry.getLodLevel());
+
+        geometry.setLodLevel(-1);
+        assertEquals(0, geometry.getLodLevel());
     }
 }

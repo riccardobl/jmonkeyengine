@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "extensionsUsed": [
+    "MSFT_lod"
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "High",
+      "extras": {
+        "MSFT_screencoverage": 0.5
+      },
+      "extensions": {
+        "MSFT_lod": {
+          "ids": [
+            1
+          ]
+        }
+      }
+    },
+    {
+      "name": "Low",
+      "extras": {
+        "MSFT_screencoverage": 0.1
+      }
+    }
+  ]
+}

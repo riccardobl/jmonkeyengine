@@ -48,7 +48,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.VertexBuffer;
+import com.jme3.scene.control.SpatialLodControl;
 import com.jme3.system.JmeSystem;
 
 import org.junit.jupiter.api.Assertions;
@@ -126,6 +128,67 @@ public class GltfLoaderTest {
             Assertions.fail("Failed to load TriangleUnsupportedExtensionRequired");
         }
 
+    }
+
+    @Test
+    public void testMSFTLodNodeExtension() {
+        Spatial scene = assetManager.loadModel("gltf/MSFTLodNodes.gltf");
+
+        Node sceneNode = (Node) scene;
+        Node high = (Node) sceneNode.getChild(0);
+        SpatialLodControl control = high.getControl(SpatialLodControl.class);
+
+        Assertions.assertNotNull(control);
+        Assertions.assertEquals(2, control.getNumLodLevels());
+        Assertions.assertEquals(1, sceneNode.getQuantity());
+
+        Spatial highClone = control.getLodLevelSpatial(0);
+        Spatial low = control.getLodLevelSpatial(1);
+
+        control.setSelectedLodLevel(3);
+        control.applyLodLevel(3);
+
+        Assertions.assertEquals(1, control.getActiveLodLevel());
+        Assertions.assertEquals(1, high.getQuantity());
+        Assertions.assertSame(low, high.getChild(0));
+        Assertions.assertEquals(0.5f, (Float) highClone.getUserData(SpatialLodControl.SCREEN_COVERAGE_USER_DATA),
+                0.0001f);
+        Assertions.assertEquals(0.1f, (Float) low.getUserData(SpatialLodControl.SCREEN_COVERAGE_USER_DATA),
+                0.0001f);
+    }
+
+    @Test
+    public void testMSFTLodMaterialExtension() {
+        Spatial scene = assetManager.loadModel("gltf/box/MSFTLodMaterial.gltf");
+
+        Node sceneNode = (Node) scene;
+        Node wrapper = (Node) sceneNode.getChild(0);
+        Node meshNode = (Node) wrapper.getChild(0);
+        Geometry high = (Geometry) meshNode.getChild(0);
+        Mesh sharedMesh = high.getMesh();
+
+        SpatialLodControl control = meshNode.getControl(SpatialLodControl.class);
+        Assertions.assertNotNull(control);
+        Assertions.assertEquals(2, control.getNumLodLevels());
+        Assertions.assertEquals(1, meshNode.getQuantity());
+        Assertions.assertNull(control.getLodLevelSpatial(0).getControl(SpatialLodControl.class));
+
+        control.setSelectedLodLevel(1);
+        control.applyLodLevel(1);
+
+        Assertions.assertEquals(1, control.getActiveLodLevel());
+        Assertions.assertEquals(CullHint.Always, high.getLocalCullHint());
+        Assertions.assertEquals(2, meshNode.getQuantity());
+
+        Node materialLod = (Node) control.getLodLevelSpatial(1);
+        Assertions.assertSame(materialLod, meshNode.getChild(1));
+        Geometry materialVariant = (Geometry) materialLod.getChild(0);
+        Assertions.assertSame(sharedMesh, materialVariant.getMesh());
+        Assertions.assertNotSame(high.getMaterial(), materialVariant.getMaterial());
+
+        control.applyLodLevel(0);
+        Assertions.assertEquals(CullHint.Inherit, high.getLocalCullHint());
+        Assertions.assertEquals(1, meshNode.getQuantity());
     }
 
     @Test

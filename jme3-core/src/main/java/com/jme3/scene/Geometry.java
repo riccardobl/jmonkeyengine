@@ -180,20 +180,18 @@ public class Geometry extends Spatial {
      * levels [1, LodLevels + 1] represent the levels set on the mesh
      * with {@link Mesh#setLodLevels(com.jme3.scene.VertexBuffer[]) }.
      *
-     * @param lod The lod level to set
+     * @param lod The lod level to set. If the requested level is outside the
+     * available range, the closest available level is used.
      */
     @Override
     public void setLodLevel(int lod) {
         assert SceneGraphThreadWarden.assertOnCorrectThread(this);
-        if (mesh.getNumLodLevels() == 0) {
-            throw new IllegalStateException("LOD levels are not set on this mesh");
+        int numLodLevels = mesh.getNumLodLevels();
+        if (numLodLevels == 0) {
+            lodLevel = 0;
+        } else {
+            lodLevel = Math.max(0, Math.min(lod, numLodLevels - 1));
         }
-
-        if (lod < 0 || lod >= mesh.getNumLodLevels()) {
-            throw new IllegalArgumentException("LOD level is out of range: " + lod);
-        }
-
-        lodLevel = lod;
 
         if (isGrouped()) {
             groupNode.onMeshChange(this);

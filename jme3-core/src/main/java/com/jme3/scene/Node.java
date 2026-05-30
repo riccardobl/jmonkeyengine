@@ -40,6 +40,7 @@ import com.jme3.export.JmeImporter;
 import com.jme3.light.Light;
 import com.jme3.light.LightList;
 import com.jme3.material.Material;
+import com.jme3.scene.control.SpatialLodControl;
 import com.jme3.scene.threadwarden.SceneGraphThreadWarden;
 import com.jme3.util.SafeArrayList;
 import com.jme3.util.clone.Cloner;
@@ -630,6 +631,11 @@ public class Node extends Spatial {
     @Override
     public void setLodLevel(int lod) {
         super.setLodLevel(lod);
+        SpatialLodControl lodControl = getControl(SpatialLodControl.class);
+        if (lodControl != null) {
+            lodControl.setSelectedLodLevel(lod);
+            lodControl.applyLodLevel(lod);
+        }
         for (Spatial child : children.getArray()) {
             child.setLodLevel(lod);
         }
@@ -815,8 +821,19 @@ public class Node extends Spatial {
     @Override
     @SuppressWarnings("unchecked")
     public void write(JmeExporter e) throws IOException {
-        super.write(e);
-        e.getCapsule(this).writeSavableArrayList(new ArrayList(children), "children", null);
+        SpatialLodControl lodControl = getControl(SpatialLodControl.class);
+        int previousActiveLodLevel = 0;
+        if (lodControl != null) {
+            previousActiveLodLevel = lodControl.prepareForSerialization();
+        }
+        try {
+            super.write(e);
+            e.getCapsule(this).writeSavableArrayList(new ArrayList(children), "children", null);
+        } finally {
+            if (lodControl != null) {
+                lodControl.restoreAfterSerialization(previousActiveLodLevel);
+            }
+        }
     }
 
     @Override

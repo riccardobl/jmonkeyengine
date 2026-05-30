@@ -104,6 +104,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.VertexBuffer.Usage;
 import com.jme3.scene.control.CameraControl;
+import com.jme3.scene.control.SpatialLodControl;
 import com.jme3.scene.mesh.MorphTarget;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
@@ -339,6 +340,7 @@ public class GltfLoader implements AssetLoader {
             }
 
             node.setName(readMeshName(meshIndex));
+            applyMaterialLods(meshIndex, node, primitives);
 
             spatial = new Node();
             ((Node) spatial).attachChild(node);
@@ -379,18 +381,28 @@ public class GltfLoader implements AssetLoader {
         return spatial;
     }
 
+    Spatial readNodeWithChildren(int nodeIndex) throws IOException {
+        Spatial cached = fetchFromCache("nodeSubtrees", nodeIndex, Spatial.class);
+        if (cached != null) {
+            return cached.clone();
+        }
+        Object loaded = readNode(nodeIndex);
+        if (!(loaded instanceof Spatial)) {
+            return null;
+        }
+        Spatial spatial = (Spatial) loaded;
+        readChildren(spatial, nodeIndex);
+        addToCache("nodeSubtrees", nodeIndex, spatial, nodes.size());
+        return spatial;
+    }
+
     private void readChild(Spatial parent, JsonElement nodeIndex) throws IOException {
         Object loaded = readNode(nodeIndex.getAsInt());
         if (loaded instanceof Spatial) {
             Spatial spatial = ((Spatial) loaded);
             ((Node) parent).attachChild(spatial);
-            JsonObject nodeElem = nodes.get(nodeIndex.getAsInt()).getAsJsonObject();
-            JsonArray children = nodeElem.getAsJsonArray("children");
-            if (children != null) {
-                for (JsonElement child : children) {
-                    readChild(spatial, child);
-                }
-            }
+            readChildren(spatial, nodeIndex.getAsInt());
+            addToCache("nodeSubtrees", nodeIndex.getAsInt(), spatial, nodes.size());
         } else if (loaded instanceof JointWrapper) {
             // parent is the Armature Node, we have to apply its transforms to the root bone's animation data
             JointWrapper bw = (JointWrapper) loaded;
@@ -400,6 +412,16 @@ public class GltfLoader implements AssetLoader {
                 return;
             }
             skinData.parent = parent;
+        }
+    }
+
+    private void readChildren(Spatial spatial, int nodeIndex) throws IOException {
+        JsonObject nodeElem = nodes.get(nodeIndex).getAsJsonObject();
+        JsonArray children = nodeElem.getAsJsonArray("children");
+        if (children != null) {
+            for (JsonElement child : children) {
+                readChild(spatial, child);
+            }
         }
     }
 
@@ -446,6 +468,8 @@ public class GltfLoader implements AssetLoader {
             String name = getAsString(meshData, "name");
 
             geomArray = new Geometry[primitives.size()];
+            int[][] materialLods = new int[primitives.size()][];
+            boolean[] vertexColors = new boolean[primitives.size()];
             int index = 0;
             for (JsonElement primitive : primitives) {
                 JsonObject meshObject = primitive.getAsJsonObject();
@@ -538,32 +562,23 @@ public class GltfLoader implements AssetLoader {
                     geom.setMaterial(material);
 
                 } else {
-                    useNormalsFlag = false;
-                    Material material = readMaterial(materialIndex, useVertexColors);
-                    geom.setMaterial(material);
-                    BlendMode blendMode = material.getAdditionalRenderState().getBlendMode();
-                    if (blendMode == BlendMode.Alpha || blendMode == BlendMode.AlphaAdditive) {
-                        // Alpha blending is enabled for this material. Let's place the geom in the
-                        // transparent bucket.
-                        geom.setQueueBucket(RenderQueue.Bucket.Transparent);
-                    }
-                    if (useNormalsFlag && mesh.getBuffer(VertexBuffer.Type.Tangent) == null) {
-                        // No tangent buffer, but there is a normal map, we have to generate them using
-                        // MikktSpace
-                        MikktspaceTangentGenerator.generate(geom);
-                    }
+                    applyMaterial(geom, mesh, materialIndex, useVertexColors);
+                    materialLods[index] = readMaterialLodIds(materialIndex);
                 }
 
                 geom.setName(name + "_" + index);
 
                 geom.updateModelBound();
                 geomArray[index] = geom;
+                vertexColors[index] = useVertexColors;
                 index++;
             }
 
             geomArray = customContentManager.readExtensionAndExtras("mesh", meshData, geomArray);
 
             addToCache("meshes", meshIndex, geomArray, meshes.size());
+            addToCache("meshMaterialLods", meshIndex, materialLods, meshes.size());
+            addToCache("meshVertexColors", meshIndex, vertexColors, meshes.size());
         }
         // cloning the geoms.
         Geometry[] geoms = new Geometry[geomArray.length];
@@ -571,6 +586,99 @@ public class GltfLoader implements AssetLoader {
             geoms[i] = geomArray[i].clone(false);
         }
         return geoms;
+    }
+
+    private void applyMaterialLods(int meshIndex, Node node, Geometry[] primitives) throws IOException {
+        int[][] materialLods = fetchFromCache("meshMaterialLods", meshIndex, int[][].class);
+        boolean[] vertexColors = fetchFromCache("meshVertexColors", meshIndex, boolean[].class);
+        if (materialLods == null || vertexColors == null || !hasMaterialLods(materialLods)) {
+            return;
+        }
+
+        SpatialLodControl lodControl = node.getControl(SpatialLodControl.class);
+        boolean addControl = false;
+        if (lodControl == null) {
+            lodControl = new SpatialLodControl();
+            addControl = true;
+        }
+        lodControl.setLodLevelSpatial(0, node.clone(false));
+        if (addControl) {
+            node.addControl(lodControl);
+        }
+
+        int maxLevels = 0;
+        for (int[] primitiveLods : materialLods) {
+            maxLevels = Math.max(maxLevels, primitiveLods != null ? primitiveLods.length : 0);
+        }
+
+        for (int lodIndex = 0; lodIndex < maxLevels; lodIndex++) {
+            Node lodNode = new Node(node.getName() + "_material_lod_" + (lodIndex + 1));
+            for (int primitiveIndex = 0; primitiveIndex < primitives.length; primitiveIndex++) {
+                Geometry source = primitives[primitiveIndex];
+                Geometry variant = source.clone(false);
+                variant.setName(source.getName() + "_material_lod_" + (lodIndex + 1));
+
+                int[] primitiveLods = materialLods[primitiveIndex];
+                if (primitiveLods != null && lodIndex < primitiveLods.length) {
+                    applyMaterial(variant, variant.getMesh(), primitiveLods[lodIndex], vertexColors[primitiveIndex]);
+                }
+
+                lodNode.attachChild(variant);
+            }
+            lodControl.setLodLevelSpatial(lodIndex + 1, lodNode);
+        }
+    }
+
+    private boolean hasMaterialLods(int[][] materialLods) {
+        for (int[] primitiveLods : materialLods) {
+            if (primitiveLods != null && primitiveLods.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void applyMaterial(Geometry geom, Mesh mesh, int materialIndex, boolean usesVertexColors)
+            throws IOException {
+        useNormalsFlag = false;
+        Material material = readMaterial(materialIndex, usesVertexColors);
+        geom.setMaterial(material);
+
+        BlendMode blendMode = material.getAdditionalRenderState().getBlendMode();
+        if (blendMode == BlendMode.Alpha || blendMode == BlendMode.AlphaAdditive) {
+            geom.setQueueBucket(RenderQueue.Bucket.Transparent);
+        } else {
+            geom.setQueueBucket(RenderQueue.Bucket.Inherit);
+        }
+
+        if (useNormalsFlag && mesh.getBuffer(VertexBuffer.Type.Tangent) == null) {
+            MikktspaceTangentGenerator.generate(geom);
+        }
+    }
+
+    private int[] readMaterialLodIds(int materialIndex) {
+        if (materials == null) {
+            return null;
+        }
+        JsonObject material = materials.get(materialIndex).getAsJsonObject();
+        JsonObject extensions = material.getAsJsonObject("extensions");
+        if (extensions == null) {
+            return null;
+        }
+        JsonObject lodExtension = extensions.getAsJsonObject(MSFTLodExtensionLoader.EXTENSION_NAME);
+        if (lodExtension == null) {
+            return null;
+        }
+        JsonArray ids = lodExtension.getAsJsonArray("ids");
+        if (ids == null || ids.size() == 0) {
+            return null;
+        }
+
+        int[] result = new int[ids.size()];
+        for (int i = 0; i < ids.size(); i++) {
+            result[i] = ids.get(i).getAsInt();
+        }
+        return result;
     }
 
     SkinBuffers getSkinBuffers(String bufferType) {
@@ -741,6 +849,13 @@ public class GltfLoader implements AssetLoader {
         validateIndex("accessor", index, accessors.size());
         JsonObject accessor = accessors.get(index).getAsJsonObject();
         return accessor;
+    }
+
+    JsonObject getNode(int index) {
+        assertNotNull(nodes, "No nodes when trying to access node with index " + index);
+        validateIndex("node", index, nodes.size());
+        JsonObject node = nodes.get(index).getAsJsonObject();
+        return node;
     }
 
     /**

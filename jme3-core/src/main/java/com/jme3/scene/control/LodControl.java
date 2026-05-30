@@ -56,7 +56,11 @@ import java.io.IOException;
  * requires the camera to do this. The controlRender method is called each frame
  * and will update the spatial's LOD if the camera has moved by a specified
  * amount.
+ *
+ * @deprecated Use a node-level LOD control for scene-graph LOD switching. This
+ * control only selects pre-existing mesh index-buffer LODs on a Geometry.
  */
+@Deprecated
 public class LodControl extends AbstractControl implements Cloneable, JmeCloneable {
 
     private float trisPerPixel = 1f;
