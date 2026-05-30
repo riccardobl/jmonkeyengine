@@ -39,6 +39,22 @@ public class StructTest {
         public final FloatField tail = new FloatField(1, "tail", 4f);
     }
 
+    static class ConstantHashSubStruct implements Struct {
+        public final IntField intField = new IntField(0, "intField", 100);
+        public final FloatField floatField = new FloatField(1, "floatField", 100f);
+
+        @Override
+        public int hashCode() {
+            return 1;
+        }
+    }
+
+    static class ConstantHashStructArray implements Struct {
+        public final SubStructArrayField<ConstantHashSubStruct> structs =
+                new SubStructArrayField<>(0, "structs",
+                        new ConstantHashSubStruct[] { new ConstantHashSubStruct(), new ConstantHashSubStruct() });
+    }
+
     @Test
     public void testFieldsExtraction() {
         TestStruct test = new TestStruct();
@@ -249,5 +265,23 @@ public class StructTest {
         assertEquals(2f, data.getFloat(4));
         assertEquals(3f, data.getFloat(8));
         assertEquals(4f, data.getFloat(12));
+    }
+
+    @Test
+    public void testStructArrayLayoutDoesNotDependOnHashCode() {
+        ConstantHashStructArray test = new ConstantHashStructArray();
+        java.util.List<StructField<?>> fields = StructUtils.getFields(test);
+
+        BufferObject bo = new BufferObject();
+        StructUtils.setBufferLayout(fields, new Std140Layout(), bo);
+
+        assertEquals(0, bo.getRegion(0).getStart());
+        assertEquals(3, bo.getRegion(0).getEnd());
+        assertEquals(4, bo.getRegion(1).getStart());
+        assertEquals(15, bo.getRegion(1).getEnd());
+        assertEquals(16, bo.getRegion(2).getStart());
+        assertEquals(19, bo.getRegion(2).getEnd());
+        assertEquals(20, bo.getRegion(3).getStart());
+        assertEquals(31, bo.getRegion(3).getEnd());
     }
 }

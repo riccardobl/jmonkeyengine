@@ -131,7 +131,7 @@ public class StructUtils {
 
                 } else {
                     so.setDepth(depth);
-                    so.setGroup(struct.hashCode());
+                    so.setGroup(System.identityHashCode(struct));
                     expandedStructFields.add(so);
                 }
             }
