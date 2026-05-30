@@ -214,6 +214,20 @@ public class DirtyRegionsIteratorTest {
     }
 
     @Test
+    public void testClonePreservesByteOrder() {
+        BufferObject bo = new BufferObject();
+        ByteBuffer source = ByteBuffer.allocateDirect(4).order(ByteOrder.LITTLE_ENDIAN);
+        source.putInt(0x11223344);
+        source.flip();
+        bo.setData(source);
+
+        BufferObject clone = bo.clone();
+
+        assertEquals(ByteOrder.LITTLE_ENDIAN, clone.getByteData().order());
+        assertEquals(0x11223344, clone.getByteData().getInt());
+    }
+
+    @Test
     public void testSetDataNullClearsBuffer() {
         BufferObject bo = new BufferObject();
         ByteBuffer source = ByteBuffer.allocateDirect(4);
