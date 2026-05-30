@@ -175,4 +175,22 @@ public class VertexBufferTest {
         vb.compact(2);
         assertEquals(4, vb.getData().limit());
     }
+
+    @Test
+    public void testByteBackedCompactPreservesByteOrder() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.TexCoord);
+        ByteBuffer data = ByteBuffer.allocateDirect(6).order(ByteOrder.LITTLE_ENDIAN);
+        data.putShort((short) 0x0102);
+        data.putShort((short) 0x0304);
+        data.putShort((short) 0x0506);
+        data.clear();
+
+        vb.setupData(VertexBuffer.Usage.Dynamic, 1, VertexBuffer.Format.Half, data);
+        vb.compact(2);
+
+        ByteBuffer compacted = (ByteBuffer) vb.getData();
+        assertEquals(ByteOrder.LITTLE_ENDIAN, compacted.order());
+        assertEquals((short) 0x0102, compacted.getShort(0));
+        assertEquals((short) 0x0304, compacted.getShort(2));
+    }
 }

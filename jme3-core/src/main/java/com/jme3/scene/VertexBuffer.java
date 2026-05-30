@@ -919,6 +919,7 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
                 int byteTotal = total * format.getComponentSize();
                 bbuf.limit(byteTotal);
                 ByteBuffer bnewBuf = BufferUtils.createByteBuffer(byteTotal);
+                bnewBuf.order(bbuf.order());
                 bnewBuf.put(bbuf);
                 data = bnewBuf;
                 break;
