@@ -114,6 +114,26 @@ public class GLRendererBufferBlockBindingTest {
     }
 
     @Test
+    public void testOutOfRangeUboBindingIsReassigned() {
+        ListMap<String, ShaderBufferBlock> blocks = new ListMap<>();
+        blocks.put("Params", block("Params", BufferType.UniformBufferObject, 0, 99));
+
+        GLRenderer.resolveBufferBlockBindingCollisions(blocks, 36, 36);
+
+        assertEquals(0, blocks.get("Params").getBinding());
+    }
+
+    @Test
+    public void testOutOfRangeSsboBindingIsReassigned() {
+        ListMap<String, ShaderBufferBlock> blocks = new ListMap<>();
+        blocks.put("Data", block("Data", BufferType.ShaderStorageBufferObject, 0, 99));
+
+        GLRenderer.resolveBufferBlockBindingCollisions(blocks, 36, 36);
+
+        assertEquals(0, blocks.get("Data").getBinding());
+    }
+
+    @Test
     public void testReadbackStoreIsClampedToBufferSize() {
         BufferObject bufferObject = new BufferObject();
         bufferObject.initializeEmpty(8);

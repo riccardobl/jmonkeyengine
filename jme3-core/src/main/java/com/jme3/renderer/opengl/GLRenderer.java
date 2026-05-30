@@ -1769,6 +1769,10 @@ public final class GLRenderer implements Renderer {
                 binding = -1;
             }
 
+            if (!engineBinding && binding >= userBindingCount) {
+                binding = -1;
+            }
+
             if (binding < 0 || !usedBindings.add(binding)) {
                 // Collision within the same namespace — find a free binding point
                 if (bufferType == BufferType.ShaderStorageBufferObject) {
