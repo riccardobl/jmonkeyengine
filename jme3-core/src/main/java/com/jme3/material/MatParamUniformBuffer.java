@@ -64,7 +64,7 @@ final class MatParamUniformBuffer {
             "(?s)(?:layout\\s*\\(([^)]*)\\)\\s*)?uniform\\s+(\\w+)\\s*\\{(.*?)\\}\\s*(\\w+)?\\s*;");
     private static final Pattern MEMBER_PATTERN = Pattern.compile(
             "(?s)(?:layout\\s*\\([^)]*\\)\\s*)?(?:highp\\s+|mediump\\s+|lowp\\s+)?(float|int|bool|vec2|vec3|vec4|mat3|mat4)\\s+(.+)");
-    private static final Pattern DECLARATOR_PATTERN = Pattern.compile("(\\w+)\\s*(?:\\[\\s*(\\d+)\\s*\\])?.*");
+    private static final Pattern DECLARATOR_PATTERN = Pattern.compile("(\\w+)\\s*(?:\\[\\s*(\\d+)\\s*\\])?\\s*");
 
     private final BufferObject bufferObject = new BufferObject();
     private Layout layout;

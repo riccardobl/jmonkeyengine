@@ -87,6 +87,17 @@ public class MatParamUniformBufferTest {
     }
 
     @Test
+    public void ignoresBlocksWithUnsupportedArrayDeclarators() {
+        MatParamUniformBuffer.Layout layout = MatParamUniformBuffer.parseLayout("#version 330\n"
+                + "#define WEIGHT_COUNT 4\n"
+                + "layout(std140) uniform m_MatParams {\n"
+                + "    float Weights[WEIGHT_COUNT];\n"
+                + "};\n");
+
+        assertNull(layout);
+    }
+
+    @Test
     public void writesOnlyBlockMembersToBufferObject() {
         Shader shader = new Shader();
         shader.addSource(Shader.ShaderType.Fragment, "mat-param-test.frag", shaderSource(), null, "GLSL330");
