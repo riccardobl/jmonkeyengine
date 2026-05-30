@@ -789,7 +789,10 @@ public class VertexBuffer extends BufferObject implements Savable, Cloneable {
      */
     @Override
     public ByteBuffer getByteData() {
-        if (data == null || data instanceof ByteBuffer) {
+        if (data == null) {
+            throw new IllegalStateException("VertexBuffer data has not been initialized");
+        }
+        if (data instanceof ByteBuffer) {
             return super.getByteData();
         }
         throw new UnsupportedOperationException("Use getData() for non-byte vertex buffer data");

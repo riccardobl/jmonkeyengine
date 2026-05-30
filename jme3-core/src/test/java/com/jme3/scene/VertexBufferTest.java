@@ -112,6 +112,13 @@ public class VertexBufferTest {
     }
 
     @Test
+    public void testUninitializedVertexBufferRejectsByteDataAccess() {
+        VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.Position);
+
+        assertThrows(IllegalStateException.class, () -> vb.getByteData());
+    }
+
+    @Test
     public void testByteBackedVertexBufferSetDataPreservesLayoutMetadata() {
         VertexBuffer vb = new VertexBuffer(VertexBuffer.Type.BoneIndex);
         vb.setupData(VertexBuffer.Usage.Dynamic, 4, VertexBuffer.Format.UnsignedByte,
