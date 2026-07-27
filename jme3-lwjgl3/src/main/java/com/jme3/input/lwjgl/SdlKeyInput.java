@@ -40,8 +40,10 @@ import java.util.Queue;
 import java.util.logging.Logger;
 import org.lwjgl.sdl.SDL_Event;
 import org.lwjgl.sdl.SDL_KeyboardEvent;
+import org.lwjgl.system.Platform;
 
 import static org.lwjgl.sdl.SDLKeyboard.*;
+import static org.lwjgl.sdl.SDLKeycode.*;
 import static org.lwjgl.sdl.SDLScancode.*;
 import static org.lwjgl.sdl.SDLEvents.*;
 import static org.lwjgl.sdl.SDLTimer.*;
@@ -89,13 +91,66 @@ public class SdlKeyInput implements KeyInput {
             }
 
             final int jmeKey = SdlKeyMap.toJmeKeyCode(key.scancode());
-            final int sdlKey = SDL_GetKeyFromScancode(key.scancode(), key.mod(), false);
-            final char keyChar = sdlKey > 0 && sdlKey <= Character.MAX_VALUE && !Character.isISOControl((char) sdlKey)
-                    ? (char) sdlKey
-                    : '\0';
+            final char keyChar = getKeyChar(key.scancode(), key.mod());
             final KeyInputEvent keyEvent = new KeyInputEvent(jmeKey, keyChar, key.down(), key.repeat());
             keyEvent.setTime(key.timestamp());
             keyInputEvents.add(keyEvent);
+        }
+    }
+
+    private static char getKeyChar(int scancode, short modifiers) {
+        final int sdlKey = SDL_GetKeyFromScancode(scancode, modifiers, false);
+        if (sdlKey > 0
+                && sdlKey <= Character.MAX_VALUE
+                && !Character.isISOControl((char) sdlKey)) {
+            return (char) sdlKey;
+        }
+
+        if ((modifiers & SDL_KMOD_NUM) != 0 || Platform.get() == Platform.MACOSX) {
+            switch (scancode) {
+                case SDL_SCANCODE_KP_0:
+                    return '0';
+                case SDL_SCANCODE_KP_1:
+                    return '1';
+                case SDL_SCANCODE_KP_2:
+                    return '2';
+                case SDL_SCANCODE_KP_3:
+                    return '3';
+                case SDL_SCANCODE_KP_4:
+                    return '4';
+                case SDL_SCANCODE_KP_5:
+                    return '5';
+                case SDL_SCANCODE_KP_6:
+                    return '6';
+                case SDL_SCANCODE_KP_7:
+                    return '7';
+                case SDL_SCANCODE_KP_8:
+                    return '8';
+                case SDL_SCANCODE_KP_9:
+                    return '9';
+                case SDL_SCANCODE_KP_PERIOD:
+                    return '.';
+                default:
+                    break;
+            }
+        }
+
+        switch (scancode) {
+            case SDL_SCANCODE_KP_DIVIDE:
+                return '/';
+            case SDL_SCANCODE_KP_MULTIPLY:
+                return '*';
+            case SDL_SCANCODE_KP_MINUS:
+                return '-';
+            case SDL_SCANCODE_KP_PLUS:
+                return '+';
+            case SDL_SCANCODE_KP_EQUALS:
+            case SDL_SCANCODE_KP_EQUALSAS400:
+                return '=';
+            case SDL_SCANCODE_KP_COMMA:
+                return ',';
+            default:
+                return '\0';
         }
     }
 
