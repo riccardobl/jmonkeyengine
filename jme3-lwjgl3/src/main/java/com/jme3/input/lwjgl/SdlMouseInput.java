@@ -39,6 +39,7 @@ import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.Vector2f;
 import com.jme3.system.AppSettings;
+import com.jme3.system.JmeSystem;
 import com.jme3.system.lwjgl.LwjglWindow;
 import com.jme3.util.BufferUtils;
 import java.nio.ByteBuffer;
@@ -94,6 +95,7 @@ public class SdlMouseInput implements MouseInput {
     private boolean cursorVisible = true;
     private boolean windowFocused = true;
     private boolean visibleCursorPositionValid;
+    private boolean protonCursorRestorePending;
     private boolean initialized;
 
     public SdlMouseInput(final LwjglWindow context) {
@@ -296,6 +298,12 @@ public class SdlMouseInput implements MouseInput {
 
     @Override
     public void update() {
+        if (protonCursorRestorePending && cursorVisible && windowFocused
+                && !SDL_GetWindowRelativeMouseMode(context.getWindowHandle())) {
+            protonCursorRestorePending = false;
+            restoreVisibleCursorPosition();
+        }
+
         if (currentCursor != null && currentCursor.length > 1) {
             long now = SDL_GetTicksNS();
             long frameTimeMs = (now - currentCursorFrameStartTimeNs) / 1_000_000L;
@@ -356,10 +364,12 @@ public class SdlMouseInput implements MouseInput {
             if (!wasVisible) {
                 if (restoreVisibleCursorPosition()) {
                     queueMousePositionSyncEvent();
+                    protonCursorRestorePending = JmeSystem.getPlatform().isWineProton();
                 }
             }
             SDL_SetWindowRelativeMouseMode(context.getWindowHandle(), false);
         } else {
+            protonCursorRestorePending = false;
             if (wasVisible || !visibleCursorPositionValid) {
                 saveVisibleCursorPosition();
             }
