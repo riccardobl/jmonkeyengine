@@ -20,6 +20,8 @@ public class IosInputHandler implements TouchInput {
     private static final Logger logger = Logger.getLogger(IosInputHandler.class.getName());
 
     private final static int MAX_TOUCH_EVENTS = 1024;
+    private static final int NATIVE_INT_DATA_SIZE = 6;
+    private static final int KEY_EVENT_KEYBOARD_ID_INDEX = NATIVE_INT_DATA_SIZE - 1;
 
     // Custom settings
     private boolean mouseEventsEnabled = false;
@@ -50,7 +52,7 @@ public class IosInputHandler implements TouchInput {
     }
     private int width = 0;
     private int height = 0;
-    private final int[] nativeIntData = new int[5];
+    private final int[] nativeIntData = new int[NATIVE_INT_DATA_SIZE];
     private final float[] nativeFloatData = new float[4];
 
     public IosInputHandler() {
@@ -277,7 +279,9 @@ public class IosInputHandler implements TouchInput {
                 addEvent(motion);
                 break;
             case LibJGLIOSInputBridge.EVENT_KEY:
-                IosJoyInput.dispatchKeyboardInput();
+                if (isPhysicalKeyboardEvent(intData)) {
+                    IosJoyInput.dispatchKeyboardInput();
+                }
                 int sdlKey = SDL_GetKeyFromScancode(intData[1], intData[4], true);
                 char keyChar = sdlKey > 0 && sdlKey <= Character.MAX_VALUE && !Character.isISOControl((char) sdlKey)
                         ? (char) sdlKey
@@ -299,6 +303,14 @@ public class IosInputHandler implements TouchInput {
             default:
                 break;
         }
+    }
+
+    static boolean isPhysicalKeyboardEvent(int[] intData) {
+        // SDL uses keyboard ID 0 for virtual keyboards and when the device is unknown.
+        // Older libJGLIOS versions only populate the first five elements, so they
+        // conservatively fall back to not suppressing the on-screen joystick.
+        return intData.length > KEY_EVENT_KEYBOARD_ID_INDEX
+                && intData[KEY_EVENT_KEYBOARD_ID_INDEX] != 0;
     }
 
     private float nativeX(float value) {
