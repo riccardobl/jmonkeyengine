@@ -379,6 +379,23 @@ class NativeLibraryLoaderExtractionTest {
     }
 
     @Test
+    void customFolderMatchingTempIsTriedOnlyOnce() throws Exception {
+        Path cache = Files.createDirectories(home.resolve(".cache"));
+        NativeLibraryLoader.setCustomExtractionFolder(tmp.resolve(".").toString());
+
+        List<Path> attempts = new ArrayList<>();
+        String name = register("fixture.so", path -> {
+            attempts.add(Paths.get(path));
+            if (attempts.size() == 1) throw new UnsatisfiedLinkError("simulated mapping failure");
+        });
+        NativeLibraryLoader.loadNativeLibrary(name, true);
+
+        assertEquals(2, attempts.size());
+        assertTrue(attempts.get(0).startsWith(tmp.toRealPath()));
+        assertTrue(attempts.get(1).startsWith(cache.toRealPath()));
+    }
+
+    @Test
     void customLoadFailureFallsBackToTemp() throws Exception {
         Path custom = Files.createDirectory(directory.resolve("custom"));
         NativeLibraryLoader.setCustomExtractionFolder(custom.toString());
